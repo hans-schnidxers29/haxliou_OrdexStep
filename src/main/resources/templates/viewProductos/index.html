@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Listado de Productos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg bg-body-tertiary">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">Navbar</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link active" aria-current="page" href="/home">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Link</a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        VER MAS
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="">Action</a></li>
+                        <li><a class="dropdown-item" href="#">Another action</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#">Something else here</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link disabled" aria-disabled="true">Disabled</a>
+                </li>
+            </ul>
+            <form class="d-flex" role="search">
+                <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search"/>
+                <button class="btn btn-outline-success" type="submit">Search</button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<br>
+<div class="container mt-4">
+    <div class="row">
+        <div class="col">
+            <h1>Listado de Producto</h1>
+
+            <!-- Mensaje si no hay Productos -->
+            <div th:if="${#lists.isEmpty(productos)}" class="alert alert-info">
+                <strong>No hay Productos registrados.</strong>
+                <a href="/crearproducto/nuevo" class="btn btn-primary btn-sm ms-2">Crear primer producto</a>
+            </div>
+
+            <!-- Tabla de Productos -->
+            <div th:unless="${#lists.isEmpty(productos)}">
+                <table class="table table-striped table-bordered">
+                    <thead class="table-dark">
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Precio</th>
+                        <th>Cantidad</th>
+                        <th>Categoria</th>
+                        <th>Descripcion</th>
+                        <th>Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody class="zebra-striping">
+                    <tr th:each="producto: ${productos}">
+                        <td th:text="${producto.nombre}">Nombre</td>
+                        <td th:text="${producto.precio}">Precio</td>
+                        <td th:text="${producto.cantidad}">Cantidad</td>
+                        <td th:text="${producto.categoria.getNombrecategoria()}">categoria</td>
+                        <td th:text="${producto.descripcion}">Descripcion</td>
+                        <td >
+                            <a th:href="@{/producto/actualizar/{id}(id=${producto.id})}" class="btn btn-info">Editar</a>
+                            <a th:href="@{/productos/delete/{id}(id=${producto.id})}" class="btn btn-danger" >Eliminar</a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+                <a href="/crearproducto/nuevo" class="btn btn-primary btn-sm">Crear nuevo Producto</a>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
