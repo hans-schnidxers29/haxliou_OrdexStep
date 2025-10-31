@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
 
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Formulario Dinámico</title>
+    <title>Formulario de Registro</title>
     <style>
         * {
             box-sizing: border-box;
@@ -115,37 +115,40 @@
 </head>
 
 <body>
-    <div class="form-container">
-        <h2>Formulario de Contacto</h2>
-        <form>
-            <div class="input-group">
-                <input type="text" id="nombre" name="nombre" required />
-                <label for="nombre">Nombre</label>
-            </div>
-
-            <div class="input-group">
-                <input type="text" id="apellidos" name="apellidos" required />
-                <label for="apellidos">Apellidos</label>
-            </div>
-
-            <div class="input-group">
-                <input type="email" id="email" name="email" required />
-                <label for="email">Correo electrónico</label>
-            </div>
-
-            <div class="input-group">
-                <input type="tel" id="telefono" name="telefono" required pattern="[0-9]{10}" />
-                <label for="telefono">Teléfono</label>
-            </div>
-
-            <div class="input-group">
-                <input type="text" id="direccion" name="direccion" required />
-                <label for="direccion">Dirección</label>
-            </div>
-
-            <button type="submit">Enviar</button>
-        </form>
+<div class="form-container">
+    <div th:if="*{param.exito}" class="btn btn-info">
+        registrado exitosamente
     </div>
+    <div th:if="*{param.eror}">
+        error al registrar
+    </div>
+    <h2>Iniciar Sesion</h2>
+    <form method="POST">
+        <div class="input-group">
+            <input type="text" id="nombre"  name="nombre" required />
+            <label >Nombre</label>
+        </div>
+
+        <div class="input-group">
+            <input type="text" id="apellidos" name="apellidos"   required />
+            <label for="apellidos">Apellidos</label>
+        </div>
+
+        <div class="input-group">
+            <input type="email" id="email" name="email"  required />
+            <label for="email">Correo electrónico</label>
+        </div>
+
+        <div class="input-group">
+            <input type="password" id="password" name="password"  required />
+            <label for="password">Password</label>
+        </div>
+        <button type="submit">Enviar</button>
+        <br>
+        <br>
+        <stro> ya tienes una cuenta? <a href="/login">inicia sesion aqui</a></stro>
+    </form>
+</div>
 </body>
 
 </html>
