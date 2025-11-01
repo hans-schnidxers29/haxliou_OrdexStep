@@ -123,24 +123,24 @@
         error al registrar
     </div>
     <h2>Iniciar Sesion</h2>
-    <form method="POST">
+    <form method="POST" th:action="@{/registro/nuevo}" th:object="${usuarioDTO}">
         <div class="input-group">
-            <input type="text" id="nombre"  name="nombre" required />
+            <input type="text" id="nombre" th:field="*{nombre}" name="nombre" required />
             <label >Nombre</label>
         </div>
 
         <div class="input-group">
-            <input type="text" id="apellidos" name="apellidos"   required />
+            <input type="text" id="apellidos" name="apellidos" th:field="*{apellido}"  required />
             <label for="apellidos">Apellidos</label>
         </div>
 
         <div class="input-group">
-            <input type="email" id="email" name="email"  required />
+            <input type="email" id="email" name="email"  th:field="*{email}" required />
             <label for="email">Correo electrónico</label>
         </div>
 
         <div class="input-group">
-            <input type="password" id="password" name="password"  required />
+            <input type="password" id="password" name="password" th:field="*{password}" required />
             <label for="password">Password</label>
         </div>
         <button type="submit">Enviar</button>
