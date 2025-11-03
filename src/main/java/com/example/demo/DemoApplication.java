@@ -1,11 +1,17 @@
 package com.example.demo;
 
+import com.example.demo.Login.Repositorio.RepositorioUsuario;
+import com.example.demo.Login.Rol;
+import com.example.demo.Login.Usuario;
 import com.example.demo.entidad.Categoria;
 import com.example.demo.repositorio.CategoriaRepositorio;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
+import java.util.Arrays;
 
 @SpringBootApplication
 public class DemoApplication implements CommandLineRunner {
@@ -18,6 +24,11 @@ public class DemoApplication implements CommandLineRunner {
     @Autowired
     private CategoriaRepositorio categoriaRepositorio;
 
+    @Autowired
+    private RepositorioUsuario usuer;
+
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
 
     @Override
     public void run(String... args) throws Exception {
@@ -39,5 +50,12 @@ public class DemoApplication implements CommandLineRunner {
         Categoria c6= new Categoria("INMUEBLES","Productos de inmuebles decorativos");
         categoriaRepositorio.save(c6);
 
+        // Seed default admin user only if not exists, and ensure password is BCrypt-encoded
+        String email = "hans@gmail.com";
+        if (usuer.findByEmail(email) == null) {
+            String encoded = passwordEncoder.encode("hans");
+            Usuario usuario = new Usuario("hans","patiño", email, encoded, Arrays.asList(new Rol("ROLE_ADMIN")));
+            usuer.save(usuario);
+        }
     }
 }

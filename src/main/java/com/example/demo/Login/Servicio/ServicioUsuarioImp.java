@@ -29,14 +29,14 @@ public class ServicioUsuarioImp implements ServicioUsuario{
     private BCryptPasswordEncoder passwordEncoder;
 
     @Override
-    public Usuario saveUser(UsuarioDTO usuarioDTO) {
+    public void saveUser(UsuarioDTO usuarioDTO) {
         Usuario usuario = new Usuario(usuarioDTO.getNombre(),usuarioDTO.getApellido(),usuarioDTO.getEmail(),
                 passwordEncoder.encode(usuarioDTO.getPassword()), Arrays.asList(new Rol("ROLE_ADMIN")));
-        return repositorioUsuario.save(usuario);
+        repositorioUsuario.save(usuario);
     }
 
     @Override
-    public Usuario finAllById(Long id) {
+    public Usuario finbyyId(Long id) {
         return repositorioUsuario.findById(id).orElseThrow();
     }
 
@@ -44,12 +44,6 @@ public class ServicioUsuarioImp implements ServicioUsuario{
     public List<Usuario> ListarUSer() {
         return repositorioUsuario.findAll();
     }
-
-    @Override
-    public Usuario findByEmial(String email) {
-        return repositorioUsuario.findByEmail(email);
-    }
-
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {

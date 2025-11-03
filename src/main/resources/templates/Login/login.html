@@ -133,14 +133,17 @@
         <form th:action="@{/login}" method="POST">
 
             <div th:if="${param.error}">
-                <div class="alert alert-danger">Usuario o contraseña
-                    inválidos</div>
+                <div class="alert alert-danger">
+                    Usuario o contraseña inválidos</div>
             </div>
 
             <div th:if="${param.logout}">
                 <div class="alert alert-info">Ha cerrado sesión exitosamente
                 </div>
             </div>
+
+            <!-- CSRF token requerido por Spring Security -->
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 
             <div class="input-group">
                 <label for="email">Correo electrónico</label>
@@ -152,7 +155,7 @@
                 <input type="password" id="password" name="password" placeholder="********" required>
             </div>
 
-            <button type="submit" class="btn" th:href="@{/home}">Ingresar</button>
+            <button type="submit" class="btn">Ingresar</button>
 
             <div class="links">
                 <p><a href="#">¿Olvidaste tu contraseña?</a></p>

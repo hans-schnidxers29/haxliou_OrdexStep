@@ -2,6 +2,7 @@ package com.example.demo.Login;
 
 import java.util.Collection;
 import jakarta.persistence.*;
+import org.springframework.context.annotation.Primary;
 
 @Entity
 @Table(name = "usuarios", uniqueConstraints = @UniqueConstraint(columnNames = "email"))
@@ -17,6 +18,7 @@ public class Usuario{
     @Column(name = "apellido")
     private String apellido;
 
+    @Column(name = "email",unique = true)
     private String email;
 
     private String password;

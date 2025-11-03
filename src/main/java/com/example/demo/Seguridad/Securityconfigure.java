@@ -18,32 +18,34 @@ public class Securityconfigure {
     @Autowired
     private ServicioUsuario usuarioServicio;
 
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;  // ✅ Cambiar aquí
+
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider auth = new DaoAuthenticationProvider();
         auth.setUserDetailsService(usuarioServicio);
-        auth.setPasswordEncoder(passwordEncoder());
+        auth.setPasswordEncoder(passwordEncoder);  // ✅ Ya no necesitas el cast
         return auth;
     }
-    // 🔹 Bean para encriptar contraseñas con BCrypt
-    @Bean
-    public BCryptPasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 // 🔹 Autorización de rutas
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/registro**", "/js/**", "/css/**", "/img/**").permitAll()
+                        .requestMatchers("/registro**", "/js/**", "/css/**", "/img/**","/h2-console/**").permitAll()
                         .anyRequest().authenticated()
                 )
 
                 // 🔹 Configuración del login
                 .formLogin(form -> form
                         .loginPage("/login")      // Página personalizada de login
+                        .loginProcessingUrl("/login")
+                        .usernameParameter("email")
+                        .passwordParameter("password")
+                        .defaultSuccessUrl("/", true)
+                        .failureUrl("/login?error")
                         .permitAll()
                 )
 
@@ -58,6 +60,4 @@ public class Securityconfigure {
 
         return http.build();
     }
-
 }
-
