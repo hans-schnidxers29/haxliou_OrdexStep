@@ -5,113 +5,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Formulario de Registro</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            font-family: 'Poppins', sans-serif;
-        }
-
-        body {
-            background: linear-gradient(135deg, #00c6ff, #0072ff);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-
-        .form-container {
-            background: white;
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            width: 100%;
-            max-width: 450px;
-            animation: fadeIn 1s ease-in-out;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        h2 {
-            text-align: center;
-            color: #0072ff;
-            margin-bottom: 20px;
-        }
-
-        .input-group {
-            position: relative;
-            margin-bottom: 25px;
-        }
-
-        .input-group input {
-            width: 100%;
-            padding: 10px 12px;
-            font-size: 16px;
-            border: 2px solid #ccc;
-            border-radius: 10px;
-            outline: none;
-            transition: 0.3s;
-        }
-
-        .input-group label {
-            position: absolute;
-            left: 12px;
-            top: 10px;
-            background: white;
-            color: #777;
-            font-size: 16px;
-            pointer-events: none;
-            transition: 0.3s;
-            padding: 0 5px;
-        }
-
-        .input-group input:focus,
-        .input-group input:valid {
-            border-color: #0072ff;
-        }
-
-        .input-group input:focus+label,
-        .input-group input:valid+label {
-            top: -10px;
-            left: 10px;
-            color: #0072ff;
-            font-size: 13px;
-        }
-
-        button {
-            width: 100%;
-            padding: 12px;
-            background: linear-gradient(90deg, #0072ff, #00c6ff);
-            color: white;
-            font-size: 16px;
-            font-weight: bold;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 15px rgba(0, 114, 255, 0.4);
-        }
-
-        @media (max-width: 500px) {
-            .form-container {
-                padding: 20px;
-            }
-        }
-    </style>
+    <link  th:href="@{/StyleLogin/StyleRegistro.css}" rel="stylesheet">
 </head>
 
 <body>
@@ -122,25 +16,25 @@
     <div th:if="*{param.eror}">
         error al registrar
     </div>
-    <h2>Iniciar Sesion</h2>
-    <form method="POST">
+    <h2>Registro de Usuario</h2>
+    <form method="POST" th:action="@{/registro/nuevo}" th:object="${usuarioDTO}">
         <div class="input-group">
-            <input type="text" id="nombre"  name="nombre" required />
+            <input type="text" id="nombre" th:field="*{nombre}" name="nombre" required />
             <label >Nombre</label>
         </div>
 
         <div class="input-group">
-            <input type="text" id="apellidos" name="apellidos"   required />
+            <input type="text" id="apellidos" name="apellidos" th:field="*{apellido}"  required />
             <label for="apellidos">Apellidos</label>
         </div>
 
         <div class="input-group">
-            <input type="email" id="email" name="email"  required />
+            <input type="email" id="email" name="email"  th:field="*{email}" required />
             <label for="email">Correo electrónico</label>
         </div>
 
         <div class="input-group">
-            <input type="password" id="password" name="password"  required />
+            <input type="password" id="password" name="password" th:field="*{password}" required />
             <label for="password">Password</label>
         </div>
         <button type="submit">Enviar</button>
