@@ -1,10 +1,7 @@
 package com.example.demo.controlador;
 
 
-import com.example.demo.entidad.Cliente;
-import com.example.demo.entidad.DetallePedido;
-import com.example.demo.entidad.Pedidos;
-import com.example.demo.entidad.Productos;
+import com.example.demo.entidad.*;
 import com.example.demo.servicio.ClienteService;
 import com.example.demo.servicio.PedidoService;
 import com.example.demo.servicio.ProductoServicio;
@@ -37,6 +34,7 @@ public class PedidosControlador {
     @GetMapping("/listarpedidos")  // ← AGREGAR la barra
     public String listarPedidos(Model model) {
         model.addAttribute("pedidos", pedidoService.listarpedidos());
+        model.addAttribute("Estadisticas",pedidoService.ContarPorestados(EstadoPedido.PENDIENTE));
         return "viewPedidos/index";
     }
 
@@ -122,6 +120,9 @@ public class PedidosControlador {
             Pedidos pedidoGuardado = pedidoService.guardarpedidos(pedido);
             System.out.println("Pedido guardado con ID: " + pedidoGuardado.getId() +
                     " - Cliente: " + pedidoGuardado.getCliente().getNombre());
+
+
+
 
             return "redirect:/pedidos/listarpedidos?success=true";  // ← CAMBIAR redirect
 
@@ -235,4 +236,6 @@ public class PedidosControlador {
             return "redirect:/pedidos/listarpedidos?error=true";
         }
     }
+
+
 }

@@ -355,3 +355,30 @@ body {
 .sidebar.closed {
     width: 80px;
 }
+.stats-box {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: transform 0.2s, box-shadow 0.2s;
+    height: 100%;
+}
+
+.stats-box:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.stats-box h6 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 500;
+    opacity: 0.9;
+}
+
+.stats-box h3 {
+    margin: 8px 0 0;
+    font-size: 28px;
+    font-weight: 700;
+}

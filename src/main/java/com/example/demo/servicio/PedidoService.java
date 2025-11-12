@@ -1,7 +1,7 @@
 package com.example.demo.servicio;
 
+import com.example.demo.entidad.EstadoPedido;
 import com.example.demo.entidad.Pedidos;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 
@@ -12,5 +12,7 @@ public interface PedidoService {
     void deletepedidos(Long id);
     Pedidos pedidosByid(Long id);
     void Updatepedido(Long id,Pedidos pedidos);
-
+    long ContarPorestados(EstadoPedido estadoPedido);
+    long ContarPorestado();
+    void descontarStock(Pedidos pedido);
 }

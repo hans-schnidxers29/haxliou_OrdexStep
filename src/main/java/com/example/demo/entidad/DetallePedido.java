@@ -24,7 +24,7 @@ public class DetallePedido {
     @JoinColumn(name = "pedido_id", nullable = false)
     private Pedidos pedido;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(cascade = CascadeType.MERGE)
     @JoinColumn(name = "producto_id", nullable = false)
     private Productos producto;
 
@@ -35,7 +35,6 @@ public class DetallePedido {
             this.subtotal = precioUnitario.multiply(BigDecimal.valueOf(cantidad));
         }
     }
-
     // Getters y Setters
     public Long getId() {
         return id;

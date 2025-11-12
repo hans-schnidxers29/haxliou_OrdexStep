@@ -25,7 +25,7 @@ public class ProductoServiceImpl implements ProductoServicio{
 
     @Override
     public Productos productoById(Long id) {
-        return repositorio.findById(id).orElse(null);
+        return repositorio.findById(id).orElseThrow(()-> new RuntimeException("producto no encontrado"));
     }
 
     @Override
@@ -37,4 +37,6 @@ public class ProductoServiceImpl implements ProductoServicio{
     public void updateProductro(Productos producto) {
         repositorio.save(producto);
     }
+
+
 }

@@ -14,6 +14,7 @@
 
     <!-- CSS Personalizado Centralizado -->
     <link th:href="@{/StyleMultiple/StyleMultiples.css}" rel="stylesheet">
+    <link th:href="@{/StyleHome/cambioMood.css}" rel="stylesheet">
 
     <style>
         /* Estilos específicos para el formulario de actualizar pedido */
@@ -167,6 +168,14 @@
 
 <!-- Main Content -->
 <div class="main-content" id="mainContent">
+
+    <div class="theme-toggle-container">
+        <button id="themeToggleBtn" class="theme-toggle-btn" title="Cambiar tema">
+            <i class="fas fa-sun sun-icon"></i>
+            <i class="fas fa-moon moon-icon"></i>
+        </button>
+    </div>
+
     <!-- Page Header -->
     <div class="page-header">
         <h1><i class="fas fa-edit me-3"></i>Actualizar Pedido</h1>
@@ -412,8 +421,8 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <!-- JS Personalizado -->
-<script th:src="@{/JavaScript/js/funcionesAlert.js}"></script>
-
+<script th:src="@{/JavaScript/js/FuncionesAlert.js}"></script>
+<script th:src="@{/JavaScript/js/cambioMood.js}"></script>
 <script th:inline="javascript">
     /*<![CDATA[*/
     // Obtener el índice inicial de detalles
