@@ -53,8 +53,7 @@
             </a>
         </li>
 
-        <!-- Clientes - Solo ADMIN -->
-        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+        <li class="nav-item" sec:authorize="isAuthenticated()">
             <a href="/listarclientes" class="nav-link">
                 <i class="fas fa-users"></i>
                 <span>Clientes</span>
@@ -114,7 +113,7 @@
             </div>
 
             <!-- Clientes -->
-            <div class="col-md-4" sec:authorize="hasRole('ADMIN')">
+            <div class="col-md-4" sec:authorize="isAuthenticated()">
                 <div class="card shadow-sm">
                     <div class="card-body text-center">
                         <div class="mb-3">
@@ -144,6 +143,23 @@
                     </div>
                 </div>
             </div>
+
+            <!-- usuarios -->
+            <div class="col-md-4" sec:authorize="hasRole('ADMIN')">
+                <div class="card shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <i class="fas fa-users fa-3x text-primary"></i>
+                        </div>
+                        <h5 class="card-title">Usuarios</h5>
+                        <p class="card-text">Gestiona la información de tus usuarios.</p>
+                        <a href="/perfil" class="btn btn-primary">
+                            <i class="fas fa-arrow-right me-2"></i>Ir a Usuarios
+                        </a>
+                    </div>
+                </div>
+            </div>
+
 
         </div>
     </div>

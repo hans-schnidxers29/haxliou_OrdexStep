@@ -129,7 +129,7 @@
         </li>
 
         <!-- Clientes - Solo ADMIN -->
-        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+        <li class="nav-item" sec:authorize="isAuthenticated()">
             <a href="/listarclientes" class="nav-link">
                 <i class="fas fa-users"></i>
                 <span>Clientes</span>
@@ -242,22 +242,28 @@
                                 Por favor ingrese la cantidad disponible.
                             </div>
                         </div>
-
-                        <!-- Categoría -->
+                        <!-- ✅ CATEGORÍA - SELECT EN LUGAR DE INPUT -->
                         <div class="col-md-6 mb-3">
-                            <label for="categoria" class="form-label required">
+                            <label for="categoriaId" class="form-label required">
                                 <i class="fas fa-layer-group form-icon"></i>Categoría
                             </label>
-                            <input type="text"
-                                   id="categoria"
-                                   name="categoria"
-                                   th:field="*{categoria.nombrecategoria}"
-                                   class="form-control"
-                                   placeholder="Ej: Electrónica"
-                                   required>
+                            <select id="categoriaId"
+                                    name="categoriaId"
+                                    class="form-select"
+                                    required>
+                                <option value="">-- Selecciona una categoría --</option>
+                                <option th:each="categ : ${categoria}"
+                                        th:value="${categ.id}"
+                                        th:text="${categ.nombrecategoria}"
+                                        th:selected="${producto.categoria != null and categ.id == producto.categoria.id}">
+                                </option>
+                            </select>
                             <div class="invalid-feedback">
-                                Por favor ingrese la categoría del producto.
+                                Por favor seleccione una categoría.
                             </div>
+                            <small class="text-muted mt-1 d-block" th:if="${producto.categoria != null}">
+                                Categoría actual: <strong th:text="${producto.categoria.nombrecategoria}">N/A</strong>
+                            </small>
                         </div>
                     </div>
 

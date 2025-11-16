@@ -1,6 +1,7 @@
 package com.example.demo;
 
 import com.example.demo.Login.Repositorio.RepositorioUsuario;
+import com.example.demo.Login.Repositorio.RolRepositorio;
 import com.example.demo.Login.Rol;
 import com.example.demo.Login.Usuario;
 import com.example.demo.entidad.Categoria;
@@ -19,6 +20,9 @@ public class DemoApplication implements CommandLineRunner {
 	public static void main(String[] args) {
 		SpringApplication.run(DemoApplication.class, args);
 	}
+
+    @Autowired
+    private RolRepositorio rolRepositorio;
 
 
     @Autowired
@@ -57,5 +61,8 @@ public class DemoApplication implements CommandLineRunner {
             Usuario usuario = new Usuario("hans","patiño", email, encoded, Arrays.asList(new Rol("ROLE_ADMIN")));
             usuer.save(usuario);
         }
+
+        Rol rol = new Rol("ROLE_USER");
+        rolRepositorio.save(rol);
     }
 }

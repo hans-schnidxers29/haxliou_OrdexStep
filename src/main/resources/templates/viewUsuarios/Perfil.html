@@ -121,7 +121,7 @@
             </a>
         </li>
 
-        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+        <li class="nav-item" sec:authorize="isAuthenticated()">
             <a href="/listarclientes" class="nav-link">
                 <i class="fas fa-users"></i>
                 <span>Clientes</span>
@@ -136,7 +136,7 @@
         </li>
 
         <li class="nav-item" sec:authorize="hasRole('ADMIN')">
-            <a href="/usuarios" class="nav-link active">
+            <a href="/perfil" class="nav-link active">
                 <i class="fas fa-user-cog"></i>
                 <span>Usuarios</span>
             </a>
@@ -204,7 +204,7 @@
         <!-- Botón Nuevo Usuario -->
         <div class="mb-3 d-flex justify-content-between align-items-center">
             <h4><i class="fas fa-users me-2"></i>Lista de Usuarios</h4>
-            <a href="/registro" class="btn btn-primary">
+            <a href="/registro/usuario" class="btn btn-primary">
                 <i class="fas fa-plus me-2"></i>Nuevo Usuario
             </a>
         </div>
@@ -233,13 +233,25 @@
                     <td>
                         <strong th:text="${usuario.email}">usuario123</strong>
                         <br>
-                        <small class="text-muted" th:text="${usuario.nombre + usuario.apellido}" >Nombre Completo</small>
+                        <small class="text-muted" th:text="${usuario.nombre + ' ' + usuario.apellido}">Nombre Completo</small>
                     </td>
                     <td th:text="${usuario.email}">email@ejemplo.com</td>
                     <td>
-                        <span th:field="${usuario.roles}" class="badge-rol badge-admin">
-                            <i class="fas fa-crown me-1"></i>ADMIN
-                        </span>
+                        <th:block th:each="rol : ${usuario.roles}">
+                            <!-- Si el rol es ADMIN -->
+                            <span th:if="${rol.nombre == 'ROLE_ADMIN'}" class="badge-rol badge-admin">
+                                <i class="fas fa-crown me-1"></i>ADMIN
+                            </span>
+                            <!-- Si el rol es VENDEDOR -->
+                            <span th:if="${rol.nombre == 'ROLE_USER'}" class="badge-rol badge-user">
+                                <i class="fas fa-shopping-bag me-1"></i>VEN_USUARIO
+                            </span>
+                            <!-- Para cualquier otro rol -->
+                            <span th:if="${rol.nombre != 'ROLE_ADMIN' and rol.nombre != 'ROLE_USER' and rol.nombre != 'ROLE_USUARIO' and rol.nombre != 'ROLE_VENDEDOR'}" class="badge-rol badge-user">
+                                <i class="fas fa-user-tag me-1"></i>
+                                <span th:text="${#strings.replace(rol.nombre, 'ROLE_', '')}">ROL</span>
+                            </span>
+                        </th:block>
                     </td>
                     <td class="text-center">
                         <a th:href="@{/usuarios/editar/{id}(id=${usuario.id})}"
@@ -275,10 +287,8 @@
 <script th:src="@{/JavsScript/Funciones.js}"></script>
 <script>
     function toggleSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        const mainContent = document.getElementById('mainContent');
-        sidebar.classList.toggle('collapsed');
-        mainContent.classList.toggle('expanded');
+        document.getElementById('sidebar').classList.toggle('closed');
+        document.getElementById('mainContent').classList.toggle('expanded');
     }
 
     function confirmarEliminacion(mensaje) {

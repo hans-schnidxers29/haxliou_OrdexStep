@@ -35,6 +35,7 @@ public class DetallePedido {
             this.subtotal = precioUnitario.multiply(BigDecimal.valueOf(cantidad));
         }
     }
+
     // Getters y Setters
     public Long getId() {
         return id;

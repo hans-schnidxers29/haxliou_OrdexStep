@@ -5,6 +5,7 @@ import com.example.demo.entidad.EstadoPedido;
 import com.example.demo.entidad.Pedidos;
 import com.example.demo.entidad.Productos;
 import com.example.demo.repositorio.PedidoRepositorio;
+import com.example.demo.repositorio.ProductoRepositorio;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -70,24 +71,43 @@ public class PedidosServiceImp implements PedidoService{
         return repositorio.contarPorEstado(EstadoPedido.PENDIENTE);
     }
 
+    @Transactional
     @Override
-    public long ContarPorestado() {
-        return repositorio.contarPorEstado(EstadoPedido.ENTREGADO);
-    }
+    public void DescantorStock(Pedidos pedidos) {
+        for (DetallePedido detalle : pedidos.getDetalles()) {
 
-    @Override
-    public void descontarStock(Pedidos pedido) {
-        for (DetallePedido detalle : pedido.getDetalles()) {
-            Productos producto = detalle.getProducto();
 
-            // Importante: recargar el producto desde la base de datos
-            Productos productoBD = productoServicio.productoById(producto.getId());
+            if (detalle.getProducto() == null || detalle.getProducto().getId() == null) {
+                continue;
+            }
 
+            if (detalle.getCantidad() == null || detalle.getCantidad() <= 0) {
+                continue;
+            }
+
+            // Buscar el producto completo desde la BD
+            Productos productoBD = productoServicio.productoById(detalle.getProducto().getId());
+
+            // Verificar stock suficiente
+            if (productoBD.getCantidad() < detalle.getCantidad()) {
+                throw new RuntimeException("Stock insuficiente para el producto: " + productoBD.getNombre() +
+                        ". Disponible: " + productoBD.getCantidad() +
+                        ", Solicitado: " + detalle.getCantidad());
+            }
+
+            // Descontar stock
             int nuevaCantidad = productoBD.getCantidad() - detalle.getCantidad();
-            productoBD.setCantidad(Math.max(nuevaCantidad, 0));
+            productoBD.setCantidad(nuevaCantidad);
 
+            // Asociar el producto completo al detalle
+            detalle.setProducto(productoBD);
+
+            // Guardar producto actualizado
             productoServicio.save(productoBD);
+
+            System.out.println("Stock actualizado - Producto: " + productoBD.getNombre() +
+                    " - Cantidad anterior: " + (productoBD.getCantidad() + detalle.getCantidad()) +
+                    " - Cantidad nueva: " + productoBD.getCantidad());
         }
     }
-
 }

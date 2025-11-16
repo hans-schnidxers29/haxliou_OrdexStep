@@ -46,6 +46,14 @@ public class ServicioUsuarioImp implements ServicioUsuario{
     }
 
     @Override
+    public Usuario saveUserDto(Usuario usuario) {
+        Usuario user = new Usuario(usuario.getId(), usuario.getNombre(), usuario.getApellido(),
+                usuario.getEmail(), passwordEncoder.encode(usuario.getPassword()),Arrays.asList(new Rol("ROLE_USER"))
+        );
+        return repositorioUsuario.save(user) ;
+    }
+
+    @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Usuario usuario = repositorioUsuario.findByEmail(username);
         if(usuario == null) {
