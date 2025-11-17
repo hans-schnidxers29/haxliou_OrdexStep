@@ -65,5 +65,38 @@ public class UsuarioControlador {
         }
     }
 
+    @PostMapping("/{id}")
+    public String DeleteUsuario(@PathVariable("id") Long id, RedirectAttributes redirectAttributes){
+        try{
+            usuarioservico.deleteUser(id);
+            return "redirect:/perfil?success";
+        }catch (Exception e){
+            System.err.println("Error al guardar Usuario: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error",
+                    "Error al guardar Usuario: " + e.getMessage());
+            return "redirect:/registro/usuario?error";
+        }
+    }
+
+    @GetMapping("/editar/usuario/{id}")
+    public String MostrarFormedit(@PathVariable Long id,Model model){
+        model.addAttribute("roles", rolServicio.listarRoles());
+        model.addAttribute("usuario", usuarioservico.finbyyId(id));
+        return "viewUsuarios/EditarUsuario";
+    }
+
+    @PostMapping("/editar/{id}")
+    public String EditarUsuario(@PathVariable Long id, @ModelAttribute("usuarios") Usuario usuarios, RedirectAttributes redirectAttributes){
+        try {
+            usuarioservico.updateUser(usuarios,id);
+            return "redirect:/perfil?success";
+        }catch (Exception e){
+            System.err.println("Error al guardar Usuario: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error",
+                    "Error al guardar Usuario: " + e.getMessage());
+            return "redirect:/registro/usuario?error";
+        }
+    }
+
 
 }

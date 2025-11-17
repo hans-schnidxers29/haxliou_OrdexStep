@@ -254,12 +254,12 @@
                         </th:block>
                     </td>
                     <td class="text-center">
-                        <a th:href="@{/usuarios/editar/{id}(id=${usuario.id})}"
+                        <a th:href="@{/registro/editar/usuario/{id}(id=${usuario.id})}"
                            class="btn btn-info btn-sm me-1"
                            title="Editar">
                             <i class="fas fa-edit"></i>
                         </a>
-                        <a th:href="@{/usuarios/eliminar/{id}(id=${usuario.id})}"
+                        <a th:href="@{/registro/{id}(id=${usuario.id})}"
                            class="btn btn-danger btn-sm"
                            onclick="return confirmarEliminacion('¿Estás seguro de eliminar este usuario?')"
                            title="Eliminar">
