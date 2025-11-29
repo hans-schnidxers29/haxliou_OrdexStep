@@ -17,7 +17,7 @@ import java.util.Objects;
 public class Cliente {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @Column(name="nombre",nullable = false)
     private String nombre;
@@ -103,11 +103,15 @@ public class Cliente {
         this.apellido = apellido;
     }
 
-    public long getId() {
+    public void setPedidos(List<Pedidos> pedidos) {
+        this.pedidos = pedidos;
+    }
+
+    public Long getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

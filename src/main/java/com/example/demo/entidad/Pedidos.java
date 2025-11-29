@@ -59,6 +59,26 @@ public class Pedidos {
         this.total = this.subtotal.add(this.impuesto);
     }
 
+    // Métodos helper
+    public void addDetalle(DetallePedido detalle) {
+        detalles.add(detalle);
+        detalle.setPedido(this);
+    }
+
+    public void removeDetalle(DetallePedido detalle) {
+        detalles.remove(detalle);
+        detalle.setPedido(null);
+    }
+
+    public void actualizarDetalles(List<DetallePedido> nuevosDetalles) {
+        this.detalles.clear();
+        if (nuevosDetalles != null) {
+            nuevosDetalles.forEach(detalle -> {
+                detalle.setPedido(this);
+                this.detalles.add(detalle);
+            });
+        }
+    }
     // Getters y Setters
     public Long getId() {
         return id;

@@ -23,12 +23,12 @@ public class Productos {
     private BigDecimal precio;
 
     @Column(name="cantidad", nullable = false)
-    private Integer cantidad;
-
+    private Integer cantidad = 0;
 
     @ManyToOne
     @JoinColumn(name = "categoria_id")
     private Categoria categoria;
+
 
     public Productos (String nombre, String descripcion, BigDecimal precio, Integer cantidad,Categoria categoria) {
         this.nombre = nombre;

@@ -24,7 +24,7 @@ public class DetallePedido {
     @JoinColumn(name = "pedido_id", nullable = false)
     private Pedidos pedido;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(cascade = CascadeType.MERGE)
     @JoinColumn(name = "producto_id", nullable = false)
     private Productos producto;
 

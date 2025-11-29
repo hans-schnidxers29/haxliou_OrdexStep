@@ -7,8 +7,8 @@
     <title>Inicio - Panel de Control</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link th:href="@{/styleHome/styleHome.css}" rel="stylesheet">
-    <link th:href="@{/JavsScript/Funciones.js}">
+    <link th:href="@{/StyleHome/StyleHome.css}" rel="stylesheet">
+
 </head>
 <body>
 
@@ -47,14 +47,13 @@
 
         <!-- Pedidos - Para todos los usuarios autenticados -->
         <li class="nav-item" sec:authorize="isAuthenticated()">
-            <a href="/pedidos" class="nav-link">
+            <a href="/pedidos/listarpedidos" class="nav-link">
                 <i class="fas fa-shopping-cart"></i>
                 <span>Pedidos</span>
             </a>
         </li>
 
-        <!-- Clientes - Solo ADMIN -->
-        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+        <li class="nav-item" sec:authorize="isAuthenticated()">
             <a href="/listarclientes" class="nav-link">
                 <i class="fas fa-users"></i>
                 <span>Clientes</span>
@@ -88,7 +87,6 @@
         </form>
     </div>
 </nav>
-
 <!-- Main Content -->
 <div class="main-content" id="mainContent">
     <div class="container-fluid py-4">
@@ -96,7 +94,6 @@
             <h1 class="display-5 fw-bold">Bienvenido al Panel de Gestión</h1>
             <p class="lead">Selecciona una sección para continuar</p>
         </div>
-
         <div class="row g-4 justify-content-center">
 
             <!-- Pedidos -->
@@ -108,7 +105,7 @@
                         </div>
                         <h5 class="card-title">Pedidos</h5>
                         <p class="card-text">Consulta y gestiona los pedidos realizados.</p>
-                        <a href="/pedidos" class="btn btn-warning text-white">
+                        <a href="/pedidos/listarpedidos" class="btn btn-warning text-white">
                             <i class="fas fa-arrow-right me-2"></i>Ir a Pedidos
                         </a>
                     </div>
@@ -116,7 +113,7 @@
             </div>
 
             <!-- Clientes -->
-            <div class="col-md-4" sec:authorize="hasRole('ADMIN')">
+            <div class="col-md-4" sec:authorize="isAuthenticated()">
                 <div class="card shadow-sm">
                     <div class="card-body text-center">
                         <div class="mb-3">
@@ -147,10 +144,28 @@
                 </div>
             </div>
 
+            <!-- usuarios -->
+            <div class="col-md-4" sec:authorize="hasRole('ADMIN')">
+                <div class="card shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <i class="fas fa-users fa-3x text-primary"></i>
+                        </div>
+                        <h5 class="card-title">Usuarios</h5>
+                        <p class="card-text">Gestiona la información de tus usuarios.</p>
+                        <a href="/perfil" class="btn btn-primary">
+                            <i class="fas fa-arrow-right me-2"></i>Ir a Usuarios
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+
         </div>
     </div>
-</div>
-
+<script th:src="@{/JavsScript/js/FuncionesAlert.js}"></script>
+<script th:src="@{/JavsScript/Funciones.js}"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</div>
 </body>
 </html>

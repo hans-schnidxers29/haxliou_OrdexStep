@@ -26,7 +26,8 @@ public class CategoriaServiceimp implements CategoriaService{
     }
 
     @Override
-    public void Buscarbyid(Long id) {
-        repositorio.findById(id);
+    public Categoria Buscarbyid(Long id) {
+        return repositorio.findById(id)
+                .orElseThrow(()->new RuntimeException("categoria no encontrada"));
     }
 }

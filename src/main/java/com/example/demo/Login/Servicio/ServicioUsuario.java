@@ -10,5 +10,8 @@ public interface ServicioUsuario extends UserDetailsService {
     Usuario saveUser(UsuarioDTO usuarioDTO);
     Usuario finbyyId(Long id);
     List<Usuario> ListarUSer();
+    Usuario saveUserDto(Usuario usuario);
+    void deleteUser(Long id);
+    void updateUser(Usuario usuario, Long id);
 
 }

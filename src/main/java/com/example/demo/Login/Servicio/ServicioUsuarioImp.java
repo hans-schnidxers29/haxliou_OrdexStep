@@ -37,12 +37,41 @@ public class ServicioUsuarioImp implements ServicioUsuario{
 
     @Override
     public Usuario finbyyId(Long id) {
-        return repositorioUsuario.findById(id).orElseThrow();
+        return repositorioUsuario.findById(id).orElseThrow(()-> new RuntimeException("Usuario no encontrado"));
     }
 
     @Override
     public List<Usuario> ListarUSer() {
         return repositorioUsuario.findAll();
+    }
+
+    @Override
+    public Usuario saveUserDto(Usuario usuario) {
+        Usuario user = new Usuario(usuario.getId(), usuario.getNombre(), usuario.getApellido(),
+                usuario.getEmail(), passwordEncoder.encode(usuario.getPassword()),Arrays.asList(new Rol("ROLE_USER"))
+        );
+        return repositorioUsuario.save(user) ;
+    }
+
+    @Override
+    public void deleteUser(Long id) {
+        repositorioUsuario.findById(id).orElseThrow(()-> new RuntimeException("Usuario no encontrado"));
+        repositorioUsuario.deleteById(id);
+    }
+
+    @Override
+    public void updateUser(Usuario usuario, Long id) {
+        try {
+           Usuario user = repositorioUsuario.findById(id).orElseThrow(()-> new RuntimeException("usuario no encontrado"));
+           user.setId(id);
+           user.setNombre(usuario.getNombre());
+           user.setApellido(usuario.getApellido());
+           user.setEmail(usuario.getEmail());
+           user.setRoles(usuario.getRoles());
+           repositorioUsuario.save(user);
+        }catch (Exception e){
+            System.out.println("Error al actualizar usuario: " + e.getMessage());
+        }
     }
 
     @Override
