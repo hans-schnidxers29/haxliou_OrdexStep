@@ -156,7 +156,6 @@ public class PedidosControlador {
 
             // Establecer los detalles válidos
             pedido.setDetalles(detallesValidos);
-
             // Calcular total del pedido
             pedido.setSubtotal(subtotalPedido);
             if (pedido.getImpuesto() == null) {

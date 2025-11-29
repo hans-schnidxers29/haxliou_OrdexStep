@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            width: 280px; /* 80mm */
+            margin: 0;
+            padding: 0;
+        }
+
+        .header {
+            text-align: center;
+            border-bottom: 1px dashed #000;
+            padding-bottom: 5px;
+            margin-bottom: 5px;
+        }
+
+        .title {
+            font-size: 15px;
+            font-weight: bold;
+        }
+
+        .info {
+            margin-top: 5px;
+            margin-bottom: 10px;
+            line-height: 1.2;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 5px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 3px 0;
+            font-size: 12px;
+        }
+
+        .totales {
+            border-top: 1px dashed #000;
+            margin-top: 10px;
+            padding-top: 10px;
+        }
+
+        .footer {
+            text-align: center;
+            border-top: 1px dashed #000;
+            margin-top: 10px;
+            padding-top: 5px;
+        }
+    </style>
+
+</head>
+<body>
+
+<div class="header">
+    <div class="title">Comprobante de Pago</div>
+    <div>NIT: 123456789-0</div>
+    <div>Tel: 3001234567</div>
+    <div>Dirección: Centro, Ciudad</div>
+</div>
+
+<div class="info">
+    <strong>Venta #: </strong><span th:text="${venta.id}"></span><br>
+    <strong>Fecha: </strong><span th:text="${#temporals.format(venta.fechaVenta,'dd/MM/yyyy HH:mm')}"></span><br>
+    <strong>Cliente: </strong><span th:text="${venta.cliente.nombre}"></span>
+</div>
+
+<table>
+    <thead>
+    <tr>
+        <th>Producto</th>
+        <th>Cant</th>
+        <th>V.Unit</th>
+        <th>Total</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="d : ${venta.detalles}">
+        <td th:text="${d.producto.nombre}"></td>
+        <td th:text="${d.cantidad}"></td>
+        <td th:text="${d.precioUnitario}"></td>
+        <td th:text="${d.subtotal}"></td>
+    </tr>
+    </tbody>
+</table>
+
+<div class="totales">
+    <strong>Subtotal: </strong><span th:text="${subtotal}"></span><br>
+    <strong>Impuesto: </strong><span th:text="${impuesto}"></span><br>
+    <strong style="font-size: 14px;">TOTAL A PAGAR: </strong>
+    <span style="font-size: 14px; font-weight: bold;" th:text="${venta.total}"></span>
+</div>
+
+<div class="footer">
+    ¡Gracias por su compra!<br>
+    Síguenos en nuestras redes<br>
+</div>
+
+</body>
+</html>
