@@ -47,12 +47,28 @@ public class ServicioUsuarioImp implements ServicioUsuario{
 
     @Override
     public Usuario saveUserDto(Usuario usuario) {
-        Usuario user = new Usuario(usuario.getId(), usuario.getNombre(), usuario.getApellido(),
-                usuario.getEmail(), passwordEncoder.encode(usuario.getPassword()),Arrays.asList(new Rol("ROLE_USER"))
-        );
-        return repositorioUsuario.save(user) ;
-    }
 
+        // Verificar si ya existe un usuario con ese email
+        Usuario existente = repositorioUsuario.findByEmail(usuario.getEmail());
+        if (existente != null) {
+            throw new RuntimeException("El usuario con ese email ya existe.");
+        }
+
+        // Respetar los roles enviados desde el frontend o API
+        Collection<Rol> roles = usuario.getRoles();
+
+        // Crear el usuario (solo codificamos la contraseña)
+        Usuario user = new Usuario(
+                null,
+                usuario.getNombre(),
+                usuario.getApellido(),
+                usuario.getEmail(),
+                passwordEncoder.encode(usuario.getPassword()),
+                roles
+        );
+
+        return repositorioUsuario.save(user);
+    }
     @Override
     public void deleteUser(Long id) {
         repositorioUsuario.findById(id).orElseThrow(()-> new RuntimeException("Usuario no encontrado"));

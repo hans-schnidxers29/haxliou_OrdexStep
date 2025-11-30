@@ -1,6 +1,7 @@
 package com.example.demo.Login.Controlador;
 
 
+import com.example.demo.Login.Rol;
 import com.example.demo.Login.Servicio.RolServicio;
 import com.example.demo.Login.Servicio.ServicioUsuario;
 import com.example.demo.Login.Usuario;
@@ -10,6 +11,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("registro")
@@ -55,6 +59,13 @@ public class UsuarioControlador {
     @PostMapping("/usuario/nuevo")
     public String RegistraNuevoUsuario(@ModelAttribute ("usuario")Usuario usuario, RedirectAttributes redirectAttributes){
         try {
+
+            List<Rol> roles = usuario.getRoles().stream()
+                    .map(r -> rolServicio.findById(r.getId()))
+                    .collect(Collectors.toList());
+
+            usuario.setRoles(roles);
+
             usuarioservico.saveUserDto(usuario);
             return "redirect:/perfil?success";
         }catch (Exception e){

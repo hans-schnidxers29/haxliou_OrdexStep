@@ -403,6 +403,7 @@
                             class="form-select"
                             required>
                         <option value="" disabled selected>-- Seleccione un rol --</option>
+
                         <option th:each="rol : ${roles}"
                                 th:value="${rol.id}"
                                 th:text="${rol.nombre}">

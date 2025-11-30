@@ -18,4 +18,9 @@ public class RolServicioImp  implements  RolServicio{
     public List<Rol> listarRoles() {
         return rolRepositorio.findAll();
     }
+
+    @Override
+    public Rol findById(Long id) {
+        return rolRepositorio.findById(id).orElseThrow(() -> new RuntimeException("Rol no encontrado"));
+    }
 }
