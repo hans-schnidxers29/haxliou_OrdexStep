@@ -1,14 +1,13 @@
 package com.example.demo.controlador;
+import com.example.demo.entidad.Categoria;
 import com.example.demo.entidad.Productos;
 import com.example.demo.servicio.CategoriaService;
 import com.example.demo.servicio.ProductoServicio;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 
 @Controller
@@ -50,21 +49,50 @@ public class ProductoControlador {
     @GetMapping("/producto/actualizar/{id}")
     public String MostrarafromEditar(@PathVariable Long id, Model model){
         model.addAttribute("producto",service.productoById(id));
+        model.addAttribute("categoria",serviceCate.Listarcategoria());
         return "viewProductos/actualizarProductos";
     }
 
+    @PostMapping("/productos/{id}")
+    public String ActualizarProducto(@PathVariable Long id,
+                                     @ModelAttribute("producto") Productos producto,
+                                     @RequestParam("categoriaId") Long categoriaId,
+                                     RedirectAttributes redirectAttributes) {
+        try {
+            // Buscar producto actual
+            Productos productoActual = service.productoById(id);
 
-    @PostMapping("productos/{id}")
-    public String ActualizarProducto(@PathVariable Long id, @ModelAttribute("productos") Productos productos, Model model){
-        Productos productoActual = service.productoById(id);
-        productoActual.setId(id);
-        productoActual.setNombre(productos.getNombre());
-        productoActual.setPrecio(productos.getPrecio());
-        productoActual.setCantidad(productos.getCantidad());
-        productoActual.setCategoria(productos.getCategoria());
-        productoActual.setDescripcion(productos.getDescripcion());
-        service.updateProductro(productoActual);
-        return "redirect:/listarproductos";
+            if (productoActual == null) {
+                redirectAttributes.addFlashAttribute("error", "Producto no encontrado");
+                return "redirect:/listarproductos";
+            }
+
+            // Buscar categoría desde la BD
+            Categoria categoria = serviceCate.Buscarbyid(categoriaId);
+
+            if (categoria == null) {
+                redirectAttributes.addFlashAttribute("error", "Categoría no encontrada");
+                return "redirect:/producto/actualizar/" + id;
+            }
+
+            // Actualizar campos
+            productoActual.setNombre(producto.getNombre());
+            productoActual.setPrecio(producto.getPrecio());
+            productoActual.setCantidad(producto.getCantidad());
+            productoActual.setDescripcion(producto.getDescripcion());
+            productoActual.setCategoria(categoria);  // ✅ Categoría gestionada
+
+            // Guardar
+            service.updateProductro(id, productoActual);
+
+            redirectAttributes.addFlashAttribute("success", "Producto actualizado correctamente");
+            return "redirect:/listarproductos?success=true";
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("error", "Error al actualizar: " + e.getMessage());
+            return "redirect:/producto/actualizar/" + id;
+        }
     }
 
     @GetMapping("/productos/delete/{id}")

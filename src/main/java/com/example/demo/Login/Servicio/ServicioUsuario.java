@@ -1,10 +1,17 @@
 package com.example.demo.Login.Servicio;
 
 import com.example.demo.Login.Usuario;
+import com.example.demo.Login.UsuarioDTO;
+import org.springframework.security.core.userdetails.UserDetailsService;
 
-public interface ServicioUsuario {
+import java.util.List;
 
-    Usuario saveUser(Usuario usuarioDTO);
-
+public interface ServicioUsuario extends UserDetailsService {
+    Usuario saveUser(UsuarioDTO usuarioDTO);
+    Usuario finbyyId(Long id);
+    List<Usuario> ListarUSer();
+    Usuario saveUserDto(Usuario usuario);
+    void deleteUser(Long id);
+    void updateUser(Usuario usuario, Long id);
 
 }

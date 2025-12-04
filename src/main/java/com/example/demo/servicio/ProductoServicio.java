@@ -1,6 +1,7 @@
 package com.example.demo.servicio;
 
 import com.example.demo.entidad.Productos;
+import jakarta.transaction.Transactional;
 
 import java.util.List;
 
@@ -9,7 +10,6 @@ public interface ProductoServicio {
     Productos save(Productos producto);
     Productos productoById(Long id);
     void deleteProductoById(Long id);
-    void updateProductro(Productos producto);
-
+    void updateProductro(Long id,Productos producto);
 
 }

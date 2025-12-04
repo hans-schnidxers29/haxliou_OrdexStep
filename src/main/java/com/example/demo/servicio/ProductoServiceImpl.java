@@ -2,6 +2,7 @@ package com.example.demo.servicio;
 
 import com.example.demo.entidad.Productos;
 import com.example.demo.repositorio.ProductoRepositorio;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,7 +26,7 @@ public class ProductoServiceImpl implements ProductoServicio{
 
     @Override
     public Productos productoById(Long id) {
-        return repositorio.findById(id).orElse(null);
+        return repositorio.findById(id).orElseThrow(()-> new RuntimeException("producto no encontrado"));
     }
 
     @Override
@@ -33,8 +34,21 @@ public class ProductoServiceImpl implements ProductoServicio{
         repositorio.deleteById(id);
     }
 
+    @Transactional
     @Override
-    public void updateProductro(Productos producto) {
-        repositorio.save(producto);
+    public void updateProductro(Long id,Productos producto) {
+        Productos p1 = repositorio.findById(id).orElseThrow(()->new RuntimeException("producto no encontrado"));
+        p1.setId(producto.getId());
+        p1.setNombre(producto.getNombre());
+        p1.setCantidad(producto.getCantidad());
+        p1.setPrecio(producto.getPrecio());
+        p1.setDescripcion(producto.getDescripcion());
+        if(producto.getCategoria() != null){
+            p1.setCategoria(producto.getCategoria());
+        }
+        repositorio.save(p1);
     }
+
+
+
 }
