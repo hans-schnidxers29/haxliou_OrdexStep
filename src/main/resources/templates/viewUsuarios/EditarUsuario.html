@@ -261,6 +261,13 @@
                 <span>Productos</span>
             </a>
         </li>
+
+        <li class="nav-item" sec:authorize="isAuthenticated()">
+            <a class="nav-link active" href="/ventas/listar">
+                <i class="fas fa-cash-register"></i>
+                <span>Ventas</span>
+            </a>
+        </li>
         <li class="nav-item" sec:authorize="isAuthenticated()">
             <a href="/perfil" class="nav-link active">
                 <i class="fas fa-user-circle"></i>

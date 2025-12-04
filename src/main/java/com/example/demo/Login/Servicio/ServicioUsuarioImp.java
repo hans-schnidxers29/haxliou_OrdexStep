@@ -30,8 +30,11 @@ public class ServicioUsuarioImp implements ServicioUsuario{
 
     @Override
     public Usuario saveUser(UsuarioDTO usuarioDTO) {
+        String rolaAdmin = new String();
+        rolaAdmin = "ROLE_ADMIN";
+
         Usuario usuario = new Usuario(usuarioDTO.getNombre(),usuarioDTO.getApellido(),usuarioDTO.getEmail(),
-                passwordEncoder.encode(usuarioDTO.getPassword()), Arrays.asList(new Rol("ROLE_ADMIN")));
+                passwordEncoder.encode(usuarioDTO.getPassword()),Arrays.asList(new Rol(rolaAdmin)));
         return repositorioUsuario.save(usuario);
     }
 
@@ -62,13 +65,13 @@ public class ServicioUsuarioImp implements ServicioUsuario{
     @Override
     public void updateUser(Usuario usuario, Long id) {
         try {
-           Usuario user = repositorioUsuario.findById(id).orElseThrow(()-> new RuntimeException("usuario no encontrado"));
-           user.setId(id);
-           user.setNombre(usuario.getNombre());
-           user.setApellido(usuario.getApellido());
-           user.setEmail(usuario.getEmail());
-           user.setRoles(usuario.getRoles());
-           repositorioUsuario.save(user);
+            Usuario user = repositorioUsuario.findById(id).orElseThrow(()-> new RuntimeException("usuario no encontrado"));
+            user.setId(id);
+            user.setNombre(usuario.getNombre());
+            user.setApellido(usuario.getApellido());
+            user.setEmail(usuario.getEmail());
+            user.setRoles(usuario.getRoles());
+            repositorioUsuario.save(user);
         }catch (Exception e){
             System.out.println("Error al actualizar usuario: " + e.getMessage());
         }

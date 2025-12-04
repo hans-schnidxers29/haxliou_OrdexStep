@@ -12,6 +12,7 @@ public interface VentaServicio {
     void deleteVenta(Long id);
 
     Venta buscarVenta(Long id);
+    void DescontarStock(Venta venta);
 
 
 }

@@ -34,9 +34,11 @@ public class VentaControlador {
     @Autowired
     private ClienteService clienteService;
 
-    @Autowired
     private PdfServicio pdfServicio;
-
+    // Inyectar el servicio
+    public VentaControlador(PdfServicio pdfServicio) {
+        this.pdfServicio = pdfServicio;
+    }
     // ============================
     // LISTAR VENTAS
     // ============================
@@ -160,7 +162,8 @@ public class VentaControlador {
             }
 
             venta.setTotal(subtotalVenta.add(venta.getImpuesto()));
-
+            //descontar del stock
+            servicio.DescontarStock(venta);
             // Guardar
             servicio.guardarVenta(venta);
 

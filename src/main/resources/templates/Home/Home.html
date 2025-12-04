@@ -68,6 +68,13 @@
             </a>
         </li>
 
+        <li class="nav-item" sec:authorize="isAuthenticated()">
+            <a class="nav-link active" href="/ventas/listar">
+                <i class="fas fa-cash-register"></i>
+                <span>Ventas</span>
+            </a>
+        </li>
+
         <!-- Perfil -->
         <li class="nav-item" sec:authorize="isAuthenticated()">
             <a href="/perfil" class="nav-link">
@@ -159,6 +166,24 @@
                     </div>
                 </div>
             </div>
+
+            <!-- ventas-->
+            <div class="col-md-4" sec:authorize="isAuthenticated()">
+                <div class="card shadow-sm">
+                    <div class="card-body text-center">
+                        <!-- Ícono de ventas centrado -->
+                        <div class="mb-3">
+                            <i class="fas fa-cash-register fa-3x text-primary"></i>
+                        </div>
+                        <h5 class="card-title">Venta Directa</h5>
+                        <p class="card-text">Realizar ventas directas</p>
+                        <a href="/ventas/listar" class="btn btn-primary">
+                            <i class="fas fa-arrow-right me-2"></i> Ir a Ventas
+                        </a>
+                    </div>
+                </div>
+            </div>
+
 
 
         </div>

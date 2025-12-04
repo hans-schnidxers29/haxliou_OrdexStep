@@ -61,7 +61,7 @@ public class UsuarioControlador {
             System.err.println("Error al guardar Usuario: " + e.getMessage());
             redirectAttributes.addFlashAttribute("error",
                     "Error al guardar Usuario: " + e.getMessage());
-             return "redirect:/registro/usuario?error";
+            return "redirect:/registro/usuario?error";
         }
     }
 

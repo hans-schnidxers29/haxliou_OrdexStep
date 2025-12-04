@@ -18,10 +18,13 @@
     <name>demo</name>
     <description>Demo project for Spring Boot</description>
 
+    <!-- PROPIEDADES CORREGIDAS PARA JAVA 17 -->
     <properties>
-        <java.version>25</java.version>
-        <maven.compiler.source>25</maven.compiler.source>
-        <maven.compiler.target>25</maven.compiler.target>
+        <java.version>17</java.version>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
 
     <!-- DEPENDENCIAS -->
@@ -33,7 +36,7 @@
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
-        <!-- PostgreSQL (Supabase usa PostgreSQL) -->
+        <!-- PostgreSQL -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
@@ -71,13 +74,14 @@
             <artifactId>flying-saucer-core</artifactId>
             <version>9.1.22</version>
         </dependency>
+
         <dependency>
             <groupId>org.xhtmlrenderer</groupId>
             <artifactId>flying-saucer-pdf</artifactId>
             <version>9.1.22</version>
         </dependency>
 
-        <!-- DevTools (para auto-restart en desarrollo) -->
+        <!-- DevTools -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
