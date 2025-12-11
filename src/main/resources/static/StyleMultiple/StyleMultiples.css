@@ -382,3 +382,93 @@ body {
     font-size: 28px;
     font-weight: 700;
 }
+/* ============================
+   ESTILO GENERAL DE TABLAS
+   ============================ */
+
+#example {
+    width: 100% !important;
+    border-collapse: separate;
+    border-spacing: 0 8px;
+}
+
+/* Filas */
+#example tbody tr {
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    transition: all .2s ease;
+}
+
+#example tbody tr:hover {
+    transform: scale(1.01);
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.12);
+}
+
+/* Celdas */
+#example tbody td {
+    padding: 15px 12px !important;
+    font-size: 15px;
+    color: #333;
+}
+
+/* Encabezados */
+#example thead th {
+    background: #4969bf !important; /* fondo negro */
+    color: #ffffff !important;      /* texto blanco */
+    font-weight: 700 !important;    /* más negrita */
+    padding: 14px 12px !important;
+    text-transform: uppercase;
+    font-size: 13px;
+    border: none !important;
+}
+
+/* Última columna - Acciones */
+#example tbody td:last-child {
+    text-align: center;
+}
+
+/* Botones dentro de la tabla */
+#example .btn {
+    padding: 5px 10px;
+    border-radius: 6px;
+}
+
+#example .btn-info {
+    background: #3b82f6 !important;
+    border-color: #3b82f6 !important;
+}
+
+#example .btn-danger {
+    background: #ef4444 !important;
+    border-color: #ef4444 !important;
+}
+
+/* Paginação de DataTables */
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    padding: 6px 12px;
+    margin: 4px;
+    border-radius: 6px;
+    background-color: #f0f0f0 !important;
+    color: #333 !important;
+    border: none !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    background-color: #7f56d9 !important;
+    color: white !important;
+}
+
+/* Buscador */
+.dataTables_filter input {
+    border-radius: 6px;
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+}
+
+/* Selector de cantidad */
+.dataTables_length select {
+    padding: 6px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}

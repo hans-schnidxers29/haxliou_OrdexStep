@@ -82,7 +82,7 @@
             </a>
         </li>
 
-        <!-- Pedidos - Para todos los usuarios autenticados -->
+        <!-- Pedidos -->
         <li class="nav-item" sec:authorize="isAuthenticated()">
             <a href="/pedidos/listarpedidos" class="nav-link">
                 <i class="fas fa-shopping-cart"></i>
@@ -90,7 +90,7 @@
             </a>
         </li>
 
-        <!-- Clientes - Solo ADMIN -->
+        <!-- Clientes -->
         <li class="nav-item" sec:authorize="isAuthenticated()">
             <a href="/listarclientes" class="nav-link">
                 <i class="fas fa-users"></i>
@@ -98,19 +98,22 @@
             </a>
         </li>
 
-        <!-- Productos - Solo ADMIN -->
+        <!-- Productos -->
         <li class="nav-item" sec:authorize="hasRole('ADMIN')">
             <a href="/listarproductos" class="nav-link">
                 <i class="fas fa-box"></i>
                 <span>Productos</span>
             </a>
         </li>
+
+        <!-- Ventas -->
         <li class="nav-item" sec:authorize="isAuthenticated()">
             <a class="nav-link active" href="/ventas/listar">
                 <i class="fas fa-cash-register"></i>
                 <span>Ventas</span>
             </a>
         </li>
+
         <!-- Perfil -->
         <li class="nav-item" sec:authorize="isAuthenticated()">
             <a href="/perfil" class="nav-link">
@@ -130,6 +133,7 @@
         </form>
     </div>
 </nav>
+
 <!-- MAIN CONTENT -->
 <div class="main-content" id="mainContent">
 
@@ -200,12 +204,10 @@
                     <td th:text="${venta.metodoPago}">Pago</td>
 
                     <td>
-                        <span class="total-destacado">$<span
-                                th:text="${#numbers.formatDecimal(venta.total,1,2)}"></span></span>
+                        <span class="total-destacado">$<span th:text="${#numbers.formatDecimal(venta.total,1,2)}"></span></span>
                     </td>
 
                     <td class="text-center">
-
                         <a class="btn btn-secondary btn-sm me-1"
                            th:href="@{/ventas/ticket/{id}(id=${venta.id})}">
                             <i class="fas fa-eye"></i> Ver
@@ -216,7 +218,6 @@
                            th:href="@{/ventas/eliminar/{id}(id=${venta.id})}">
                             <i class="fas fa-trash"></i> Eliminar
                         </a>
-
                     </td>
                 </tr>
 
@@ -247,6 +248,35 @@
                 </div>
             </div>
         </div>
+
+        <!-- ========================================================= -->
+        <!-- === NUEVO: SECCIÓN DE GRÁFICAS ========================== -->
+        <!-- ========================================================= -->
+        <div class="row mt-5 g-4">
+
+            <!-- Gráfica Circular -->
+            <div class="col-md-6">
+                <div class="card p-3 shadow">
+                    <h5 class="text-center">Distribución de Ventas por Método de Pago</h5>
+                    <!-- NUEVO CANVAS -->
+                    <canvas id="graficaCircular"></canvas>
+                </div>
+            </div>
+
+            <!-- Gráfica Lineal -->
+            <div class="col-md-6">
+                <div class="card p-3 shadow">
+                    <h5 class="text-center">Ventas Totales por Fecha</h5>
+                    <!-- NUEVO CANVAS -->
+                    <canvas id="graficaLineal"></canvas>
+                </div>
+            </div>
+
+        </div>
+        <!-- ========================================================= -->
+        <!-- === FIN DE GRÁFICAS ==================================== -->
+        <!-- ========================================================= -->
+
     </div>
 
 </div>
@@ -256,6 +286,58 @@
 
 <!-- JS Personalizado -->
 <script th:src="@{/JavsScript/js/FuncionesAlert.js}"></script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<
+<script th:inline="javascript">
+
+    // Datos generados desde el backend (debes enviarlos desde tu controlador)
+    const metodosPago = /*[[${metodosPago}]]*/ [];
+    const cantidadesPago = /*[[${cantidadesPago}]]*/ [];
+
+    const fechas = /*[[${fechasVentas}]]*/ [];
+    const ventasmes = /*[[${totalesPorFecha}]]*/ [];
+
+    // ------------------------------
+    // Gráfica circular
+    // ------------------------------
+    const ctxCircular = document.getElementById('graficaCircular');
+
+    new Chart(ctxCircular, {
+        type: 'doughnut',
+        data: {
+            labels: metodosPago,
+            datasets: [{
+                data: cantidadesPago,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true
+        }
+    });
+
+    // ------------------------------
+    // Gráfica lineal
+    // ------------------------------
+    const ctxLineal = document.getElementById('graficaLineal');
+
+    new Chart(ctxLineal, {
+        type: 'line',
+        data: {
+            labels: fechas,
+            datasets: [{
+                label: 'Total Recaudado',
+                data: totalesPorFecha,
+                fill: false,
+                tension: 0.3,
+                borderWidth: 2
+            }]
+        }
+    });
+
+</script>
 
 </body>
 </html>

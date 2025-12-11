@@ -1,5 +1,6 @@
 package com.example.demo.ModuloVentas;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public interface VentaServicio {
@@ -14,5 +15,10 @@ public interface VentaServicio {
     Venta buscarVenta(Long id);
     void DescontarStock(Venta venta);
 
+    void descontarStock(Venta venta);
+
+    Long totalVentas();
+
+    BigDecimal sumapormes(int mes, int anio);
 
 }
