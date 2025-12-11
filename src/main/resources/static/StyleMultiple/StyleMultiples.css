@@ -414,7 +414,7 @@ body {
 
 /* Encabezados */
 #example thead th {
-    background: #000000 !important; /* fondo negro */
+    background: #4969bf !important; /* fondo negro */
     color: #ffffff !important;      /* texto blanco */
     font-weight: 700 !important;    /* más negrita */
     padding: 14px 12px !important;

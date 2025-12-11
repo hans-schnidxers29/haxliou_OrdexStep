@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -46,6 +47,11 @@ public class VentaControlador {
     @GetMapping("/listar")
     public String listar(Model model) {
         model.addAttribute("ventas", servicio.ListarVenta());
+        model.addAttribute("totalRecaudado",servicio.totalVentas());
+        LocalDate fecha = LocalDate.now();
+        int mes = fecha.getDayOfMonth();
+        int anio = fecha.getYear();
+        model.addAttribute("ventasmes",servicio.sumapormes(mes,anio));
         return "ViewVentas/index";
     }
 
