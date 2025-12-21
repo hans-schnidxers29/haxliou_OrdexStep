@@ -5,20 +5,16 @@ import java.util.List;
 
 public interface VentaServicio {
     List<Venta> ListarVenta();
-
     Venta guardarVenta(Venta venta);
-
     void Buscarbyid(Long id);
-
     void deleteVenta(Long id);
-
     Venta buscarVenta(Long id);
     void DescontarStock(Venta venta);
-
     void descontarStock(Venta venta);
-
     Long totalVentas();
-
     BigDecimal sumapormes(int mes, int anio);
+    BigDecimal sumaproductos();
+    BigDecimal sumaproductosPordia();
+
 
 }

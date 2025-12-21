@@ -259,15 +259,15 @@
                     <div class="col-md-6 offset-md-3">
                         <div class="mb-3">
                             <label class="form-label"><strong>Subtotal:</strong></label>
-                            <input type="number" id="totalSubtotal" class="form-control" step="0.01" readonly>
+                            <input type="number" id="totalSubtotal" class="form-control" step="0.001" readonly>
                         </div>
                         <div class="mb-3">
                             <label for="impuesto" class="form-label"><strong>Impuesto (%):</strong></label>
-                            <input type="number" id="impuesto" name="impuesto" th:field="*{impuesto}" class="form-control" step="0.01" value="0" onchange="calcularTotal()">
+                            <input type="number" id="impuesto" name="impuesto" th:field="*{impuesto}" class="form-control" step="0.001" value="0" onchange="calcularTotal()">
                         </div>
                         <div class="mb-3" style="background-color: white; padding: 15px; border-radius: 8px; border: 2px solid #667eea;">
                             <label class="form-label"><strong style="font-size: 1.3rem;">Total a Pagar:</strong></label>
-                            <input type="number" id="totalPedido" name="total" th:field="*{total}" class="form-control" step="0.01" readonly style="font-size: 1.2rem; font-weight: bold; color: #667eea;">
+                            <input type="number" id="totalPedido" name="total" th:field="*{total}" class="form-control" step="0.001" readonly style="font-size: 1.2rem; font-weight: bold; color: #667eea;">
                         </div>
                     </div>
                 </div>
@@ -278,7 +278,7 @@
                 <button type="submit" class="btn btn-success btn-lg">
                     <i class="fas fa-save me-2"></i>Guardar Pedido
                 </button>
-                <a href="/listarpedidos" class="btn btn-secondary btn-lg">
+                <a href=" /pedidos/listarpedidos" class="btn btn-secondary btn-lg">
                     <i class="fas fa-times me-2"></i>Cancelar
                 </a>
                 <a href="/crearcliente/nuevo" class="btn btn-info btn-lg">

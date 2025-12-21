@@ -2,11 +2,10 @@ package com.example.demo.ModuloVentas;
 
 
 import com.example.demo.ModuloVentas.DetalleVenta.DetalleVenta;
+import com.example.demo.ModuloVentas.DetalleVenta.DetalleVentaRepositorio;
 import com.example.demo.entidad.Productos;
 import com.example.demo.servicio.ProductoServicio;
 import jakarta.transaction.Transactional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,13 +15,15 @@ import java.util.List;
 @Service
 public class VentaServicioImp implements VentaServicio {
 
-    private static final Logger log = LoggerFactory.getLogger(VentaServicioImp.class);
+
     @Autowired
     private VentaRepositorio repositorioVenta;
 
     @Autowired
     private ProductoServicio productoServicio;
 
+    @Autowired
+    private DetalleVentaRepositorio detalleVentaRepositorio;
 
     @Override
     public List<Venta> ListarVenta() {
@@ -102,5 +103,15 @@ public class VentaServicioImp implements VentaServicio {
     public BigDecimal sumapormes(int mes, int anio) {
         BigDecimal totalmess= repositorioVenta.sumaPorMes(mes, anio);
         return totalmess != null ? totalmess : BigDecimal.ZERO;
+    }
+
+    @Override
+    public BigDecimal sumaproductos() {
+        return detalleVentaRepositorio.sumaproductos();
+    }
+
+    @Override
+    public BigDecimal sumaproductosPordia() {
+        return null;
     }
 }
