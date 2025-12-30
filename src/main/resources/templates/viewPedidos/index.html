@@ -1,434 +1,170 @@
 <!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/adminlte}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Listado de Pedidos</title>
-
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <link href="https://cdn.datatables.net/2.3.5/css/dataTables.dataTables.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- CSS Personalizado -->
-    <link th:href="@{/StyleMultiple/StyleMultiples.css}" rel="stylesheet">
-
     <style>
-        /* Estilos específicos para pedidos */
-        .badge-estado {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 500;
-        }
-        .badge-pendiente {
-            background-color: #fff3cd;
-            color: #856404;
-        }
-        .badge-procesando {
-            background-color: #cfe2ff;
-            color: #084298;
-        }
-        .badge-enviado {
-            background-color: #cff4fc;
-            color: #055160;
-        }
-        .badge-entregado {
-            background-color: #d1e7dd;
-            color: #0f5132;
-        }
-        .badge-cancelado {
-            background-color: #f8d7da;
-            color: #842029;
-        }
-        .info-pedido {
-            font-size: 0.9rem;
-            color: #666;
-        }
-        .total-destacado {
-            font-weight: 600;
-            color: #667eea;
-            font-size: 1.05rem;
-        }
-        .stats-card {
-            padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 10px;
-            color: white;
-            text-align: center;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        .stats-card h6 {
-            margin-bottom: 10px;
-            opacity: 0.9;
-        }
-        .stats-card h3 {
-            margin: 0;
-            font-weight: 600;
-        }
-
-        /* 🎨 ESTILOS PARA FILAS COLOREADAS SEGÚN ESTADO */
-        .fila-entregado {
-            background-color: #d1f2eb !important;
-            border-left: 4px solid #28a745;
-        }
-
-        .fila-entregado:hover {
-            background-color: #a9dfbf !important;
-        }
-
-        .fila-cancelado {
-            background-color: #f8d7da !important;
-            border-left: 4px solid #dc3545;
-        }
-
-        .fila-cancelado:hover {
-            background-color: #f1aeb5 !important;
-        }
-
-        .fila-pendiente {
-            background-color: #fff9e6 !important;
-            border-left: 4px solid #ffc107;
-        }
-
-        .fila-procesando {
-            background-color: #e7f3ff !important;
-            border-left: 4px solid #0d6efd;
-        }
-
-        .fila-enviado {
-            background-color: #e0f7fa !important;
-            border-left: 4px solid #17a2b8;
-        }
-
-        /* Transición suave para hover */
-        tbody tr {
-            transition: all 0.3s ease;
-        }
-
-        /* Ajuste para que el texto se vea bien en fondos coloreados */
-        .fila-entregado td,
-        .fila-cancelado td {
-            font-weight: 500;
-        }
+        .fila-entregado { border-left: 5px solid #28a745 !important; background-color: rgba(40, 167, 69, 0.05) !important; }
+        .fila-cancelado { border-left: 5px solid #dc3545 !important; background-color: rgba(220, 53, 69, 0.05) !important; }
+        .fila-pendiente { border-left: 5px solid #ffc107 !important; }
+        .fila-procesando { border-left: 5px solid #007bff !important; }
+        .fila-enviado { border-left: 5px solid #17a2b8 !important; }
+        .badge-estado { padding: 5px 10px; border-radius: 15px; text-transform: uppercase; font-size: 0.75rem; }
     </style>
 </head>
 <body>
 
-<!-- Sidebar -->
-<nav class="sidebar" id="sidebar">
-    <!-- Header -->
-    <div class="sidebar-header">
-        <a href="/" class="logo">
-            <i class="fas fa-store"></i>
-            <span class="logo-text">Mi Sistema</span>
-        </a>
-        <button class="toggle-btn" onclick="toggleSidebar()">
-            <i class="fas fa-bars"></i>
-        </button>
-    </div>
-
-    <!-- User Info -->
-    <div class="user-info" sec:authorize="isAuthenticated()">
-        <div class="user-avatar">
-            <i class="fas fa-user"></i>
-        </div>
-        <div class="user-details">
-            <div class="user-name" sec:authentication="name">Usuario</div>
-            <div class="user-role" sec:authentication="principal.authorities">ROLE</div>
-        </div>
-    </div>
-
-    <!-- Navigation Menu -->
-    <ul class="nav-menu">
-        <li class="nav-item">
-            <a href="/" class="nav-link">
-                <i class="fas fa-home"></i>
-                <span>Inicio</span>
-            </a>
-        </li>
-
-        <!-- Pedidos - Para todos los usuarios autenticados -->
-        <li class="nav-item" sec:authorize="isAuthenticated()">
-            <a href="/pedidos/listarpedidos" class="nav-link active">
-                <i class="fas fa-shopping-cart"></i>
-                <span>Pedidos</span>
-            </a>
-        </li>
-
-        <li class="nav-item" sec:authorize="isAuthenticated()">
-            <a href="/listarclientes" class="nav-link">
-                <i class="fas fa-users"></i>
-                <span>Clientes</span>
-            </a>
-        </li>
-
-        <!-- Productos - Solo ADMIN -->
-        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
-            <a href="/listarproductos" class="nav-link">
-                <i class="fas fa-box"></i>
-                <span>Productos</span>
-            </a>
-        </li>
-
-        <li class="nav-item" sec:authorize="isAuthenticated()">
-            <a class="nav-link active" href="/ventas/listar">
-                <i class="fas fa-cash-register"></i>
-                <span>Ventas</span>
-            </a>
-        </li>
-        <!-- Perfil -->
-        <li class="nav-item" sec:authorize="isAuthenticated()">
-            <a href="/perfil" class="nav-link">
-                <i class="fas fa-user-circle"></i>
-                <span>Mi Perfil</span>
-            </a>
-        </li>
-    </ul>
-
-    <!-- Logout -->
-    <div class="logout-section" sec:authorize="isAuthenticated()">
-        <form th:action="@{/logout}" method="post" style="margin: 0;">
-            <button type="submit" class="logout-btn">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>Cerrar Sesión</span>
-            </button>
-        </form>
-    </div>
-</nav>
-
-<!-- Main Content -->
-<div class="main-content" id="mainContent">
-    <!-- Page Header -->
-    <div class="page-header">
-        <h1><i class="fas fa-shopping-cart me-3"></i>Listado de Pedidos</h1>
-    </div>
-
-    <!-- Mensaje de Error -->
-    <div th:if="${param.error}" class="alert alert-danger alert-dismissible fade show" role="alert">
-        <i class="fas fa-exclamation-circle me-2"></i>
-        <strong>Error:</strong> Ocurrió un problema al procesar la solicitud.
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-
-    <!-- Mensaje de Éxito -->
-    <div th:if="${param.success}" class="alert alert-success alert-dismissible fade show" role="alert">
-        <i class="fas fa-check-circle me-2"></i>
-        <strong>Éxito:</strong> La operación se completó correctamente.
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-
-    <!-- Mensaje si no hay pedidos -->
-    <div th:if="${#lists.isEmpty(pedidos)}" class="alert alert-info">
-        <i class="fas fa-info-circle me-2"></i>
-        <strong>No hay pedidos registrados.</strong>
-        <a href="/pedidos/nuevo" class="btn btn-sm ms-2 ">
-            <i class="fas fa-plus me-1"></i>Crear primer pedido
-        </a>
-    </div>
-
-    <!-- Tabla de pedidos -->
-    <div th:unless="${#lists.isEmpty(pedidos)}">
-        <div class="mb-3 d-flex justify-content-between align-items-center">
-            <div>
-                <span class="text-muted">Mostrando pedidos</span>
-            </div>
-            <a href="/pedidos/nuevo" class="btn btn-primary">
-                <i class="fas fa-plus me-2"></i>Nuevo Pedido
-            </a>
-        </div>
-
-        <div class="table-responsive">
-            <table id="example" class="display">
-                <thead>
-                <tr>
-                    <th><i class="fas fa-hashtag me-2"></i>ID</th>
-                    <th><i class="fas fa-user me-2"></i>Cliente</th>
-                    <th><i class="fas fa-calendar me-2"></i>Fecha Pedido</th>
-                    <th><i class="fas fa-truck me-2"></i>Fecha Entrega</th>
-                    <th><i class="fas fa-list me-2"></i>Productos</th>
-                    <th><i class="fas fa-dollar-sign me-2"></i>Total</th>
-                    <th><i class="fas fa-tasks me-2"></i>Estado</th>
-                    <th class="text-center"><i class="fas fa-cog me-2"></i>Acciones</th>
-                    <th class="text-center"><i class="fas fa-cog me-2"></i>Acciones</th>
-                </tr>
-                </thead>
-                <tbody>
-                <!-- 🎨 CLASE DINÁMICA SEGÚN EL ESTADO DEL PEDIDO -->
-                <tr th:each="pedido : ${pedidos}"
-                    th:class="${pedido.estado.name() == 'ENTREGADO'} ? 'fila-entregado' :
-                               (${pedido.estado.name() == 'CANCELADO'} ? 'fila-cancelado' :
-                               (${pedido.estado.name() == 'PENDIENTE'} ? 'fila-pendiente' :
-                               (${pedido.estado.name() == 'PROCESANDO'} ? 'fila-procesando' :
-                               (${pedido.estado.name() == 'ENVIADO'} ? 'fila-enviado' : ''))))">
-                    <td>
-                        <strong>#<span th:text="${pedido.id}">ID</span></strong>
-                    </td>
-                    <td>
-                        <strong th:text="${pedido.cliente.nombre}">Cliente</strong>
-                        <br>
-                        <small class="info-pedido" th:text="${pedido.cliente.email}">email</small>
-                    </td>
-                    <td>
-                        <span th:text="${#temporals.format(pedido.fechaPedido, 'dd/MM/yyyy')}">Fecha</span>
-                        <br>
-                        <small class="info-pedido" th:text="${#temporals.format(pedido.fechaPedido, 'HH:mm')}">Hora</small>
-                    </td>
-                    <td>
-                        <span th:text="${#temporals.format(pedido.fechaEntrega, 'dd/MM/yyyy')}">Fecha</span>
-                    </td>
-                    <td>
-                        <span class="badge bg-info" th:text="${pedido.detalles.size()} + ' item(s)'">0</span>
-                        <br>
-                        <small class="text-muted">
-                             <span th:each="detalle, iterStat : ${pedido.detalles}">
-                             <span th:text="${detalle.cantidad} + 'x ' + ${detalle.producto.nombre}"></span>
-                             <span th:if="${!iterStat.last}">, </span>
-                             </span>
-                        </small>
-                    </td>
-                    <td>
-                        <span class="total-destacado">
-                            $<span th:text="${#numbers.formatDecimal(pedido.total, 1, 3)}">0.000</span>
-                        </span>
-                    </td>
-                    <td>
-                        <span th:class="'badge-estado badge-' + ${pedido.estado.name().toLowerCase()}"
-                              th:text="${pedido.estado}">Estado</span>
-                    </td>
-                    <td class="text-center">
-                        <a th:if="${pedido.estado.name() != 'ENTREGADO'}">
-                            <a th:href="@{/pedidos/ver/{id}(id=${pedido.id})}"
-                               class="btn btn-secondary btn-sm me-1"
-                               title="Ver Detalles">
-                                <i class="fas fa-eye"></i> Imprimir POS
-                            </a>
-
-                            <a th:href="@{/pedidos/editar/{id}(id=${pedido.id})}"
-                               class="btn btn-info btn-sm me-1"
-                               title="Editar"
-                               th:disabled="${pedido.estado.name() == 'ENTREGADO' || pedido.estado.name() == 'CANCELADO'}">
-                                <i class="fas fa-edit"></i> Editar
-                            </a>
-
-                            <a th:href="@{/pedidos/eliminar/{id}(id=${pedido.id})}"
-                               class="btn btn-danger btn-sm"
-                               onclick="return confirmarEliminacion('¿Estás seguro de eliminar este pedido?')"
-                               title="Eliminar">
-                                <i class="fas fa-trash"></i> Eliminar
-                            </a>
-                        </a>
-                        <!-- Mensaje cuando está entregado -->
-                        <span th:if="${pedido.estado.name() == 'ENTREGADO'}"
-                              class="badge bg-success">
-                            <i class="fas fa-check-double"></i> Entregado
-                        </span>
-
-                        <!-- Mensaje cuando está cancelado -->
-                        <span th:if="${pedido.estado.name() == 'CANCELADO'}"
-                              class="badge bg-danger">
-                            <i class="fas fa-ban"></i> Cancelado
-                        </span>
-                    </td>
-                    <td class="text-center">
-                        <!-- Botón Entregar - Solo visible si NO está entregado ni cancelado -->
-                        <a th:href="@{/pedidos/Entregar/{id}(id=${pedido.id})}"
-                           class="btn btn-success btn-sm me-1"
-                           title="Marcar como Entregado"
-                           th:if="${pedido.estado.name() != 'ENTREGADO' && pedido.estado.name() != 'CANCELADO'}"
-                           onclick="return confirm('¿Confirmas que el pedido ha sido entregado?')">
-                            <i class="fas fa-check-circle"></i> Entregar
-                        </a>
-
-                        <!-- Botón Cancelar - Solo visible si NO está entregado ni cancelado -->
-                        <a th:href="@{/pedidos/Cancelar/{id}(id=${pedido.id})}"
-                           class="btn btn-danger btn-sm"
-                           title="Cancelar Pedido"
-                           th:if="${pedido.estado.name() != 'ENTREGADO' && pedido.estado.name() != 'CANCELADO'}"
-                           onclick="return confirm('¿Estás seguro de cancelar este pedido?')">
-                            <i class="fas fa-times-circle"></i> Cancelar
-                        </a>
-
-                        <!-- Mensaje cuando está entregado -->
-                        <span th:if="${pedido.estado.name() == 'ENTREGADO'}"
-                              class="badge bg-success">
-                            <i class="fas fa-check-double"></i> Entregado
-                        </span>
-
-                        <!-- Mensaje cuando está cancelado -->
-                        <span th:if="${pedido.estado.name() == 'CANCELADO'}"
-                              class="badge bg-danger">
-                            <i class="fas fa-ban"></i> Cancelado
-                        </span>
-                    </td>
-                </tr>
-                </tbody>
-                <tfoot>
-                <tr>
-                    <th><i class="fas fa-hashtag me-2"></i>ID</th>
-                    <th><i class="fas fa-user me-2"></i>Cliente</th>
-                    <th><i class="fas fa-calendar me-2"></i>Fecha Pedido</th>
-                    <th><i class="fas fa-truck me-2"></i>Fecha Entrega</th>
-                    <th><i class="fas fa-list me-2"></i>Productos</th>
-                    <th><i class="fas fa-dollar-sign me-2"></i>Total</th>
-                    <th><i class="fas fa-tasks me-2"></i>Estado</th>
-                    <th class="text-center"><i class="fas fa-cog me-2"></i>Acciones</th>
-                    <th class="text-center"><i class="fas fa-cog me-2"></i>Acciones</th>
-                </tr>
-                </tfoot>
-            </table>
-        </div>
-
-        <!-- Resumen debajo de la tabla -->
-        <div class="mt-3">
-            <div class="row g-3">
-                <div class="col-md-3 col-sm-6">
-                    <div class="stats-card">
-                        <h6><i class="fas fa-clipboard-list me-2"></i>Total Pedidos</h6>
-                        <h3 th:text="${pedidos.size()}">0</h3>
-                    </div>
+<div layout:fragment="content">
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1><i class="fas fa-shopping-cart mr-2"></i> Gestión de Pedidos</h1>
                 </div>
-                <div class="col-md-3 col-sm-6">
-                    <div class="stats-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                        <h6><i class="fas fa-clock me-2"></i>Pendientes</h6>
-                        <h3 th:text="${Estadisticas} ?: '0'">0</h3>
-                    </div>
-                </div>
-                <div class="col-md-3 col-sm-6">
-                    <div class="stats-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                        <h6><i class="fas fa-check-circle me-2"></i>Entregados</h6>
-                        <h3 th:text="${Estadisticas2} ?: '0'">0</h3>
-                    </div>
-                </div>
-                <div class="col-md-3 col-sm-6">
-                    <div class="stats-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
-                        <h6><i class="fas fa-times-circle me-2"></i>Cancelados</h6>
-                        <h3 th:text="${Estadisticas3} ?: '0'">0</h3>
-                    </div>
+                <div class="col-sm-6 text-right">
+                    <a th:href="@{/pedidos/nuevo}" class="btn btn-primary shadow-sm">
+                        <i class="fas fa-plus mr-1"></i> Nuevo Pedido
+                    </a>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-info shadow">
+                        <div class="inner"><h3 th:text="${pedidos.size()}">0</h3><p>Total Pedidos</p></div>
+                        <div class="icon"><i class="fas fa-shopping-bag"></i></div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-warning shadow">
+                        <div class="inner"><h3 th:text="${Estadisticas} ?: '0'">0</h3><p>Pendientes</p></div>
+                        <div class="icon"><i class="fas fa-clock"></i></div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-success shadow">
+                        <div class="inner"><h3 th:text="${Estadisticas2} ?: '0'">0</h3><p>Entregados</p></div>
+                        <div class="icon"><i class="fas fa-check-circle"></i></div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-danger shadow">
+                        <div class="inner"><h3 th:text="${Estadisticas3} ?: '0'">0</h3><p>Cancelados</p></div>
+                        <div class="icon"><i class="fas fa-times-circle"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card card-outline card-primary shadow">
+                <div class="card-header">
+                    <h3 class="card-title">Listado General de Pedidos</h3>
+                </div>
+                <div class="card-body">
+                    <table id="tablaPedidos" class="table table-bordered table-striped table-hover w-100">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Cliente</th>
+                            <th>Fecha Pedido</th>
+                            <th>Fecha Entrega</th>
+                            <th>Productos</th>
+                            <th>Total</th>
+                            <th>Estado</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="pedido : ${pedidos}"
+                            th:class="${pedido.estado.name() == 'ENTREGADO'} ? 'fila-entregado' :
+                                       (${pedido.estado.name() == 'CANCELADO'} ? 'fila-cancelado' :
+                                       (${pedido.estado.name() == 'PENDIENTE'} ? 'fila-pendiente' : ''))">
+
+                            <td th:text="'#' + ${pedido.id}" class="font-weight-bold"></td>
+                            <td>
+                                <span th:text="${pedido.cliente.nombre}"></span><br>
+                                <small class="text-muted" th:text="${pedido.cliente.email}"></small>
+                            </td>
+                            <td>
+                                <span th:text="${#temporals.format(pedido.fechaPedido, 'dd/MM/yyyy')}"></span><br>
+                                <small class="text-muted" th:text="${#temporals.format(pedido.fechaPedido, 'HH:mm')}"></small>
+                            </td>
+                            <td>
+                                <span th:text="${#temporals.format(pedido.fechaEntrega, 'dd/MM/yyyy')}">Fecha</span>
+                            </td>
+                            <td>
+                                <span class="badge badge-info" th:text="${pedido.detalles.size()} + ' item(s)'"></span>
+                                <br>
+                                <small class="text-muted">
+                                 <span th:each="detalle, iterStat : ${pedido.detalles}">
+                                 <span th:text="${detalle.cantidad} + 'x ' + ${detalle.producto.nombre}"></span>
+                                 <span th:if="${!iterStat.last}">, </span>
+                                 </span>
+                                </small>
+                            </td>
+                            <td>
+                                <span class="text-primary font-weight-bold" th:text="'$' + ${#numbers.formatDecimal(pedido.total, 1, 3)}"></span>
+                            </td>
+                            <td>
+                                <span class="badge badge-estado"x
+                                      th:classappend="${pedido.estado.name() == 'ENTREGADO' ? 'badge-success' :
+                                                       (pedido.estado.name() == 'CANCELADO' ? 'badge-danger' :
+                                                       (pedido.estado.name() == 'PENDIENTE' ? 'badge-warning' : 'badge-info'))}"
+                                      th:text="${pedido.estado}"></span>
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group">
+                                    <th:block th:if="${pedido.estado.name() != 'ENTREGADO' && pedido.estado.name() != 'CANCELADO'}">
+                                        <a th:href="@{/pedidos/Entregar/{id}(id=${pedido.id})}" class="btn btn-success btn-sm" title="Entregar">
+                                            <i class="fas fa-check"></i>
+                                        </a>
+                                        <a th:href="@{/pedidos/editar/{id}(id=${pedido.id})}" class="btn btn-info btn-sm">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a th:href="@{/pedidos/Cancelar/{id}(id=${pedido.id})}" class="btn btn-danger btn-sm" title="Cancelar">
+                                            <i class="fas fa-times"></i>
+                                        </a>
+                                    </th:block>
+                                    <a th:href="@{/pedidos/ver/{id}(id=${pedido.id})}" class="btn btn-default btn-sm ml-1">
+                                        <i class="fas fa-print"></i> POS
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
 </div>
 
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://code.jquery.com/jquery-3.7.1.js"></script>
-<script src="https://cdn.datatables.net/2.3.5/js/dataTables.js"></script>
-<script>
-    new DataTable('#example', {
-        columnDefs: [
-            { targets: 2, visible: true, searchable: true },
-            { targets: 3, visible: true }
-        ]
-    });
-</script>
-
-<!-- JS Personalizado -->
-<script th:src="@{/JavsScript/js/FuncionesAlert.js}"></script>
+<th:block layout:fragment="scripts">
+    <script>
+        $(document).ready(function () {
+            $('#tablaPedidos').DataTable({
+                "responsive": true,
+                "autoWidth": false,
+                "paging": true,
+                "lengthChange": true,
+                "searching": true,
+                "ordering": true,
+                "info": true,
+                "language": {
+                    "url": "https://cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json"
+                },
+                // ESPACIOS CLAVE: [ [ 0, "desc" ] ] para evitar error de Thymeleaf
+                "order": [ [ 0, "desc" ] ],
+                "lengthMenu": [ [ 10, 25, 50, -1 ], [ 10, 25, 50, "Todos" ] ]
+            });
+        });
+    </script>
+</th:block>
 
 </body>
 </html>

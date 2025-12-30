@@ -19,7 +19,7 @@ public class ControldorInicio {
         return "Login/login";
     }
 
-    @GetMapping("/")
+    @GetMapping({"/","/Home"})
     public String verPaginaDeInicio(Model modelo) {
         modelo.addAttribute("usuarios", servicioUsuario.ListarUSer());
         return "Home/Home";

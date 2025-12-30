@@ -1,381 +1,141 @@
 <!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/adminlte}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Editar Cliente</title>
-
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- CSS Personalizado -->
-    <link th:href="@{/StyleMultiple/StyleMultiples.css}" rel="stylesheet">
-    <style>
-        /* Estilos específicos para formularios */
-        .form-card {
-            background: white;
-            padding: 35px;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-
-        .form-card h2 {
-            color: #2c3e50;
-            font-weight: 600;
-            margin-bottom: 30px;
-            padding-bottom: 15px;
-            border-bottom: 3px solid #667eea;
-        }
-
-        .form-label {
-            font-weight: 500;
-            color: #333;
-            margin-bottom: 8px;
-        }
-
-        .form-control:focus,
-        .form-select:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-        }
-
-        .required::after {
-            content: " *";
-            color: #dc3545;
-        }
-
-        .btn-submit {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            color: white;
-            padding: 12px 30px;
-            font-weight: 500;
-            transition: all 0.3s;
-        }
-
-        .btn-submit:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-            color: white;
-        }
-
-        .btn-cancel {
-            background: #6c757d;
-            border: none;
-            color: white;
-            padding: 12px 30px;
-            font-weight: 500;
-            transition: all 0.3s;
-        }
-
-        .btn-cancel:hover {
-            background: #5c636a;
-            color: white;
-            transform: translateY(-2px);
-        }
-
-        .form-icon {
-            color: #667eea;
-            margin-right: 8px;
-        }
-
-        .section-title {
-            color: #667eea;
-            font-weight: 600;
-            font-size: 1.1rem;
-            margin-top: 25px;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #e9ecef;
-        }
-    </style>
+    <title>Actualizar Cliente</title>
 </head>
 <body>
 
-<!-- Sidebar -->
-<nav class="sidebar" id="sidebar">
-    <!-- Header -->
-    <div class="sidebar-header">
-        <a href="/" class="logo">
-            <i class="fas fa-store"></i>
-            <span class="logo-text">Mi Sistema</span>
-        </a>
-        <button class="toggle-btn" onclick="toggleSidebar()">
-            <i class="fas fa-bars"></i>
-        </button>
-    </div>
-
-    <!-- User Info -->
-    <div class="user-info" sec:authorize="isAuthenticated()">
-        <div class="user-avatar">
-            <i class="fas fa-user"></i>
-        </div>
-        <div class="user-details">
-            <div class="user-name" sec:authentication="name">Usuario</div>
-            <div class="user-role" sec:authentication="principal.authorities">ROLE</div>
-        </div>
-    </div>
-
-    <!-- Navigation Menu -->
-    <ul class="nav-menu">
-        <li class="nav-item">
-            <a href="/" class="nav-link">
-                <i class="fas fa-home"></i>
-                <span>Inicio</span>
-            </a>
-        </li>
-
-        <!-- Pedidos - Para todos los usuarios autenticados -->
-        <li class="nav-item" sec:authorize="isAuthenticated()">
-            <a href="/pedidos/listarpedidos" class="nav-link">
-                <i class="fas fa-shopping-cart"></i>
-                <span>Pedidos</span>
-            </a>
-        </li>
-
-        <!-- Clientes - Solo ADMIN -->
-        <li class="nav-item" sec:authorize="isAuthenticated()">
-            <a href="/listarclientes" class="nav-link">
-                <i class="fas fa-users"></i>
-                <span>Clientes</span>
-            </a>
-        </li>
-
-        <!-- Productos - Solo ADMIN -->
-        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
-            <a href="/listarproductos" class="nav-link">
-                <i class="fas fa-box"></i>
-                <span>Productos</span>
-            </a>
-        </li>
-        <li class="nav-item" sec:authorize="isAuthenticated()">
-            <a class="nav-link active" href="/ventas/listar">
-                <i class="fas fa-cash-register"></i>
-                <span>Ventas</span>
-            </a>
-        </li>
-        <!-- Perfil -->
-        <li class="nav-item" sec:authorize="isAuthenticated()">
-            <a href="/perfil" class="nav-link">
-                <i class="fas fa-user-circle"></i>
-                <span>Mi Perfil</span>
-            </a>
-        </li>
-    </ul>
-
-    <!-- Logout -->
-    <div class="logout-section" sec:authorize="isAuthenticated()">
-        <form th:action="@{/logout}" method="post" style="margin: 0;">
-            <button type="submit" class="logout-btn">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>Cerrar Sesión</span>
-            </button>
-        </form>
-    </div>
-</nav>
-<!-- Main Content -->
-<div class="main-content" id="mainContent">
-    <!-- Page Header -->
-    <div class="page-header">
-        <h1><i class="fas fa-user-edit me-3"></i>Actualizar Cliente</h1>
-    </div>
-
-    <!-- Formulario -->
-    <div class="row justify-content-center">
-        <div class="col-lg-10 col-md-12">
-            <div class="form-card">
-                <h2 class="text-center">
-                    <i class="fas fa-users form-icon"></i>
-                    Editar Información del Cliente
-                </h2>
-
-                <form th:action="@{/clientes/{id}(id=${clientes.id})}"
-                      th:object="${clientes}"
-                      method="POST"
-                      class="needs-validation"
-                      novalidate>
-
-                    <!-- Información Personal -->
-                    <div class="section-title">
-                        <i class="fas fa-id-card me-2"></i>Información Personal
-                    </div>
-
-                    <div class="row">
-                        <!-- Nombre -->
-                        <div class="col-md-6 mb-3">
-                            <label for="nombre" class="form-label required">
-                                <i class="fas fa-user form-icon"></i>Nombre
-                            </label>
-                            <input type="text"
-                                   id="nombre"
-                                   name="nombre"
-                                   th:field="*{nombre}"
-                                   class="form-control"
-                                   placeholder="Ej: Juan"
-                                   required>
-                            <div class="invalid-feedback">
-                                Por favor ingrese el nombre.
-                            </div>
-                        </div>
-
-                        <!-- Apellido -->
-                        <div class="col-md-6 mb-3">
-                            <label for="apellido" class="form-label required">
-                                <i class="fas fa-user form-icon"></i>Apellido
-                            </label>
-                            <input type="text"
-                                   id="apellido"
-                                   name="apellido"
-                                   th:field="*{apellido}"
-                                   class="form-control"
-                                   placeholder="Ej: Pérez"
-                                   required>
-                            <div class="invalid-feedback">
-                                Por favor ingrese el apellido.
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Información de Contacto -->
-                    <div class="section-title">
-                        <i class="fas fa-address-book me-2"></i>Información de Contacto
-                    </div>
-
-                    <div class="row">
-                        <!-- Email -->
-                        <div class="col-md-6 mb-3">
-                            <label for="email" class="form-label required">
-                                <i class="fas fa-envelope form-icon"></i>Correo Electrónico
-                            </label>
-                            <input type="email"
-                                   id="email"
-                                   name="email"
-                                   th:field="*{email}"
-                                   class="form-control"
-                                   placeholder="ejemplo@correo.com"
-                                   required>
-                            <div class="invalid-feedback">
-                                Por favor ingrese un correo válido.
-                            </div>
-                        </div>
-
-                        <!-- Teléfono -->
-                        <div class="col-md-6 mb-3">
-                            <label for="telefono" class="form-label required">
-                                <i class="fas fa-phone form-icon"></i>Número Telefónico
-                            </label>
-                            <input type="tel"
-                                   id="telefono"
-                                   name="telefono"
-                                   th:field="*{telefono}"
-                                   class="form-control"
-                                   placeholder="3001234567"
-                                   pattern="[0-9]{10}"
-                                   required>
-                            <div class="invalid-feedback">
-                                Por favor ingrese un teléfono válido (10 dígitos).
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Dirección -->
-                    <div class="section-title">
-                        <i class="fas fa-map-marked-alt me-2"></i>Dirección
-                    </div>
-
-                    <div class="row">
-                        <!-- Ciudad -->
-                        <div class="col-md-4 mb-3">
-                            <label for="ciudad" class="form-label required">
-                                <i class="fas fa-city form-icon"></i>Ciudad
-                            </label>
-                            <input type="text"
-                                   id="ciudad"
-                                   name="ciudad"
-                                   th:field="*{ciudad}"
-                                   class="form-control"
-                                   placeholder="Ej: Bogotá"
-                                   required>
-                            <div class="invalid-feedback">
-                                Por favor ingrese la ciudad.
-                            </div>
-                        </div>
-
-                        <!-- País -->
-                        <div class="col-md-4 mb-3">
-                            <label for="pais" class="form-label required">
-                                <i class="fas fa-globe form-icon"></i>País
-                            </label>
-                            <input type="text"
-                                   id="pais"
-                                   name="pais"
-                                   th:field="*{pais}"
-                                   class="form-control"
-                                   placeholder="Ej: Colombia"
-                                   required>
-                            <div class="invalid-feedback">
-                                Por favor ingrese el país.
-                            </div>
-                        </div>
-
-                        <!-- Código Postal -->
-                        <div class="col-md-4 mb-3">
-                            <label for="codigoPostal" class="form-label required">
-                                <i class="fas fa-map-pin form-icon"></i>Código Postal
-                            </label>
-                            <input type="text"
-                                   id="codigoPostal"
-                                   name="codigoPostal"
-                                   th:field="*{codigoPostal}"
-                                   class="form-control"
-                                   placeholder="Ej: 110111"
-                                   required>
-                            <div class="invalid-feedback">
-                                Por favor ingrese el código postal.
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Botones -->
-                    <div class="d-flex justify-content-end gap-2 mt-4">
-                        <a href="/listarclientes" class="btn btn-cancel">
-                            <i class="fas fa-times me-2"></i>Cancelar
-                        </a>
-                        <button type="submit" class="btn btn-submit">
-                            <i class="fas fa-save me-2"></i>Guardar Cambios
-                        </button>
-                    </div>
-                </form>
+<div layout:fragment="content">
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1><i class="fas fa-user-edit mr-3"></i>Actualizar Cliente</h1>
+                </div>
             </div>
         </div>
-    </div>
+    </section>
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <div class="card card-outline card-warning shadow"> <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-users mr-2 text-warning"></i>
+                            Editar Información del Cliente
+                        </h3>
+                    </div>
+
+                        <form th:action="@{/clientes/{id}(id=${clientes.id})}"
+                              th:object="${clientes}"
+                              method="POST"
+                              class="needs-validation"
+                              novalidate>
+
+                            <div class="card-body">
+                                <div class="border-bottom mb-3 pb-2">
+                                    <h5 class="text-primary"><i class="fas fa-id-card mr-2"></i>Información Personal</h5>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 form-group">
+                                        <label for="nombre" class="required">Nombre</label>
+                                        <input type="text" th:field="*{nombre}" class="form-control" placeholder="Ej: Juan" required>
+                                        <div class="invalid-feedback">Por favor ingrese el nombre.</div>
+                                    </div>
+                                    <div class="col-md-6 form-group">
+                                        <label for="apellido" class="required">Apellido</label>
+                                        <input type="text" th:field="*{apellido}" class="form-control" placeholder="Ej: Pérez" required>
+                                        <div class="invalid-feedback">Por favor ingrese el apellido.</div>
+                                    </div>
+                                </div>
+
+                                <div class="border-bottom mb-3 pb-2 mt-4">
+                                    <h5 class="text-primary"><i class="fas fa-address-book mr-2"></i>Información de Contacto</h5>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 form-group">
+                                        <label for="email" class="required">Correo Electrónico</label>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                            </div>
+                                            <input type="email" th:field="*{email}" class="form-control" placeholder="ejemplo@correo.com" required>
+                                            <div class="invalid-feedback">Ingrese un correo válido.</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 form-group">
+                                        <label for="telefono" class="required">Número Telefónico</label>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                                            </div>
+                                            <input type="tel" th:field="*{telefono}" class="form-control" placeholder="3001234567" pattern="[0-9]{10}" required>
+                                            <div class="invalid-feedback">Ingrese un teléfono válido (10 dígitos).</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="border-bottom mb-3 pb-2 mt-4">
+                                    <h5 class="text-primary"><i class="fas fa-map-marked-alt mr-2"></i>Dirección</h5>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-4 form-group">
+                                        <label for="ciudad" class="required">Ciudad</label>
+                                        <input type="text" th:field="*{ciudad}" class="form-control" placeholder="Ej: Bogotá" required>
+                                    </div>
+                                    <div class="col-md-4 form-group">
+                                        <label for="pais" class="required">País</label>
+                                        <input type="text" th:field="*{pais}" class="form-control" placeholder="Ej: Colombia" required>
+                                    </div>
+                                    <div class="col-md-4 form-group">
+                                        <label for="codigoPostal" class="required">C. Postal</label>
+                                        <input type="text" th:field="*{codigoPostal}" class="form-control" placeholder="Ej: 110111" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card-footer text-right">
+                                <a th:href="@{/listarclientes}" class="btn btn-default mr-2">
+                                    <i class="fas fa-times mr-1"></i> Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="fas fa-save mr-1"></i> Guardar Cambios
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 </div>
 
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<!-- JS Personalizado -->
-<script th:src="@{/JavsScript/js/FuncionesAlert.js}"></script>
-
-<script>
-    // Validación de Bootstrap
-    (function () {
-        'use strict'
-        var forms = document.querySelectorAll('.needs-validation')
-        Array.prototype.slice.call(forms).forEach(function (form) {
-            form.addEventListener('submit', function (event) {
-                if (!form.checkValidity()) {
-                    event.preventDefault()
-                    event.stopPropagation()
-                }
-                form.classList.add('was-validated')
+<th:block layout:fragment="scripts">
+    <script>
+        (function () {
+            'use strict'
+            window.addEventListener('load', function () {
+                var forms = document.getElementsByClassName('needs-validation')
+                Array.prototype.filter.call(forms, function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (form.checkValidity() === false) {
+                            event.preventDefault()
+                            event.stopPropagation()
+                        }
+                        form.classList.add('was-validated')
+                    }, false)
+                })
             }, false)
-        })
-    })()
-</script>
+        })()
+    </script>
+</th:block>
 
 </body>
 </html>

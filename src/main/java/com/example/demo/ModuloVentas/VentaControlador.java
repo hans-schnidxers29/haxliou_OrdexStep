@@ -50,6 +50,10 @@ public class VentaControlador {
         model.addAttribute("totalRecaudado",servicio.totalVentas());
         model.addAttribute("sumaproductos",servicio.sumaproductos());
         model.addAttribute("SumaProcDias", servicio.sumaproductosPordia(LocalDate.now()));
+        List<String> etiquetas = servicio.ListaMeses();
+        List<BigDecimal> valores = servicio.listarTotalVentas();
+        model.addAttribute("labelsGrafica", etiquetas);
+        model.addAttribute("datosGrafica", valores );
         return "ViewVentas/index";
     }
 

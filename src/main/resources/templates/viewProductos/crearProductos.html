@@ -1,296 +1,137 @@
 <!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/adminlte}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Registrar Productos</title>
-
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- CSS Personalizado Centralizado -->
-    <link th:href="@{/StyleMultiple/StyleMultiples.css}" rel="stylesheet">
-
-    <style>
-        /* Estilos específicos para el formulario de productos */
-        .container-form {
-            background-color: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            margin-top: 30px;
-            margin-bottom: 30px;
-            max-width: 700px;
-        }
-        .section-title {
-            border-bottom: 2px solid #667eea;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-            color: #333;
-            font-weight: 600;
-        }
-        .form-label {
-            font-weight: 500;
-            color: #555;
-        }
-        .form-control:focus, .form-select:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-        }
-        .info-box {
-            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        .info-box i {
-            color: #667eea;
-        }
-    </style>
+    <title>Registrar Producto</title>
 </head>
 <body>
 
-<!-- Sidebar -->
-<nav class="sidebar" id="sidebar">
-    <!-- Header -->
-    <div class="sidebar-header">
-        <a href="/" class="logo">
-            <i class="fas fa-store"></i>
-            <span class="logo-text">Mi Sistema</span>
-        </a>
-        <button class="toggle-btn" onclick="toggleSidebar()">
-            <i class="fas fa-bars"></i>
-        </button>
-    </div>
-
-    <!-- User Info -->
-    <div class="user-info" sec:authorize="isAuthenticated()">
-        <div class="user-avatar">
-            <i class="fas fa-user"></i>
-        </div>
-        <div class="user-details">
-            <div class="user-name" sec:authentication="name">Usuario</div>
-            <div class="user-role" sec:authentication="principal.authorities">ROLE</div>
-        </div>
-    </div>
-
-    <!-- Navigation Menu -->
-    <ul class="nav-menu">
-        <li class="nav-item">
-            <a href="/" class="nav-link">
-                <i class="fas fa-home"></i>
-                <span>Inicio</span>
-            </a>
-        </li>
-
-        <!-- Pedidos -->
-        <li class="nav-item" sec:authorize="isAuthenticated()">
-            <a href="pedidos/listarpedidos" class="nav-link">
-                <i class="fas fa-shopping-cart"></i>
-                <span>Pedidos</span>
-            </a>
-        </li>
-
-        <li class="nav-item" sec:authorize="isAuthenticated()">
-            <a href="/listarclientes" class="nav-link">
-                <i class="fas fa-users"></i>
-                <span>Clientes</span>
-            </a>
-        </li>
-
-        <!-- Productos - Solo ADMIN -->
-        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
-            <a href="/listarproductos" class="nav-link active">
-                <i class="fas fa-box"></i>
-                <span>Productos</span>
-            </a>
-        </li>
-        <li class="nav-item" sec:authorize="isAuthenticated()">
-            <a class="nav-link active" href="/ventas/listar">
-                <i class="fas fa-cash-register"></i>
-                <span>Ventas</span>
-            </a>
-        </li>
-
-        <!-- Perfil -->
-        <li class="nav-item" sec:authorize="isAuthenticated()">
-            <a href="/perfil" class="nav-link">
-                <i class="fas fa-user-circle"></i>
-                <span>Mi Perfil</span>
-            </a>
-        </li>
-    </ul>
-
-    <!-- Logout -->
-    <div class="logout-section" sec:authorize="isAuthenticated()">
-        <form th:action="@{/logout}" method="post" style="margin: 0;">
-            <button type="submit" class="logout-btn">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>Cerrar Sesión</span>
-            </button>
-        </form>
-    </div>
-</nav>
-
-<!-- Main Content -->
-<div class="main-content" id="mainContent">
-    <!-- Page Header -->
-    <div class="page-header">
-        <h1><i class="fas fa-plus-circle me-3"></i>Registrar Nuevo Producto</h1>
-    </div>
-
-    <div class="container d-flex justify-content-center">
-        <div class="container-form">
-            <!-- Info box -->
-            <div class="info-box">
-                <i class="fas fa-info-circle me-2"></i>
-                <strong>Información:</strong> Complete todos los campos para registrar un nuevo producto en el inventario.
+<div layout:fragment="content">
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1><i class="fas fa-plus-circle mr-2"></i> Nuevo Producto</h1>
+                </div>
             </div>
-
-            <h5 class="section-title">
-                <i class="fas fa-box me-2"></i>Datos del Producto
-            </h5>
-
-            <form th:action="@{/crearproducto}" th:object="${producto}" method="POST">
-
-                <!-- Nombre -->
-                <div class="mb-3">
-                    <label for="nombre" class="form-label">
-                        <i class="fas fa-tag me-1"></i>Nombre del Producto <span class="text-danger">*</span>
-                    </label>
-                    <input type="text"
-                           id="nombre"
-                           name="nombre"
-                           th:field="*{nombre}"
-                           class="form-control"
-                           placeholder="Ej: Laptop Dell Inspiron"
-                           required>
-                </div>
-
-                <!-- Descripción -->
-                <div class="mb-3">
-                    <label for="descripcion" class="form-label">
-                        <i class="fas fa-align-left me-1"></i>Descripción <span class="text-danger">*</span>
-                    </label>
-                    <textarea id="descripcion"
-                              name="descripcion"
-                              th:field="*{descripcion}"
-                              class="form-control"
-                              rows="3"
-                              placeholder="Descripción detallada del producto..."
-                              required></textarea>
-                </div>
-
-                <!-- Categoría -->
-                <div class="mb-3">
-                    <label for="categoria" class="form-label">
-                        <i class="fas fa-folder me-1"></i>Categoría <span class="text-danger">*</span>
-                    </label>
-                    <select id="categoria"
-                            name="categoria"
-                            th:field="*{categoria}"
-                            class="form-select"
-                            required>
-                        <option value="" disabled selected>-- Selecciona una categoría --</option>
-                        <option th:each="categ : ${categoria}"
-                                th:value="${categ.id}"
-                                th:text="${categ.nombrecategoria}"></option>
-                    </select>
-                    <small class="text-muted">
-                        ¿No encuentras la categoría?
-                        <a href="/categoria/crear" class="text-primary">Crear nueva categoría</a>
-                    </small>
-                </div>
-
-                <div class="row">
-                    <!-- Precio -->
-                    <div class="col-md-6 mb-3">
-                        <label for="precio" class="form-label">
-                            <i class="fas fa-dollar-sign me-1"></i>Precio <span class="text-danger">*</span>
-                        </label>
-                        <div class="input-group">
-                            <span class="input-group-text">$</span>
-                            <input type="number"
-                                   id="precio"
-                                   name="precio"
-                                   th:field="*{precio}"
-                                   step="0.001"
-                                   min="0"
-                                   class="form-control"
-                                   placeholder="0.000"
-                                   th:value="${#numbers.formatDecimal(precio, 1, 3)}"
-                                   required>
-                        </div>
-                    </div>
-
-                    <!-- Cantidad -->
-                    <div class="col-md-6 mb-3">
-                        <label for="cantidad" class="form-label">
-                            <i class="fas fa-cubes me-1"></i>Cantidad en Stock <span class="text-danger">*</span>
-                        </label>
-                        <input type="number"
-                               id="cantidad"
-                               name="cantidad"
-                               th:field="*{cantidad}"
-                               step="1"
-                               min="0"
-                               class="form-control"
-                               placeholder="0"
-                               required>
-                    </div>
-                </div>
-
-                <!-- Botones de acción -->
-                <div class="mt-4 d-flex justify-content-center gap-2">
-                    <button type="submit" class="btn btn-success btn-lg">
-                        <i class="fas fa-save me-2"></i>Guardar Producto
-                    </button>
-                    <a href="/listarproductos" class="btn btn-secondary btn-lg">
-                        <i class="fas fa-times me-2"></i>Cancelar
-                    </a>
-                    <a href="/categoria/crear" class="btn btn-info btn-lg">
-                        <i class="fas fa-plus me-2"></i>Nueva Categoría
-                    </a>
-                </div>
-            </form>
         </div>
-    </div>
+    </section>
+
+    <section class="content">
+        <div class="container-fluid">
+
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="card card-primary card-outline shadow">
+                        <div class="card-header">
+                            <h3 class="card-title font-weight-bold">
+                                <i class="fas fa-edit mr-1"></i> Formulario de Registro
+                            </h3>
+                        </div>
+
+                        <form th:action="@{/crearproducto}" th:object="${producto}" method="POST">
+                            <div class="card-body">
+                                <div class="callout callout-info">
+                                    <h5><i class="fas fa-info"></i> Información</h5>
+                                    <p>Complete los datos del producto para ingresarlo al inventario. Los campos con (*) son obligatorios.</p>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="nombre">Nombre del Producto <span class="text-danger">*</span></label>
+                                    <input type="text" th:field="*{nombre}" class="form-control"
+                                           placeholder="Ej: Laptop Dell Inspiron" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="descripcion">Descripción <span class="text-danger">*</span></label>
+                                    <textarea th:field="*{descripcion}" class="form-control" rows="3"
+                                              placeholder="Características principales..." required></textarea>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label for="categoria">Categoría <span class="text-danger">*</span></label>
+                                            <div class="input-group">
+                                                <select th:field="*{categoria}" class="form-control select2" required>
+                                                    <option value="" disabled selected>-- Seleccione una categoría --</option>
+                                                    <option th:each="categ : ${categoria}"
+                                                            th:value="${categ.id}"
+                                                            th:text="${categ.nombrecategoria}"></option>
+                                                </select>
+                                                <div class="input-group-append">
+                                                    <a href="/categoria/crear" class="btn btn-info" title="Crear nueva categoría">
+                                                        <i class="fas fa-plus"></i>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="precio">Precio Unitario <span class="text-danger">*</span></label>
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text font-weight-bold">$</span>
+                                                </div>
+                                                <input type="number" th:field="*{precio}" step="0.001" min="0"
+                                                       class="form-control" placeholder="0.000" required>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="cantidad">Stock Inicial <span class="text-danger">*</span></label>
+                                            <div class="input-group">
+                                                <input type="number" th:field="*{cantidad}" step="1" min="0"
+                                                       class="form-control" placeholder="0" required>
+                                                <div class="input-group-append">
+                                                    <span class="input-group-text">Unidades</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card-footer bg-white text-center">
+                                <button type="submit" class="btn btn-success btn-lg shadow-sm px-5">
+                                    <i class="fas fa-save mr-2"></i> Guardar Producto
+                                </button>
+                                <a href="/listarproductos" class="btn btn-default btn-lg px-5 ml-2">
+                                    Cancelar
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 </div>
 
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<th:block layout:fragment="scripts">
+    <script>
+        $(document).ready(function() {
+            // Validación visual rápida con Toast si el precio es negativo antes de enviar
+            $('form').on('submit', function(e) {
+                const precio = parseFloat($('#precio').val());
+                if (precio < 0) {
+                    e.preventDefault();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Precio inválido',
+                        text: 'El precio no puede ser un valor negativo.'
+                    });
+                }
+            });
+        });
+    </script>
+</th:block>
 
-<!-- JS Personalizado -->
-<script th:src="@{/JavsScript/js/FuncionesAlert.js}"></script>
-
-<script>
-    // Función para el sidebar
-    function toggleSidebar() {
-        document.getElementById('sidebar').classList.toggle('collapsed');
-        document.getElementById('mainContent').classList.toggle('expanded');
-    }
-
-    // Validación adicional del formulario
-    document.querySelector('form').addEventListener('submit', function(e) {
-        const precio = parseFloat(document.getElementById('precio').value);
-        const cantidad = parseInt(document.getElementById('cantidad').value);
-
-        if (precio < 0) {
-            e.preventDefault();
-            alert('El precio no puede ser negativo');
-            return false;
-        }
-
-        if (cantidad < 0) {
-            e.preventDefault();
-            alert('La cantidad no puede ser negativa');
-            return false;
-        }
-    });
-</script>
 </body>
 </html>

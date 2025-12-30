@@ -16,4 +16,6 @@ public interface VentaServicio {
     BigDecimal sumapormes(int mes, int anio);
     BigDecimal sumaproductos();
     Long  sumaproductosPordia(LocalDate fecha);
+    List<String> ListaMeses();
+    List<BigDecimal> listarTotalVentas();
 }

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${title} ?: 'Gestor de Pedidos'">Gestor de Pedidos</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Google Font -->
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+    <!-- AdminLTE CSS LOCAL -->
+    <link rel="stylesheet" th:href="@{/adminlte/css/adminlte.min.css}">
+
+    <link rel="stylesheet" th:href="@{/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css}">
+    <link rel="stylesheet" th:href="@{/plugins/datatables-responsive/css/responsive.bootstrap4.min.css}">
+    <link rel="stylesheet" th:href="@{/plugins/chart.js/Chart.min.css}">
+
+    <!-- CSS adicionales de cada página -->
+    <th:block layout:fragment="css"></th:block>
+</head>
+
+<body class="hold-transition sidebar-mini layout-fixed">
+
+<div class="wrapper">
+
+    <!-- NAVBAR -->
+    <nav class="main-header navbar navbar-expand navbar-white navbar-light shadow-sm">
+        <ul class="navbar-nav">
+            <li class="nav-item">
+                <a class="nav-link" data-widget="pushmenu" href="#" role="button">
+                    <i class="fas fa-bars"></i>
+                </a>
+            </li>
+            <li class="nav-item d-none d-sm-inline-block">
+                <a th:href="@{/Home}" class="nav-link">Inicio</a>
+            </li>
+        </ul>
+
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item dropdown user-menu">
+                <a href="/perfil" class="nav-link dropdown-toggle" data-toggle="dropdown">
+                    <i class="fas fa-user-circle fa-lg"></i>
+                    <span class="d-none d-md-inline ml-2" sec:authentication="name">Usuario</span>
+                </a>
+
+                <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-right shadow border-0">
+                    <li class="user-header bg-primary">
+                        <i class="fas fa-user-circle fa-4x text-white mt-2"></i>
+                        <p>
+                            <span sec:authentication="name">Usuario</span>
+                        </p>
+                    </li>
+
+                    <li class="user-footer">
+                        <a th:href="@{/perfil}" class="btn btn-default btn-flat">Perfil</a>
+                        <form th:action="@{/logout}" method="post" class="float-right">
+                            <button type="submit" class="btn btn-default btn-flat text-danger">
+                                Salir
+                            </button>
+                        </form>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- SIDEBAR -->
+    <aside class="main-sidebar sidebar-dark-primary elevation-4">
+        <a th:href="@{/Home}" class="brand-link">
+            <i class="fas fa-store ml-3"></i>
+            <span class="brand-text font-weight-light ml-2">Mi Sistema</span>
+        </a>
+
+        <div class="sidebar">
+            <nav class="mt-2">
+                <ul class="nav nav-pills nav-sidebar flex-column"
+                    data-widget="treeview"
+                    role="menu"
+                    data-accordion="false">
+
+                    <li class="nav-item">
+                        <a th:href="@{/Home}" class="nav-link">
+                            <i class="nav-icon fas fa-home"></i>
+                            <p>Inicio</p>
+                        </a>
+                    </li>
+
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-users"></i>
+                            <p>
+                                Pedidos
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a th:href="@{/pedidos/listarpedidos}" class="nav-link">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>Listado de Pedidos</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a th:href="@{/pedidios/nuevo}" class="nav-link">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>Nuevo Pedido</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <li class="nav-item has-treeview" sec:authorize="isAuthenticated()">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-users"></i>
+                            <p>
+                                Clientes
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a th:href="@{/listarclientes}" class="nav-link">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>Listado de Clientes</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a th:href="@{/crearcliente/nuevo}" class="nav-link">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>Nuevo Cliente</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-users"></i>
+                            <p>
+                                Productos
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a th:href="@{/listarproductos}" class="nav-link">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>Listado de Productos</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a th:href="@{/crearproducto/nuevo}" class="nav-link">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>Crear Productos</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a th:href="@{/categoria/crear}" class="nav-link">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>Crear Categoria</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-users"></i>
+                            <p>
+                                Ventas
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a th:href="@{/ventas/listar}" class="nav-link">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>Listado de Ventas</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a th:href="@{/ventas/crear}" class="nav-link">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>Crear Venta</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </aside>
+
+    <!-- CONTENIDO -->
+    <div class="content-wrapper">
+        <section class="content pt-3">
+            <div class="container-fluid">
+                <!-- Aquí se inserta el contenido de cada página -->
+                <div layout:fragment="content"></div>
+            </div>
+        </section>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="main-footer text-center">
+        <strong>© 2025 Gestor de Pedidos</strong>
+    </footer>
+
+</div>
+
+<!-- SCRIPTS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/adminlte/js/adminlte.min.js}"></script>
+<script th:src="@{/plugins/datatables/jquery.dataTables.min.js}"></script>
+<script th:src="@{/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js}"></script>
+<script th:src="@{/plugins/datatables-responsive/js/dataTables.responsive.min.js}"></script>
+
+<!-- Script para menú activo -->
+<script th:src="@{/js/menu-active.js}"></script>
+
+<!-- Scripts adicionales de cada página -->
+<th:block layout:fragment="scripts"></th:block>
+
+</body>
+</html>

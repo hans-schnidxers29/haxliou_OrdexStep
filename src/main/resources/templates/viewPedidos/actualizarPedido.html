@@ -1,585 +1,252 @@
 <!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/adminlte}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Actualizar Pedido</title>
-
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- CSS Personalizado Centralizado -->
-    <link th:href="@{/StyleMultiple/StyleMultiples.css}" rel="stylesheet">
-    <link th:href="@{/StyleHome/cambioMood.css}" rel="stylesheet">
-
     <style>
-        /* Estilos específicos para el formulario de actualizar pedido */
-        .container-form {
-            background-color: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            margin-top: 30px;
-            margin-bottom: 30px;
-        }
-        .section-title {
-            border-bottom: 2px solid #667eea;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-            color: #333;
-            font-weight: 600;
-        }
-        .detalle-item {
-            border: 1px solid #ddd;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-radius: 5px;
-            background-color: #f9f9f9;
-            position: relative;
-        }
-        .btn-agregar {
-            margin-top: 10px;
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-            border: none;
-            color: white;
-        }
-        .btn-agregar:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
-        }
-        .total-section {
-            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .form-label {
-            font-weight: 500;
-            color: #555;
-        }
-        .btn-eliminar-detalle {
-            margin-top: 5px;
-            background: #dc3545;
-            border: none;
-        }
-        .btn-eliminar-detalle:hover {
-            background: #c82333;
-        }
-        .info-badge {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 8px;
-            display: inline-block;
-            margin-bottom: 20px;
-            font-weight: 500;
-        }
-        .readonly-info {
-            background-color: #e9ecef;
-            border: 1px solid #ced4da;
-            padding: 10px;
-            border-radius: 5px;
-        }
+        .detalle-item { border-bottom: 1px solid #eee; padding: 15px 0; }
+        .detalle-item:hover { background-color: #fcfcfc; }
+        .info-badge-id { font-size: 1.1rem; font-weight: bold; color: #667eea; background: #f0f2ff; padding: 5px 15px; border-radius: 20px; border: 1px solid #667eea; }
     </style>
 </head>
 <body>
 
-<!-- Sidebar -->
-<nav class="sidebar" id="sidebar">
-    <!-- Header -->
-    <div class="sidebar-header">
-        <a href="/" class="logo">
-            <i class="fas fa-store"></i>
-            <span class="logo-text">Mi Sistema</span>
-        </a>
-        <button class="toggle-btn" onclick="toggleSidebar()">
-            <i class="fas fa-bars"></i>
-        </button>
-    </div>
-
-    <!-- User Info -->
-    <div class="user-info" sec:authorize="isAuthenticated()">
-        <div class="user-avatar">
-            <i class="fas fa-user"></i>
-        </div>
-        <div class="user-details">
-            <div class="user-name" sec:authentication="name">Usuario</div>
-            <div class="user-role" sec:authentication="principal.authorities">ROLE</div>
-        </div>
-    </div>
-
-    <!-- Navigation Menu -->
-    <ul class="nav-menu">
-        <li class="nav-item">
-            <a href="/" class="nav-link">
-                <i class="fas fa-home"></i>
-                <span>Inicio</span>
-            </a>
-        </li>
-
-        <!-- Pedidos -->
-        <li class="nav-item" sec:authorize="isAuthenticated()">
-            <a href="/pedidos/listarpedidos" class="nav-link active">
-                <i class="fas fa-shopping-cart"></i>
-                <span>Pedidos</span>
-            </a>
-        </li>
-
-        <!-- Clientes - Solo ADMIN -->
-        <li class="nav-item" sec:authorize="isAuthenticated()">
-            <a href="/listarclientes" class="nav-link">
-                <i class="fas fa-users"></i>
-                <span>Clientes</span>
-            </a>
-        </li>
-
-        <!-- Productos - Solo ADMIN -->
-        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
-            <a href="/listarproductos" class="nav-link">
-                <i class="fas fa-box"></i>
-                <span>Productos</span>
-            </a>
-        </li>
-        <li class="nav-item" sec:authorize="isAuthenticated()">
-            <a class="nav-link active" href="/ventas/listar">
-                <i class="fas fa-cash-register"></i>
-                <span>Ventas</span>
-            </a>
-        </li>
-
-        <!-- Perfil -->
-        <li class="nav-item" sec:authorize="isAuthenticated()">
-            <a href="/perfil" class="nav-link">
-                <i class="fas fa-user-circle"></i>
-                <span>Mi Perfil</span>
-            </a>
-        </li>
-    </ul>
-
-    <!-- Logout -->
-    <div class="logout-section" sec:authorize="isAuthenticated()">
-        <form th:action="@{/logout}" method="post" style="margin: 0;">
-            <button type="submit" class="logout-btn">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>Cerrar Sesión</span>
-            </button>
-        </form>
-    </div>
-</nav>
-
-<!-- Main Content -->
-<div class="main-content" id="mainContent">
-    <!-- Page Header -->
-    <div class="page-header">
-        <h1><i class="fas fa-edit me-3"></i>Actualizar Pedido</h1>
-        <p class="mb-0">Modifica la información del pedido existente</p>
-    </div>
-
-    <!-- Info Badge con ID del Pedido -->
-    <div class="info-badge">
-        <i class="fas fa-hashtag me-2"></i>Pedido ID: <strong th:text="${pedido.id}">-</strong>
-    </div>
-
-    <div class="container-form">
-        <!-- Mostrar errores si existen -->
-        <div th:if="${param.error}" class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="fas fa-exclamation-circle me-2"></i>
-            <strong>Error:</strong> Ocurrió un problema al actualizar el pedido.
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-
-        <!-- Mostrar éxito -->
-        <div th:if="${param.success}" class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="fas fa-check-circle me-2"></i>
-            <strong>¡Éxito!</strong> El pedido se actualizó correctamente.
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-
-        <form th:action="@{/pedidos/actualizar/{id}(id=${pedido.id})}"
-              th:object="${pedido}"
-              method="POST">
-
-            <!-- Campo oculto para el ID -->
-            <input type="hidden" th:field="*{id}">
-
-            <!-- SECCIÓN: INFORMACIÓN DEL PEDIDO -->
-            <div class="row">
-                <div class="col-md-6">
-                    <h5 class="section-title">
-                        <i class="fas fa-info-circle me-2"></i>Información General
-                    </h5>
-                    <div class="mb-3">
-                        <label for="cliente" class="form-label">
-                            <i class="fas fa-user me-1"></i>Cliente <span class="text-danger">*</span>
-                        </label>
-                        <select id="cliente"
-                                th:field="*{cliente.id}"
-                                class="form-select"
-                                required>
-                            <option value="">-- Selecciona un cliente --</option>
-                            <option th:each="c : ${clientes}"
-                                    th:value="${c.id}"
-                                    th:text="${c.nombre + ' ' + c.apellido}"></option>
-                        </select>
-                    </div>
-
-                    <!-- Fecha de Creación (solo lectura) -->
-                    <div class="mb-3">
-                        <label class="form-label">
-                            <i class="fas fa-calendar-check me-1"></i>Fecha de Creación
-                        </label>
-                        <input type="text"
-                               th:value="${#temporals.format(pedido.fechaPedido, 'dd/MM/yyyy HH:mm')}"
-                               class="form-control readonly-info"
-                               readonly>
-                    </div>
+<div layout:fragment="content">
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2 align-items-center">
+                <div class="col-sm-6">
+                    <h1><i class="fas fa-edit mr-2"></i> Actualizar Pedido</h1>
                 </div>
-
-                <div class="col-md-6">
-                    <h5 class="section-title">
-                        <i class="fas fa-calendar me-2"></i>Fechas y Estado
-                    </h5>
-                    <div class="mb-3">
-                        <label for="fechaEntrega" class="form-label">
-                            <i class="fas fa-truck me-1"></i>Fecha de Entrega <span class="text-danger">*</span>
-                        </label>
-                        <input type="datetime-local"
-                               id="fechaEntrega"
-                               th:field="*{fechaEntrega}"
-                               class="form-control"
-                               required>
-                    </div>
-
-                    <!-- Estado del Pedido -->
-                    <div class="mb-3">
-                        <label for="estado" class="form-label">
-                            <i class="fas fa-flag me-1"></i>Estado del Pedido
-                        </label>
-                        <select id="estado"
-                                th:field="*{estado}"
-                                class="form-select">
-                            <option value="PENDIENTE">Pendiente</option>
-                            <option value="EN_PROCESO">En Proceso</option>
-                            <option value="ENVIADO">Enviado</option>
-                            <option value="ENTREGADO">Entregado</option>
-                            <option value="CANCELADO">Cancelado</option>
-                        </select>
-                    </div>
+                <div class="col-sm-6 text-right">
+                    <span class="info-badge-id">
+                        <i class="fas fa-hashtag mr-1"></i> Pedido #<span th:text="${pedido.id}"></span>
+                    </span>
                 </div>
             </div>
+        </div>
+    </section>
 
-            <!-- SECCIÓN: DETALLES DEL PEDIDO -->
-            <h5 class="section-title mt-4">
-                <i class="fas fa-box me-2"></i>Productos del Pedido
-            </h5>
+    <section class="content">
+        <div class="container-fluid">
+            <form th:action="@{/pedidos/actualizar/{id}(id=${pedido.id})}" th:object="${pedido}" method="POST">
+                <input type="hidden" th:field="*{id}">
 
-            <div id="detallesContainer">
-                <div class="detalle-item" th:each="detalle, iterStat : ${pedido.detalles}">
-                    <!-- Campo oculto para el ID del detalle -->
-                    <input type="hidden" th:field="*{detalles[__${iterStat.index}__].id}">
-
-                    <div class="row">
-                        <div class="col-md-4">
-                            <label class="form-label">
-                                <i class="fas fa-cube me-1"></i>Producto <span class="text-danger">*</span>
-                            </label>
-                            <select th:field="*{detalles[__${iterStat.index}__].producto.id}"
-                                    class="form-select producto-select"
-                                    required
-                                    th:onchange="'actualizarPrecioExistente(this, ' + ${iterStat.index} + ')'">
-                                <option value="">-- Selecciona un producto --</option>
-                                <option th:each="p : ${productos}"
-                                        th:value="${p.id}"
-                                        th:text="${p.nombre}"
-                                        th:data-precio="${p.precio}"></option>
-                            </select>
-                        </div>
-
-                        <div class="col-md-2">
-                            <label class="form-label">
-                                <i class="fas fa-sort-numeric-up me-1"></i>Cantidad <span class="text-danger">*</span>
-                            </label>
-                            <input type="number"
-                                   th:field="*{detalles[__${iterStat.index}__].cantidad}"
-                                   class="form-control cantidad-input"
-                                   min="1"
-                                   required
-                                   th:onchange="'calcularSubtotalExistente(this, ' + ${iterStat.index} + ')'">
-                        </div>
-
-                        <div class="col-md-2">
-                            <label class="form-label">
-                                <i class="fas fa-tag me-1"></i>Precio Unit.
-                            </label>
-                            <input type="number"
-                                   th:field="*{detalles[__${iterStat.index}__].precioUnitario}"
-                                   class="form-control precio-unitario"
-                                   step="0.01"
-                                   readonly>
-                        </div>
-
-                        <div class="col-md-3">
-                            <label class="form-label">
-                                <i class="fas fa-dollar-sign me-1"></i>Subtotal
-                            </label>
-                            <input type="number"
-                                   th:field="*{detalles[__${iterStat.index}__].subtotal}"
-                                   class="form-control subtotal-item"
-                                   step="0.01"
-                                   readonly>
-                        </div>
-
-                        <div class="col-md-1">
-                            <label class="form-label">&nbsp;</label>
-                            <button type="button"
-                                    class="btn btn-danger btn-sm w-100 btn-eliminar-detalle"
-                                    onclick="eliminarDetalle(this)">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <button type="button" class="btn btn-agregar" onclick="agregarDetalle()">
-                <i class="fas fa-plus me-2"></i>Agregar Producto
-            </button>
-
-            <!-- SECCIÓN: OBSERVACIONES -->
-            <div class="mt-4">
-                <h5 class="section-title">
-                    <i class="fas fa-sticky-note me-2"></i>Observaciones
-                </h5>
-                <div class="mb-3">
-                    <textarea th:field="*{observaciones}"
-                              class="form-control"
-                              rows="3"
-                              placeholder="Notas adicionales del pedido..."></textarea>
-                </div>
-            </div>
-
-            <!-- SECCIÓN: TOTALES -->
-            <div class="total-section">
-                <h5 class="text-center mb-3">
-                    <i class="fas fa-calculator me-2"></i>Resumen del Pedido
-                </h5>
                 <div class="row">
-                    <div class="col-md-6 offset-md-3">
-                        <div class="mb-3">
-                            <label class="form-label"><strong>Subtotal:</strong></label>
-                            <input type="number"
-                                   id="totalSubtotal"
-                                   class="form-control"
-                                   step="0.01"
-                                   readonly>
+                    <div class="col-md-8">
+                        <div class="card card-primary card-outline shadow-sm">
+                            <div class="card-header">
+                                <h3 class="card-title font-weight-bold"><i class="fas fa-info-circle mr-1"></i> Información General</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Cliente <span class="text-danger">*</span></label>
+                                            <select th:field="*{cliente.id}" class="form-control select2" required>
+                                                <option th:each="c : ${clientes}" th:value="${c.id}" th:text="${c.nombre + ' ' + (c.apellido ?: '')}"></option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Fecha de Creación</label>
+                                            <input type="text" th:value="${#temporals.format(pedido.fechaPedido, 'dd/MM/yyyy HH:mm')}" class="form-control bg-light" readonly>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Fecha Estimada de Entrega <span class="text-danger">*</span></label>
+                                            <input type="datetime-local" th:field="*{fechaEntrega}" class="form-control" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Estado del Pedido</label>
+                                            <select th:field="*{estado}" class="form-control text-bold">
+                                                <option value="PENDIENTE" class="text-warning">PENDIENTE</option>
+                                                <option value="EN_PROCESO" class="text-primary">EN PROCESO</option>
+                                                <option value="ENVIADO" class="text-info">ENVIADO</option>
+                                                <option value="ENTREGADO" class="text-success">ENTREGADO</option>
+                                                <option value="CANCELADO" class="text-danger">CANCELADO</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <label for="impuesto" class="form-label"><strong>Impuesto (%):</strong></label>
-                            <input type="number"
-                                   id="impuesto"
-                                   th:field="*{impuesto}"
-                                   class="form-control"
-                                   step="0.01"
-                                   value="0"
-                                   onchange="calcularTotal()">
+
+                        <div class="card card-info shadow-sm">
+                            <div class="card-header">
+                                <h3 class="card-title font-weight-bold"><i class="fas fa-boxes mr-1"></i> Detalle de Productos</h3>
+                            </div>
+                            <div class="card-body p-0">
+                                <div id="detallesContainer" class="px-3">
+                                    <div class="detalle-item" th:each="detalle, iterStat : ${pedido.detalles}">
+                                        <input type="hidden" th:field="*{detalles[__${iterStat.index}__].id}">
+
+                                        <div class="row align-items-end">
+                                            <div class="col-md-5">
+                                                <div class="form-group mb-2">
+                                                    <label class="small">Producto</label>
+                                                    <select th:field="*{detalles[__${iterStat.index}__].producto.id}"
+                                                            class="form-control producto-select" required
+                                                            th:onchange="'actualizarPrecio(this, ' + ${iterStat.index} + ')'">
+                                                        <option th:each="p : ${productos}" th:value="${p.id}" th:text="${p.nombre}" th:data-precio="${p.precio}"></option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <div class="form-group mb-2">
+                                                    <label class="small">Cant.</label>
+                                                    <input type="number" th:field="*{detalles[__${iterStat.index}__].cantidad}"
+                                                           class="form-control cantidad-input" min="1" required
+                                                           th:onchange="'calcularSubtotal(this, ' + ${iterStat.index} + ')'">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <div class="form-group mb-2">
+                                                    <label class="small">P. Unit</label>
+                                                    <input type="number" th:field="*{detalles[__${iterStat.index}__].precioUnitario}"
+                                                           class="form-control precio-unitario bg-light" readonly step="0.01">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-group mb-2">
+                                                    <label class="small">Subtotal</label>
+                                                    <div class="input-group">
+                                                        <input type="number" th:field="*{detalles[__${iterStat.index}__].subtotal}"
+                                                               class="form-control subtotal-item bg-light text-bold" readonly step="0.01">
+                                                        <div class="input-group-append">
+                                                            <button type="button" class="btn btn-danger" onclick="eliminarDetalle(this)"><i class="fas fa-trash"></i></button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="p-3">
+                                    <button type="button" class="btn btn-outline-info btn-sm" onclick="agregarDetalle()">
+                                        <i class="fas fa-plus mr-1"></i> Añadir Producto
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        <div class="mb-3" style="background-color: white; padding: 15px; border-radius: 8px; border: 2px solid #667eea;">
-                            <label class="form-label"><strong style="font-size: 1.3rem;">Total a Pagar:</strong></label>
-                            <input type="number"
-                                   id="totalPedido"
-                                   th:field="*{total}"
-                                   class="form-control"
-                                   step="0.01"
-                                   readonly
-                                   style="font-size: 1.2rem; font-weight: bold; color: #667eea;">
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card card-dark shadow">
+                            <div class="card-header"><h3 class="card-title font-weight-bold">Resumen de Cobro</h3></div>
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Subtotal:</span>
+                                    <span class="font-weight-bold">$ <span id="labelSubtotal">0.00</span></span>
+                                </div>
+                                <div class="form-group">
+                                    <label>Impuesto (%)</label>
+                                    <input type="number" th:field="*{impuesto}" id="impuesto" class="form-control" step="0.01" onchange="calcularTotal()">
+                                </div>
+                                <hr>
+                                <div class="bg-light p-3 text-center border rounded mb-3">
+                                    <span class="text-muted small d-block">TOTAL ACTUALIZADO</span>
+                                    <span class="h3 font-weight-bold text-primary">$ <span id="labelTotal">0.00</span></span>
+                                    <input type="hidden" th:field="*{total}" id="inputTotal">
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-block btn-lg shadow">
+                                    <i class="fas fa-sync-alt mr-1"></i> ACTUALIZAR PEDIDO
+                                </button>
+                                <a th:href="@{/pedidos/listarpedidos}" class="btn btn-default btn-block mt-2">Volver al listado</a>
+                            </div>
+                        </div>
+
+                        <div class="card card-outline card-secondary shadow-sm">
+                            <div class="card-body p-2">
+                                <label class="small text-muted">Notas Internas</label>
+                                <textarea th:field="*{observaciones}" class="form-control border-0" rows="3" placeholder="Escriba aquí..."></textarea>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- BOTONES DE ACCIÓN -->
-            <div class="mt-4 text-center">
-                <button type="submit" class="btn btn-primary btn-lg">
-                    <i class="fas fa-save me-2"></i>Actualizar Pedido
-                </button>
-                <a href="/pedidos/listarpedidos" class="btn btn-secondary btn-lg">
-                    <i class="fas fa-times me-2"></i>Cancelar
-                </a>
-            </div>
-        </form>
-    </div>
+            </form>
+        </div>
+    </section>
 </div>
 
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<th:block layout:fragment="scripts">
+    <script th:inline="javascript">
+        /* Obtener datos de productos del servidor */
+        const productosList = /*[[${productos}]]*/ [];
+        let detalleCount = /*[[${pedido.detalles.size()}]]*/ 0;
 
-<!-- JS Personalizado -->
-<script th:src="@{/JavaScript/js/FuncionesAlert.js}"></script>
-<script th:src="@{/JavaScript/js/cambioMood.js}"></script>
-<script th:inline="javascript">
-    /*<![CDATA[*/
-    // Obtener el índice inicial de detalles
-    let detalleCount = /*[[${pedido.detalles.size()}]]*/ 0;
-
-    // Obtener los productos para usar en nuevos detalles
-    const productosData = /*[[${productos}]]*/ [];
-
-    function toggleSidebar() {
-        document.getElementById('sidebar').classList.toggle('collapsed');
-        document.getElementById('mainContent').classList.toggle('expanded');
-    }
-
-    // Función para agregar un nuevo detalle
-    function agregarDetalle() {
-        const container = document.getElementById('detallesContainer');
-        const nuevoDetalle = document.createElement('div');
-        nuevoDetalle.className = 'detalle-item';
-
-        // Construir opciones de productos
-        let opcionesProductos = '<option value="">-- Selecciona un producto --</option>';
-        productosData.forEach(producto => {
-            opcionesProductos += `<option value="${producto.id}" data-precio="${producto.precio}">${producto.nombre}</option>`;
-        });
-
-        nuevoDetalle.innerHTML = `
-            <div class="row">
-                <div class="col-md-4">
-                    <label class="form-label">
-                        <i class="fas fa-cube me-1"></i>Producto <span class="text-danger">*</span>
-                    </label>
-                    <select name="detalles[${detalleCount}].producto.id"
-                            class="form-select producto-select"
-                            required
-                            onchange="actualizarPrecio(this)">
-                        ${opcionesProductos}
-                    </select>
-                </div>
-
-                <div class="col-md-2">
-                    <label class="form-label">
-                        <i class="fas fa-sort-numeric-up me-1"></i>Cantidad <span class="text-danger">*</span>
-                    </label>
-                    <input type="number"
-                           name="detalles[${detalleCount}].cantidad"
-                           class="form-control cantidad-input"
-                           min="1"
-                           value="1"
-                           required
-                           onchange="calcularSubtotalNuevo(this)">
-                </div>
-
-                <div class="col-md-2">
-                    <label class="form-label">
-                        <i class="fas fa-tag me-1"></i>Precio Unit.
-                    </label>
-                    <input type="number"
-                           name="detalles[${detalleCount}].precioUnitario"
-                           class="form-control precio-unitario"
-                           step="0.01"
-                           value="0"
-                           readonly>
-                </div>
-
-                <div class="col-md-3">
-                    <label class="form-label">
-                        <i class="fas fa-dollar-sign me-1"></i>Subtotal
-                    </label>
-                    <input type="number"
-                           name="detalles[${detalleCount}].subtotal"
-                           class="form-control subtotal-item"
-                           step="0.01"
-                           value="0"
-                           readonly>
-                </div>
-
-                <div class="col-md-1">
-                    <label class="form-label">&nbsp;</label>
-                    <button type="button"
-                            class="btn btn-danger btn-sm w-100 btn-eliminar-detalle"
-                            onclick="eliminarDetalle(this)">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </div>
-        `;
-        container.appendChild(nuevoDetalle);
-        detalleCount++;
-    }
-
-    // Eliminar detalle
-    function eliminarDetalle(boton) {
-        const container = document.getElementById('detallesContainer');
-        if (container.children.length > 1) {
-            boton.closest('.detalle-item').remove();
-            calcularTotal();
-        } else {
-            alert('Debe haber al menos un producto en el pedido');
+        function agregarDetalle() {
+            let opciones = productosList.map(p => `<option value="${p.id}" data-precio="${p.precio}">${p.nombre}</option>`).join('');
+            const html = `
+                <div class="detalle-item">
+                    <div class="row align-items-end">
+                        <div class="col-md-5">
+                            <div class="form-group mb-2">
+                                <select name="detalles[${detalleCount}].producto.id" class="form-control producto-select" required onchange="actualizarPrecio(this, ${detalleCount})">
+                                    <option value="">-- Seleccionar --</option>
+                                    ${opciones}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group mb-2"><input type="number" name="detalles[${detalleCount}].cantidad" class="form-control cantidad-input" min="1" value="1" required onchange="calcularSubtotal(this, ${detalleCount})"></div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group mb-2"><input type="number" name="detalles[${detalleCount}].precioUnitario" class="form-control precio-unitario bg-light" readonly step="0.01"></div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group mb-2">
+                                <div class="input-group">
+                                    <input type="number" name="detalles[${detalleCount}].subtotal" class="form-control subtotal-item bg-light text-bold" readonly step="0.01">
+                                    <div class="input-group-append"><button type="button" class="btn btn-danger" onclick="eliminarDetalle(this)"><i class="fas fa-trash"></i></button></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            $('#detallesContainer').append(html);
+            detalleCount++;
         }
-    }
 
-    // Actualizar precio para detalles existentes
-    function actualizarPrecioExistente(selectElement, index) {
-        const precio = selectElement.options[selectElement.selectedIndex].getAttribute('data-precio') || 0;
-        const detalleItem = selectElement.closest('.detalle-item');
-        const precioInput = detalleItem.querySelector('.precio-unitario');
-        precioInput.value = parseFloat(precio).toFixed(2);
-        calcularSubtotalExistente(precioInput, index);
-    }
+        function eliminarDetalle(btn) {
+            $(btn).closest('.detalle-item').remove();
+            calcularTotal();
+        }
 
-    // Actualizar precio para nuevos detalles
-    function actualizarPrecio(selectElement) {
-        const precio = selectElement.options[selectElement.selectedIndex].getAttribute('data-precio') || 0;
-        const detalleItem = selectElement.closest('.detalle-item');
-        const precioInput = detalleItem.querySelector('.precio-unitario');
-        precioInput.value = parseFloat(precio).toFixed(2);
-        calcularSubtotalNuevo(precioInput);
-    }
+        function actualizarPrecio(select, index) {
+            const precio = $(select).find(':selected').data('precio') || 0;
+            const row = $(select).closest('.detalle-item');
+            row.find('.precio-unitario').val(parseFloat(precio).toFixed(2));
+            calcularSubtotal(select, index);
+        }
 
-    // Calcular subtotal para detalles existentes
-    function calcularSubtotalExistente(element, index) {
-        const detalleItem = element.closest('.detalle-item');
-        const cantidad = parseFloat(detalleItem.querySelector('.cantidad-input').value) || 0;
-        const precio = parseFloat(detalleItem.querySelector('.precio-unitario').value) || 0;
-        const subtotal = cantidad * precio;
-        detalleItem.querySelector('.subtotal-item').value = subtotal.toFixed(2);
-        calcularTotal();
-    }
+        function calcularSubtotal(el, index) {
+            const row = $(el).closest('.detalle-item');
+            const cant = parseFloat(row.find('.cantidad-input').val()) || 0;
+            const prec = parseFloat(row.find('.precio-unitario').val()) || 0;
+            row.find('.subtotal-item').val((cant * prec).toFixed(2));
+            calcularTotal();
+        }
 
-    // Calcular subtotal para nuevos detalles
-    function calcularSubtotalNuevo(element) {
-        const detalleItem = element.closest('.detalle-item');
-        const cantidad = parseFloat(detalleItem.querySelector('.cantidad-input').value) || 0;
-        const precio = parseFloat(detalleItem.querySelector('.precio-unitario').value) || 0;
-        const subtotal = cantidad * precio;
-        detalleItem.querySelector('.subtotal-item').value = subtotal.toFixed(2);
-        calcularTotal();
-    }
+        function calcularTotal() {
+            let subtotal = 0;
+            $('.subtotal-item').each(function() { subtotal += parseFloat($(this).val()) || 0; });
+            const imp = parseFloat($('#impuesto').val()) || 0;
+            const total = subtotal + (subtotal * (imp / 100));
 
-    // Calcular total general
-    function calcularTotal() {
-        let totalSubtotal = 0;
-        document.querySelectorAll('.subtotal-item').forEach(item => {
-            totalSubtotal += parseFloat(item.value) || 0;
-        });
+            $('#labelSubtotal').text(subtotal.toFixed(2));
+            $('#labelTotal').text(total.toFixed(2));
+            $('#inputTotal').val(total.toFixed(2));
+        }
 
-        const impuesto = parseFloat(document.getElementById('impuesto').value) || 0;
-        const impuestoCalculado = totalSubtotal * (impuesto / 100);
-        const total = totalSubtotal + impuestoCalculado;
-
-        document.getElementById('totalSubtotal').value = totalSubtotal.toFixed(2);
-        document.getElementById('totalPedido').value = total.toFixed(2);
-    }
-
-    // Calcular total al cargar la página
-    document.addEventListener('DOMContentLoaded', function() {
-        calcularTotal();
-    });
-    /*]]>*/
-</script>
+        $(document).ready(() => calcularTotal());
+    </script>
+</th:block>
 </body>
 </html>

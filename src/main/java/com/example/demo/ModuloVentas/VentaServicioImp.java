@@ -12,7 +12,11 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
+import java.util.stream.Collectors;
 
 @Service
 public class VentaServicioImp implements VentaServicio {
@@ -117,5 +121,18 @@ public class VentaServicioImp implements VentaServicio {
         LocalDateTime inicio = fecha.atStartOfDay(); // 00:00:00
         LocalDateTime fin = fecha.plusDays(1).atStartOfDay(); // 00:00:00 del día siguiente
         return detalleVentaRepositorio.sumaProductosPorDia(inicio, fin);
+    }
+
+    @Override
+    public List<String> ListaMeses() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM", new Locale("es", "ES"));
+        return repositorioVenta.listarFechas()
+                .stream()
+                .toList();
+    }
+
+    @Override
+    public List<BigDecimal> listarTotalVentas() {
+        return repositorioVenta.ListaTotalVentas().stream().toList();
     }
 }

@@ -1,196 +1,95 @@
 <!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Inicio - Panel de Control</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link th:href="@{/StyleHome/StyleHome.css}" rel="stylesheet">
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6"
+      layout:decorate="~{layouts/adminlte}">
 
+<head>
+    <title>Home - Gestor de Pedidos</title>
 </head>
+
 <body>
 
-<!-- Sidebar -->
-<nav class="sidebar" id="sidebar">
-    <!-- Header -->
-    <div class="sidebar-header">
-        <a href="/" class="logo">
-            <i class="fas fa-store"></i>
-            <span class="logo-text">Mi Sistema</span>
-        </a>
-        <button class="toggle-btn" onclick="toggleSidebar()">
-            <i class="fas fa-bars"></i>
-        </button>
-    </div>
+<div layout:fragment="content">
 
-    <!-- User Info -->
-    <div class="user-info" sec:authorize="isAuthenticated()">
-        <div class="user-avatar">
-            <i class="fas fa-user"></i>
-        </div>
-        <div class="user-details">
-            <div class="user-name" sec:authentication="name">Usuario</div>
-            <div class="user-role" sec:authentication="principal.authorities">ROLE</div>
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Bienvenido al Panel de Gestión</h1>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Navigation Menu -->
-    <ul class="nav-menu">
-        <li class="nav-item">
-            <a href="/" class="nav-link active">
-                <i class="fas fa-home"></i>
-                <span>Inicio</span>
-            </a>
-        </li>
-
-        <!-- Pedidos - Para todos los usuarios autenticados -->
-        <li class="nav-item" sec:authorize="isAuthenticated()">
-            <a href="/pedidos/listarpedidos" class="nav-link">
-                <i class="fas fa-shopping-cart"></i>
-                <span>Pedidos</span>
-            </a>
-        </li>
-
-        <li class="nav-item" sec:authorize="isAuthenticated()">
-            <a href="/listarclientes" class="nav-link">
-                <i class="fas fa-users"></i>
-                <span>Clientes</span>
-            </a>
-        </li>
-
-        <!-- Productos - Solo ADMIN -->
-        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
-            <a href="/listarproductos" class="nav-link">
-                <i class="fas fa-box"></i>
-                <span>Productos</span>
-            </a>
-        </li>
-
-        <li class="nav-item" sec:authorize="isAuthenticated()">
-            <a class="nav-link active" href="/ventas/listar">
-                <i class="fas fa-cash-register"></i>
-                <span>Ventas</span>
-            </a>
-        </li>
-
-        <!-- Perfil -->
-        <li class="nav-item" sec:authorize="isAuthenticated()">
-            <a href="/perfil" class="nav-link">
-                <i class="fas fa-user-circle"></i>
-                <span>Mi Perfil</span>
-            </a>
-        </li>
-    </ul>
-
-    <!-- Logout -->
-    <div class="logout-section" sec:authorize="isAuthenticated()">
-        <form th:action="@{/logout}" method="post" style="margin: 0;">
-            <button type="submit" class="logout-btn">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>Cerrar Sesión</span>
-            </button>
-        </form>
-    </div>
-</nav>
-<!-- Main Content -->
-<div class="main-content" id="mainContent">
-    <div class="container-fluid py-4">
-        <div class="text-center mb-5">
-            <h1 class="display-5 fw-bold">Bienvenido al Panel de Gestión</h1>
-            <p class="lead">Selecciona una sección para continuar</p>
+    <div class="row">
+        <!-- Card Pedidos -->
+        <div class="col-lg-3 col-md-6" sec:authorize="isAuthenticated()">
+            <div class="small-box bg-warning shadow">
+                <div class="inner">
+                    <h3>Pedidos</h3>
+                    <p>Gestión de órdenes actuales</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <a th:href="@{/pedidos/listarpedidos}" class="small-box-footer">
+                    Ir a Pedidos <i class="fas fa-arrow-circle-right"></i>
+                </a>
+            </div>
         </div>
-        <div class="row g-4 justify-content-center">
 
-            <!-- Pedidos -->
-            <div class="col-md-4" sec:authorize="isAuthenticated()">
-                <div class="card shadow-sm">
-                    <div class="card-body text-center">
-                        <div class="mb-3">
-                            <i class="fas fa-shopping-cart fa-3x text-warning"></i>
-                        </div>
-                        <h5 class="card-title">Pedidos</h5>
-                        <p class="card-text">Consulta y gestiona los pedidos realizados.</p>
-                        <a href="/pedidos/listarpedidos" class="btn btn-warning text-white">
-                            <i class="fas fa-arrow-right me-2"></i>Ir a Pedidos
-                        </a>
-                    </div>
+        <!-- Card Clientes -->
+        <div class="col-lg-3 col-md-6" sec:authorize="isAuthenticated()">
+            <div class="small-box bg-primary shadow">
+                <div class="inner">
+                    <h3>Clientes</h3>
+                    <p>Directorio de clientes</p>
                 </div>
-            </div>
-
-            <!-- Clientes -->
-            <div class="col-md-4" sec:authorize="isAuthenticated()">
-                <div class="card shadow-sm">
-                    <div class="card-body text-center">
-                        <div class="mb-3">
-                            <i class="fas fa-users fa-3x text-primary"></i>
-                        </div>
-                        <h5 class="card-title">Clientes</h5>
-                        <p class="card-text">Gestiona la información de tus clientes.</p>
-                        <a href="/listarclientes" class="btn btn-primary">
-                            <i class="fas fa-arrow-right me-2"></i>Ir a Clientes
-                        </a>
-                    </div>
+                <div class="icon">
+                    <i class="fas fa-users"></i>
                 </div>
+                <a th:href="@{/listarclientes}" class="small-box-footer">
+                    Ir a Clientes <i class="fas fa-arrow-circle-right"></i>
+                </a>
             </div>
+        </div>
 
-            <!-- Productos -->
-            <div class="col-md-4" sec:authorize="hasRole('ADMIN')">
-                <div class="card shadow-sm">
-                    <div class="card-body text-center">
-                        <div class="mb-3">
-                            <i class="fas fa-box fa-3x text-success"></i>
-                        </div>
-                        <h5 class="card-title">Productos</h5>
-                        <p class="card-text">Administra tu catálogo de productos.</p>
-                        <a href="/listarproductos" class="btn btn-success">
-                            <i class="fas fa-arrow-right me-2"></i>Ir a Productos
-                        </a>
-                    </div>
+        <!-- Card Productos -->
+        <div class="col-lg-3 col-md-6" sec:authorize="hasRole('ADMIN')">
+            <div class="small-box bg-success shadow">
+                <div class="inner">
+                    <h3>Productos</h3>
+                    <p>Catálogo e Inventario</p>
                 </div>
-            </div>
-
-            <!-- usuarios -->
-            <div class="col-md-4" sec:authorize="hasRole('ADMIN')">
-                <div class="card shadow-sm">
-                    <div class="card-body text-center">
-                        <div class="mb-3">
-                            <i class="fas fa-users fa-3x text-primary"></i>
-                        </div>
-                        <h5 class="card-title">Usuarios</h5>
-                        <p class="card-text">Gestiona la información de tus usuarios.</p>
-                        <a href="/perfil" class="btn btn-primary">
-                            <i class="fas fa-arrow-right me-2"></i>Ir a Usuarios
-                        </a>
-                    </div>
+                <div class="icon">
+                    <i class="fas fa-box"></i>
                 </div>
+                <a th:href="@{/listarproductos}" class="small-box-footer">
+                    Ir a Productos <i class="fas fa-arrow-circle-right"></i>
+                </a>
             </div>
+        </div>
 
-            <!-- ventas-->
-            <div class="col-md-4" sec:authorize="isAuthenticated()">
-                <div class="card shadow-sm">
-                    <div class="card-body text-center">
-                        <!-- Ícono de ventas centrado -->
-                        <div class="mb-3">
-                            <i class="fas fa-cash-register fa-3x text-primary"></i>
-                        </div>
-                        <h5 class="card-title">Venta Directa</h5>
-                        <p class="card-text">Realizar ventas directas</p>
-                        <a href="/ventas/listar" class="btn btn-primary">
-                            <i class="fas fa-arrow-right me-2"></i> Ir a Ventas
-                        </a>
-                    </div>
+        <!-- Card Ventas -->
+        <div class="col-lg-3 col-md-6" sec:authorize="isAuthenticated()">
+            <div class="small-box bg-danger shadow">
+                <div class="inner">
+                    <h3>Venta Directa</h3>
+                    <p>Registrar nueva venta</p>
                 </div>
+                <div class="icon">
+                    <i class="fas fa-cash-register"></i>
+                </div>
+                <a th:href="@{/ventas/listar}" class="small-box-footer">
+                    Ir a Ventas <i class="fas fa-arrow-circle-right"></i>
+                </a>
             </div>
-
-
-
         </div>
     </div>
-<script th:src="@{/JavsScript/js/FuncionesAlert.js}"></script>
-<script th:src="@{/JavsScript/Funciones.js}"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 </div>
+
 </body>
 </html>

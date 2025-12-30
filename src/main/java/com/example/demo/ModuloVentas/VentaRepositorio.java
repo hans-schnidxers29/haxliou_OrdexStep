@@ -6,6 +6,8 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -16,5 +18,11 @@ public interface VentaRepositorio extends JpaRepository<Venta, Long> {
 
     @Query("SELECT SUM(v.total) FROM Venta v WHERE EXTRACT( MONTH from v.fechaVenta) = :mes AND EXTRACT (YEAR from v.fechaVenta) = :anio")
     BigDecimal sumaPorMes(@Param("mes") int mes, @Param("anio") int anio);
+
+    @Query("SELECT CAST(v.fechaVenta AS string) FROM Venta v")
+    List<String> listarFechas();
+
+    @Query("SELECT v.total FROM Venta v")
+    List<BigDecimal> ListaTotalVentas();
 
 }

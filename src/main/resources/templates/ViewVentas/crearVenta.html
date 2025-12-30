@@ -1,384 +1,217 @@
 <!DOCTYPE html>
-<html lang="es" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6"
-      xmlns:th="http://www.thymeleaf.org">
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6"
+      layout:decorate="~{layouts/adminlte}">
 <head>
-    <meta charset="UTF-8">
-    <meta content="width=device-width, initial-scale=1" name="viewport">
     <title>Registrar Venta</title>
-
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-
-    <!-- CSS Personalizado -->
-    <link rel="stylesheet" th:href="@{/StyleMultiple/StyleMultiples.css}">
-
-    <style>
-        .container-form {
-            background-color: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            margin-top: 30px;
-            margin-bottom: 30px;
-        }
-
-        .section-title {
-            border-bottom: 2px solid #667eea;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-            color: #333;
-            font-weight: 600;
-        }
-
-        .detalle-item {
-            border: 1px solid #ddd;
-            padding: 15px;
-            margin-bottom: 10px;
-            border-radius: 5px;
-            background-color: #f9f9f9;
-        }
-
-        .total-section {
-            background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 20px;
-        }
-    </style>
 </head>
 <body>
 
-<!-- Sidebar -->
-<nav class="sidebar" id="sidebar">
-    <!-- Header -->
-    <div class="sidebar-header">
-        <a class="logo" href="/">
-            <i class="fas fa-store"></i>
-            <span class="logo-text">Mi Sistema</span>
-        </a>
-        <button class="toggle-btn" onclick="toggleSidebar()">
-            <i class="fas fa-bars"></i>
-        </button>
-    </div>
-
-    <!-- User Info -->
-    <div class="user-info" sec:authorize="isAuthenticated()">
-        <div class="user-avatar">
-            <i class="fas fa-user"></i>
-        </div>
-        <div class="user-details">
-            <div class="user-name" sec:authentication="name">Usuario</div>
-            <div class="user-role" sec:authentication="principal.authorities">ROLE</div>
-        </div>
-    </div>
-
-    <!-- Navigation Menu -->
-    <ul class="nav-menu">
-        <li class="nav-item">
-            <a class="nav-link" href="/">
-                <i class="fas fa-home"></i>
-                <span>Inicio</span>
-            </a>
-        </li>
-        <li class="nav-item" sec:authorize="isAuthenticated()">
-            <a class="nav-link" href="/pedidos/listarpedidos">
-                <i class="fas fa-shopping-cart"></i>
-                <span>Pedidos</span>
-            </a>
-        </li>
-        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
-            <a class="nav-link" href="/listarclientes">
-                <i class="fas fa-users"></i>
-                <span>Clientes</span>
-            </a>
-        </li>
-        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
-            <a class="nav-link" href="/listarproductos">
-                <i class="fas fa-box"></i>
-                <span>Productos</span>
-            </a>
-        </li>
-        <li class="nav-item" sec:authorize="isAuthenticated()">
-            <a class="nav-link active" href="/perfil">
-                <i class="fas fa-user-circle"></i>
-                <span>Mi Perfil</span>
-            </a>
-        </li>
-    </ul>
-
-    <!-- Logout -->
-    <div class="logout-section" sec:authorize="isAuthenticated()">
-        <form method="post" style="margin: 0;" th:action="@{/logout}">
-            <button class="logout-btn" type="submit">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>Cerrar Sesión</span>
-            </button>
-        </form>
-    </div>
-</nav>
-
-<!-- MAIN CONTENT -->
-<div class="main-content" id="mainContent">
-
-    <div class="page-header">
-        <h1><i class="fas fa-plus-circle me-3"></i>Registrar Venta</h1>
-    </div>
-
-    <div class="container-form">
-
-        <form method="POST" th:action="@{/ventas/crear/nueva}" th:object="${venta}">
-
-            <!-- INFORMACIÓN GENERAL -->
-            <h5 class="section-title">
-                <i class="fas fa-info-circle me-2"></i>Información General
-            </h5>
-
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Cliente</label>
-                    <select class="form-select" required th:field="*{cliente}">
-                        <option disabled selected value="">Selecciona un cliente</option>
-                        <option th:each="c : ${clientes}" th:text="${c.nombre}" th:value="${c.id}"></option>
-                    </select>
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Método de Pago</label>
-                    <select class="form-select" required th:field="*{metodoPago}">
-                        <option disabled selected value="">Seleccione...</option>
-                        <option value="EFECTIVO">Efectivo</option>
-                        <option value="TRANSFERENCIA">Transferencia</option>
-                        <option value="TARJETA">Tarjeta</option>
-                        <option value="MIXTO">Mixto</option>
-                    </select>
+<div layout:fragment="content">
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1><i class="fas fa-cart-plus mr-2"></i> Nueva Venta</h1>
                 </div>
             </div>
+        </div>
+    </section>
 
-            <!-- DETALLES DE VENTA -->
-            <h5 class="section-title mt-4"><i class="fas fa-box me-2"></i>Productos</h5>
+    <section class="content">
+        <div class="container-fluid">
+            <form th:action="@{/ventas/crear/nueva}" th:object="${venta}" method="POST">
 
-            <div id="detallesContainer">
-                <div class="detalle-item">
-                    <div class="row">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card card-primary card-outline shadow">
+                            <div class="card-header">
+                                <h3 class="card-title font-weight-bold">Datos de Facturación</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label>Cliente <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <select class="form-control select2" th:field="*{cliente}" required>
+                                            <option value="" disabled selected>Seleccione un cliente</option>
+                                            <option th:each="c : ${clientes}" th:value="${c.id}" th:text="${c.nombre}"></option>
+                                        </select>
+                                        <div class="input-group-append">
+                                            <a href="/crearcliente/nuevo" class="btn btn-outline-primary" title="Nuevo Cliente">
+                                                <i class="fas fa-plus"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
 
-                        <div class="col-md-5">
-                            <label class="form-label">Producto</label>
-                            <select class="form-select producto-select" name="detalles[0].producto.id"
-                                    onchange="actualizarPrecio(0)" required>
-                                <option disabled selected value="">-- Selecciona --</option>
-                                <option th:data-precio="${p.precio}" th:each="p : ${productos}"
-                                        th:text="${p.nombre}" th:value="${p.id}"></option>
-                            </select>
+                                <div class="form-group">
+                                    <label>Método de Pago <span class="text-danger">*</span></label>
+                                    <select class="form-control" th:field="*{metodoPago}" required>
+                                        <option value="" disabled selected>Seleccione pago...</option>
+                                        <option value="EFECTIVO">Efectivo</option>
+                                        <option value="TRANSFERENCIA">Transferencia</option>
+                                        <option value="TARJETA">Tarjeta</option>
+                                        <option value="MIXTO">Mixto</option>
+                                    </select>
+                                </div>
+
+                                <hr>
+
+                                <div class="bg-light p-3 rounded">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Subtotal:</span>
+                                        <input type="number" id="subtotalGeneral" class="form-control form-control-sm text-right border-0 bg-transparent font-weight-bold" readonly value="0.000">
+                                    </div>
+                                    <div class="form-group mb-2">
+                                        <label class="small">Impuesto (%)</label>
+                                        <input type="number" id="impuesto" th:field="*{impuesto}" class="form-control form-control-sm text-right" onchange="calcularTotal()" value="0">
+                                    </div>
+                                    <div class="d-flex justify-content-between text-lg text-primary font-weight-bold mt-3">
+                                        <span>TOTAL:</span>
+                                        <div>
+                                            $ <input type="number" id="totalVenta" th:field="*{total}" class="d-inline text-right border-0 bg-transparent font-weight-bold text-primary" readonly style="width: 120px;">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <button type="submit" class="btn btn-success btn-block shadow">
+                                    <i class="fas fa-save mr-1"></i> Finalizar Venta
+                                </button>
+                                <a href="/ventas/listar" class="btn btn-default btn-block mt-2">Cancelar</a>
+                            </div>
                         </div>
+                    </div>
 
-                        <div class="col-md-3">
-                            <label class="form-label">Cantidad</label>
-                            <input class="form-control" min="1" name="detalles[0].cantidad"
-                                   onchange="calcularSubtotal(0)" required
-                                   type="number" value="1">
-                        </div>
-
-                        <!--
-                        ═══════════════════════════════════════════════════════════════
-                        CAMBIO #1: step="0.01" → step="0.001" (3 decimales)
-                        ═══════════════════════════════════════════════════════════════
-                        -->
-                        <div class="col-md-2">
-                            <label class="form-label">Precio</label>
-                            <input class="form-control precio-unitario" name="detalles[0].precioUnitario" readonly
-                                   step="0.001"
-                                   type="number">
-                        </div>
-                        <!--
-                        ═══════════════════════════════════════════════════════════════
-                        CAMBIO #2: step="0.01" → step="0.001" (3 decimales)
-                        ═══════════════════════════════════════════════════════════════
-                        -->
-                        <div class="col-md-2">
-                            <label class="form-label">Subtotal</label>
-                            <input class="form-control subtotal-item" name="detalles[0].subtotal" readonly
-                                   step="0.001"
-                                   type="number">
+                    <div class="col-md-8">
+                        <div class="card card-outline card-info shadow">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h3 class="card-title font-weight-bold">Detalle de Productos</h3>
+                                <button type="button" class="btn btn-primary btn-sm ml-auto" onclick="agregarDetalle()">
+                                    <i class="fas fa-plus mr-1"></i> Agregar Fila
+                                </button>
+                            </div>
+                            <div class="card-body p-0">
+                                <table class="table table-striped mb-0" id="tablaDetalles">
+                                    <thead class="bg-info text-white">
+                                    <tr>
+                                        <th style="width: 45%">Producto</th>
+                                        <th style="width: 15%">Cantidad</th>
+                                        <th style="width: 20%">Precio Unit.</th>
+                                        <th style="width: 20%">Subtotal</th>
+                                        <th style="width: 40px"></th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="detallesContainer">
+                                    <tr class="detalle-item">
+                                        <td>
+                                            <select name="detalles[0].producto.id" class="form-control producto-select" onchange="actualizarPrecio(0)" required>
+                                                <option value="" disabled selected>-- Seleccione --</option>
+                                                <option th:each="p : ${productos}"
+                                                        th:value="${p.id}"
+                                                        th:text="${p.nombre}"
+                                                        th:data-precio="${p.precio}"></option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input type="number" name="detalles[0].cantidad" class="form-control" value="1" min="1" onchange="calcularSubtotal(0)" required>
+                                        </td>
+                                        <td>
+                                            <input type="number" name="detalles[0].precioUnitario" class="form-control precio-unitario" readonly step="0.001" value="0.000">
+                                        </td>
+                                        <td>
+                                            <input type="number" name="detalles[0].subtotal" class="form-control subtotal-item" readonly step="0.001" value="0.000">
+                                        </td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-link text-danger p-0" onclick="eliminarFila(this)"><i class="fas fa-times-circle"></i></button>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <button class="btn btn-primary mt-3" onclick="agregarDetalle()" type="button">
-                <i class="fas fa-plus me-2"></i>Agregar Producto
-            </button>
-
-            <!-- TOTALES -->
-            <div class="total-section mt-4">
-                <h5 class="text-center mb-3"><i class="fas fa-calculator me-2"></i>Resumen</h5>
-
-                <label><strong>Subtotal:</strong></label>
-                <input class="form-control mb-3" id="subtotalGeneral" readonly type="number">
-
-                <label><strong>Impuesto (%):</strong></label>
-                <input class="form-control mb-3" id="impuesto" onchange="calcularTotal()"
-                       th:field="*{impuesto}" type="number" value="0">
-
-                <label><strong>Total a Pagar:</strong></label>
-                <input class="form-control" id="totalVenta" readonly
-                       th:field="*{total}" type="number">
-            </div>
-
-            <!-- BOTONES -->
-            <div class="text-center mt-4">
-                <button class="btn btn-success btn-lg"><i class="fas fa-save me-2"></i>Guardar Venta</button>
-                <a class="btn btn-secondary btn-lg" href="/ventas/listar"><i class="fas fa-times me-2"></i>Cancelar</a>
-                <a class="btn btn-info btn-lg" href="/crearcliente/nuevo"><i class="fas fa-user-plus me-2"></i>Nuevo
-                    Cliente</a>
-            </div>
-
-        </form>
-    </div>
+            </form>
+        </div>
+    </section>
 </div>
 
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<th:block layout:fragment="scripts">
+    <script>
+        let detalleCount = 1;
 
-<!-- JS Personalizado -->
-<script th:src="@{/JavsScript/js/FuncionesAlert.js}"></script>
+        function agregarDetalle() {
+            const container = document.getElementById('detallesContainer');
+            // Clonamos el contenido del primer select para mantener los data-precio
+            const opciones = document.querySelector('.producto-select').innerHTML;
 
-<!--
-╔═══════════════════════════════════════════════════════════════════════════════╗
-║                         JAVASCRIPT - CAMBIOS PARA 3 DECIMALES                 ║
-╚═══════════════════════════════════════════════════════════════════════════════╝
--->
-<script>
-    let detalleCount = 1;
+            const tr = document.createElement('tr');
+            tr.className = "detalle-item";
+            tr.innerHTML = `
+                <td>
+                    <select name="detalles[${detalleCount}].producto.id" class="form-control producto-select" onchange="actualizarPrecio(${detalleCount})" required>
+                        ${opciones}
+                    </select>
+                </td>
+                <td>
+                    <input type="number" name="detalles[${detalleCount}].cantidad" class="form-control" value="1" min="1" onchange="calcularSubtotal(${detalleCount})" required>
+                </td>
+                <td>
+                    <input type="number" name="detalles[${detalleCount}].precioUnitario" class="form-control precio-unitario" readonly step="0.001">
+                </td>
+                <td>
+                    <input type="number" name="detalles[${detalleCount}].subtotal" class="form-control subtotal-item" readonly step="0.001">
+                </td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-link text-danger p-0" onclick="eliminarFila(this)"><i class="fas fa-times-circle"></i></button>
+                </td>
+            `;
+            container.appendChild(tr);
+            detalleCount++;
+        }
 
-    /**
-     * Agrega un nuevo detalle de producto dinámicamente
-     * CAMBIOS:
-     * - step="0.01" → step="0.001" en inputs de precio y subtotal
-     */
-    function agregarDetalle() {
-        const container = document.getElementById('detallesContainer');
-        const opciones = document.querySelector('.producto-select').innerHTML;
+        function eliminarFila(btn) {
+            const filas = document.querySelectorAll('.detalle-item');
+            if(filas.length > 1) {
+                btn.closest('tr').remove();
+                calcularTotal();
+            } else {
+                Swal.fire('Atención', 'La venta debe tener al menos un producto', 'info');
+            }
+        }
 
-        const nuevo = document.createElement('div');
-        nuevo.className = "detalle-item";
+        function actualizarPrecio(i) {
+            const select = document.querySelector(`select[name="detalles[${i}].producto.id"]`);
+            const precio = select.options[select.selectedIndex].getAttribute("data-precio");
+            document.querySelector(`input[name="detalles[${i}].precioUnitario"]`).value = parseFloat(precio).toFixed(3) || 0;
+            calcularSubtotal(i);
+        }
 
-        nuevo.innerHTML = `
-        <div class="row">
+        function calcularSubtotal(i) {
+            const cant = parseFloat(document.querySelector(`input[name="detalles[${i}].cantidad"]`).value) || 0;
+            const precio = parseFloat(document.querySelector(`input[name="detalles[${i}].precioUnitario"]`).value) || 0;
+            const subtotal = cant * precio;
+            document.querySelector(`input[name="detalles[${i}].subtotal"]`).value = subtotal.toFixed(3);
+            calcularTotal();
+        }
 
-            <div class="col-md-5">
-                <label class="form-label">Producto</label>
-                <select name="detalles[${detalleCount}].producto.id"
-                        class="form-select producto-select"
-                        onchange="actualizarPrecio(${detalleCount})">
-                    ${opciones}
-                </select>
-            </div>
+        function calcularTotal() {
+            let subtotalGral = 0;
+            document.querySelectorAll('.subtotal-item').forEach(input => {
+                subtotalGral += parseFloat(input.value) || 0;
+            });
 
-            <div class="col-md-3">
-                <label class="form-label">Cantidad</label>
-                <input type="number" min="1" class="form-control"
-                       name="detalles[${detalleCount}].cantidad"
-                       value="1" onchange="calcularSubtotal(${detalleCount})">
-            </div>
+            const impuestoPorcentaje = parseFloat(document.getElementById('impuesto').value) || 0;
+            const totalFinal = subtotalGral + (subtotalGral * (impuestoPorcentaje / 100));
 
-            <!-- ═══════════════════════════════════════════════════════════════
-                 CAMBIO #3: step="0.01" → step="0.001" (3 decimales)
-                 ═══════════════════════════════════════════════════════════════ -->
-            <div class="col-md-2">
-                <label class="form-label">Precio</label>
-                <input type="number" readonly step="0.001"
-                       name="detalles[${detalleCount}].precioUnitario"
-                       class="form-control precio-unitario">
-            </div>
-
-            <!-- ═══════════════════════════════════════════════════════════════
-                 CAMBIO #4: step="0.01" → step="0.001" (3 decimales)
-                 ═══════════════════════════════════════════════════════════════ -->
-            <div class="col-md-2">
-                <label class="form-label">Subtotal</label>
-                <input type="number" readonly step="0.001"
-                       name="detalles[${detalleCount}].subtotal"
-                       class="form-control subtotal-item">
-                <button type="button" class="btn btn-danger btn-sm mt-2"
-                        onclick="eliminarDetalle(this)">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </div>
-
-        </div>
-        `;
-
-        container.appendChild(nuevo);
-        detalleCount++;
-    }
-
-    /**
-     * Elimina un detalle de producto
-     */
-    function eliminarDetalle(btn) {
-        btn.closest(".detalle-item").remove();
-        calcularTotal();
-    }
-
-    /**
-     * Actualiza el precio del producto seleccionado
-     */
-    function actualizarPrecio(i) {
-        const select = document.querySelector(`select[name="detalles[${i}].producto.id"]`);
-        const precio = select.options[select.selectedIndex].getAttribute("data-precio");
-        document.querySelector(`input[name="detalles[${i}].precioUnitario"]`).value = precio || 0;
-        calcularSubtotal(i);
-    }
-
-    /**
-     * Calcula el subtotal de un detalle específico
-     * CAMBIO #5: toFixed(2) → toFixed(3) para mantener 3 decimales
-     */
-    function calcularSubtotal(i) {
-        const cant = parseFloat(document.querySelector(`input[name="detalles[${i}].cantidad"]`).value);
-        const precio = parseFloat(document.querySelector(`input[name="detalles[${i}].precioUnitario"]`).value);
-        const res = cant * precio;
-
-        // ═══════════════════════════════════════════════════════════════
-        // CAMBIO #5: .toFixed(2) → .toFixed(3) (3 decimales)
-        // ═══════════════════════════════════════════════════════════════
-        document.querySelector(`input[name="detalles[${i}].subtotal"]`).value = res.toFixed(3);
-        calcularTotal();
-    }
-
-    /**
-     * Calcula el total general de la venta
-     * CAMBIOS #6 y #7: toFixed(2) → toFixed(3) para subtotal y total
-     */
-    function calcularTotal() {
-        let subtotal = 0;
-        document.querySelectorAll('.subtotal-item').forEach(s => subtotal += parseFloat(s.value) || 0);
-
-        const impuesto = parseFloat(document.getElementById('impuesto').value) || 0;
-        const total = subtotal + subtotal * (impuesto / 100);
-
-        // ═══════════════════════════════════════════════════════════════
-        // CAMBIO #6: .toFixed(2) → .toFixed(3) (3 decimales)
-        // ═══════════════════════════════════════════════════════════════
-        document.getElementById('subtotalGeneral').value = subtotal.toFixed(3);
-
-        // ═══════════════════════════════════════════════════════════════
-        // CAMBIO #7: .toFixed(2) → .toFixed(3) (3 decimales)
-        // ═══════════════════════════════════════════════════════════════
-        document.getElementById('totalVenta').value = total.toFixed(3);
-    }
-
-    /**
-     * Alterna la visibilidad del sidebar
-     */
-    function toggleSidebar() {
-        document.getElementById("sidebar").classList.toggle("collapsed");
-        document.getElementById("mainContent").classList.toggle("expanded");
-    }
-</script>
+            document.getElementById('subtotalGeneral').value = subtotalGral.toFixed(3);
+            document.getElementById('totalVenta').value = totalFinal.toFixed(3);
+        }
+    </script>
+</th:block>
 
 </body>
 </html>
