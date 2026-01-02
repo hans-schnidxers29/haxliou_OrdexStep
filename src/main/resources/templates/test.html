@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test SweetAlert2</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+<h1>Test de Notificaciones</h1>
+<button onclick="testToast()">Probar Toast</button>
+
+<script>
+    console.log("Página cargada");
+    console.log("SweetAlert2 disponible:", typeof Swal);
+
+    function testToast() {
+        console.log("Click en botón");
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: '¡Funciona!',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true
+        });
+    }
+
+    // Test automático
+    setTimeout(function() {
+        console.log("Mostrando toast automático");
+        testToast();
+    }, 1000);
+</script>
+</body>
+</html>

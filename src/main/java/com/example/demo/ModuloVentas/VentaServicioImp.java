@@ -126,13 +126,26 @@ public class VentaServicioImp implements VentaServicio {
     @Override
     public List<String> ListaMeses() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM", new Locale("es", "ES"));
-        return repositorioVenta.listarFechas()
+        return repositorioVenta.listarFechasUnicasPorMes()
                 .stream()
-                .toList();
+                .map(fecha -> fecha.format(formatter))
+                .collect(Collectors.toList());
     }
 
     @Override
     public List<BigDecimal> listarTotalVentas() {
-        return repositorioVenta.ListaTotalVentas().stream().toList();
+        return repositorioVenta.listarTotalesAgrupadosPorMes().stream().toList();
+    }
+
+    @Override
+    public List<String> NombreProductos() {
+        List<Object[]>resultado =repositorioVenta.listarProductosVendidos();
+        return resultado.stream().map(objeto ->(String) objeto[0]).toList();
+    }
+
+    @Override
+    public List<Long> CantidadProductos() {
+        List<Object[]>resultado =repositorioVenta.listarProductosVendidos();
+        return resultado.stream().map(objeto -> (Long) objeto[1]).toList();
     }
 }

@@ -39,4 +39,16 @@ public class ClienteServiceImp implements ClienteService {
     public void update(Cliente cliente) {
         repositorio.save(cliente);
     }
+
+    @Override
+    public List<Long> ListaCLientePedidos() {
+        List<Object[]> resultado = repositorio.CantidadPorPedidos();
+        return resultado.stream().map(objeto -> (Long) objeto[1]).toList();
+    }
+
+    @Override
+    public List<String> NombreListPedidos() {
+        List<Object[]>Resultado= repositorio.CantidadPorPedidos();
+        return Resultado.stream().map(objeto -> (String) objeto[0]).toList();
+    }
 }

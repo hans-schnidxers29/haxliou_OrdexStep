@@ -1,6 +1,5 @@
 package com.example.demo.Login.Controlador;
 
-
 import com.example.demo.Login.Servicio.RolServicio;
 import com.example.demo.Login.Servicio.ServicioUsuario;
 import com.example.demo.Login.Usuario;
@@ -14,7 +13,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 @RequestMapping("registro")
 public class UsuarioControlador {
-
 
     @Autowired
     private ServicioUsuario usuarioservico;
@@ -33,15 +31,16 @@ public class UsuarioControlador {
     }
 
     @PostMapping("/nuevo")
-    public String RegistrarUsuario(@ModelAttribute("usuarioDTO") UsuarioDTO usuarioDTO) {
+    public String RegistrarUsuario(@ModelAttribute("usuarioDTO") UsuarioDTO usuarioDTO, RedirectAttributes flash) {
         try {
             usuarioservico.saveUser(usuarioDTO);
-            return "redirect:/registro?exito";
+            flash.addFlashAttribute("success", "Usuario registrado exitosamente");
+            return "redirect:/registro";  // ✅ Sin ?success=true
         } catch (Exception e) {
             System.out.println("error en el registro" + e.getMessage());
-            return "redirect:/registro?error";
+            flash.addFlashAttribute("error", "Error al registrar el usuario: " + e.getMessage());
+            return "redirect:/registro";  // ✅ Sin ?error=true
         }
-
     }
 
     @GetMapping("/usuario")
@@ -53,33 +52,33 @@ public class UsuarioControlador {
     }
 
     @PostMapping("/usuario/nuevo")
-    public String RegistraNuevoUsuario(@ModelAttribute ("usuario")Usuario usuario, RedirectAttributes redirectAttributes){
+    public String RegistraNuevoUsuario(@ModelAttribute("usuario") Usuario usuario, RedirectAttributes redirectAttributes){
         try {
             usuarioservico.saveUserDto(usuario);
-            return "redirect:/perfil?success";
-        }catch (Exception e){
+            redirectAttributes.addFlashAttribute("success", "Usuario registrado exitosamente");
+            return "redirect:/perfil";  // ✅ Sin ?success
+        } catch (Exception e) {
             System.err.println("Error al guardar Usuario: " + e.getMessage());
-            redirectAttributes.addFlashAttribute("error",
-                    "Error al guardar Usuario: " + e.getMessage());
-            return "redirect:/registro/usuario?error";
+            redirectAttributes.addFlashAttribute("error", "Error al guardar usuario: " + e.getMessage());
+            return "redirect:/registro/usuario";  // ✅ Sin ?error=true
         }
     }
 
     @GetMapping("/{id}")
     public String DeleteUsuario(@PathVariable("id") Long id, RedirectAttributes redirectAttributes){
-        try{
+        try {
             usuarioservico.deleteUser(id);
-            return "redirect:/perfil?success";
-        }catch (Exception e){
-            System.err.println("Error al guardar Usuario: " + e.getMessage());
-            redirectAttributes.addFlashAttribute("error",
-                    "Error al guardar Usuario: " + e.getMessage());
-            return "redirect:/registro/usuario?error";
+            redirectAttributes.addFlashAttribute("success", "Usuario eliminado exitosamente");
+            return "redirect:/perfil";
+        } catch (Exception e) {
+            System.err.println("Error al eliminar Usuario: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Error al eliminar usuario: " + e.getMessage());
+            return "redirect:/perfil";
         }
     }
 
     @GetMapping("/editar/usuario/{id}")
-    public String MostrarFormedit(@PathVariable Long id,Model model){
+    public String MostrarFormedit(@PathVariable Long id, Model model){
         model.addAttribute("roles", rolServicio.listarRoles());
         model.addAttribute("usuario", usuarioservico.finbyyId(id));
         return "viewUsuarios/EditarUsuario";
@@ -88,15 +87,17 @@ public class UsuarioControlador {
     @PostMapping("/editar/{id}")
     public String EditarUsuario(@PathVariable Long id, @ModelAttribute("usuarios") Usuario usuarios, RedirectAttributes redirectAttributes){
         try {
-            usuarioservico.updateUser(usuarios,id);
-            return "redirect:/perfil?success";
-        }catch (Exception e){
-            System.err.println("Error al guardar Usuario: " + e.getMessage());
-            redirectAttributes.addFlashAttribute("error",
-                    "Error al guardar Usuario: " + e.getMessage());
-            return "redirect:/registro/usuario?error";
+            usuarioservico.updateUser(usuarios, id);
+            redirectAttributes.addFlashAttribute("success", "Usuario actualizado exitosamente");
+            return "redirect:/perfil";  // ✅ Sin ?success
+        } catch (Exception e) {
+            System.err.println("Error al actualizar Usuario: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Error al actualizar usuario: " + e.getMessage());
+            return "redirect:/registro/editar/usuario/" + id;  // ✅ Volver al formulario de edición
         }
     }
-
-
+    @GetMapping("/test")
+    public String test() {
+        return "test";
+    }
 }

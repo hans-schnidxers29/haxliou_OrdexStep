@@ -49,22 +49,28 @@
                     <table th:unless="${#lists.isEmpty(clientes)}" id="tablaClientes" class="table table-bordered table-striped table-hover w-100">
                         <thead>
                         <tr>
+                            <th>Tipo de Identificacion</th>
+                            <th>Numero de Identificacion</th>
                             <th>Nombre</th>
                             <th>Apellido</th>
                             <th>Email</th>
                             <th>Teléfono</th>
                             <th>Ciudad</th>
+                            <th>Direccion</th>
                             <th>Pedidos</th>
                             <th class="text-center">Acciones</th>
                         </tr>
                         </thead>
                         <tbody>
                         <tr th:each="cliente : ${clientes}">
+                            <td th:text="${cliente.tipoidentificacion}"></td>
+                            <td th:text="${cliente.numeroIdentificacion}"></td>
                             <td th:text="${cliente.nombre}"></td>
                             <td th:text="${cliente.apellido}"></td>
                             <td th:text="${cliente.email}"></td>
                             <td th:text="${cliente.telefono}"></td>
                             <td th:text="${cliente.ciudad}"></td>
+                            <td th:text="${cliente.direccion}"></td>
                             <td class="text-center">
                                 <span class="badge badge-info" th:text="${cliente.pedidos.size()}">0</span>
                             </td>
@@ -94,7 +100,7 @@
 </div>
 
 <th:block layout:fragment="scripts">
-    <script>
+    <script th:inline="javascript">
         $(document).ready(function () {
             $("#tablaClientes").DataTable({
                 "responsive": true,
@@ -111,6 +117,16 @@
                     { "orderable": false, "targets": 6 } // La columna de acciones no se ordena
                 ]
             });
+
+            // 2. Notificaciones (Original restaurado)
+            const s = /*[[${success}]]*/ null;
+            const e = /*[[${error}]]*/ null;
+            const i = /*[[${info}]]*/ null;
+            const w = /*[[${warning}]]*/ null;
+
+
+            checkNotifications(s, e, i, w);
+
         });
     </script>
 </th:block>

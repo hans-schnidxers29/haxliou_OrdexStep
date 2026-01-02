@@ -152,7 +152,7 @@
                                 <hr>
                                 <div class="total-box text-center mb-4">
                                     <span class="d-block text-muted small text-uppercase">Total a Pagar</span>
-                                    <span class="total-final">$ <span id="totalPedidoLabel">0.00</span></span>
+                                    <span class="total-final">$ <span id="totalPedidoLabel">0.000</span></span>
                                     <input type="hidden" id="totalPedido" th:field="*{total}">
                                 </div>
 
@@ -263,6 +263,14 @@
             document.getElementById('totalPedidoLabel').innerText = total.toLocaleString('en-US', {minimumFractionDigits: 2});
             document.getElementById('totalPedido').value = total.toFixed(2);
         }
+        $(document).ready(function () {
+            // 1. Capturamos las variables de Spring/Thymeleaf para Toasts
+            const s = /*[[${success}]]*/ null;
+            const e = /*[[${error}]]*/ null;
+            const i = /*[[${info}]]*/ null;
+            const w = /*[[${warning}]]*/ null;
+            checkNotifications(s, e, i, w);
+        })
     </script>
 </th:block>
 </body>

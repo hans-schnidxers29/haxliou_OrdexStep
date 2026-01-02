@@ -19,10 +19,15 @@ public class Cliente {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name="tipoIdentificacion", nullable = false)
+    private String tipoidentificacion ;
+
+    @Column(name="numero_identificacion",nullable = false, unique = true)
+    private String numeroIdentificacion ;
+
     @Column(name="nombre",nullable = false)
     private String nombre;
 
-    
     @Column(name="email",nullable = false, unique = true)
     private String email;
 
@@ -44,9 +49,29 @@ public class Cliente {
     @OneToMany(mappedBy = "cliente", fetch=FetchType.LAZY, cascade= CascadeType.ALL )
     private List<Pedidos> pedidos = new ArrayList<>();
 
+    @Column(columnDefinition = "TEXT")
+    private String direccion ;
+
 
 
     public Cliente() {
+    }
+
+
+    public Cliente(Long id, String tipoidentificacion, String numeroIdentificacion, String nombre, String email, String apellido,
+                   String telefono, String ciudad, String pais, int codigoPostal, List<Pedidos> pedidos, String direccion) {
+        this.id = id;
+        this.tipoidentificacion = tipoidentificacion;
+        this.numeroIdentificacion = numeroIdentificacion;
+        this.nombre = nombre;
+        this.email = email;
+        this.apellido = apellido;
+        this.telefono = telefono;
+        this.ciudad = ciudad;
+        this.pais = pais;
+        this.codigoPostal = codigoPostal;
+        this.pedidos = pedidos;
+        this.direccion = direccion;
     }
 
     public Cliente(String nombre, String email, String apellido, String telefono, String ciudad, String pais, int codigoPostal) {
@@ -131,8 +156,29 @@ public class Cliente {
         this.email = email;
     }
 
+    public String getTipoidentificacion() {
+        return tipoidentificacion;
+    }
 
+    public void setTipoidentificacion(String tipoidentificacion) {
+        this.tipoidentificacion = tipoidentificacion;
+    }
 
+    public String getNumeroIdentificacion() {
+        return numeroIdentificacion;
+    }
+
+    public void setNumeroIdentificacion(String numeroIdentificacion) {
+        this.numeroIdentificacion = numeroIdentificacion;
+    }
+
+    public String getDireccion() {
+        return direccion;
+    }
+
+    public void setDireccion(String direccion) {
+        this.direccion = direccion;
+    }
 
     @Override
     public final int hashCode() {
@@ -141,14 +187,19 @@ public class Cliente {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + "(" +
-                "id = " + id + ", " +
-                "nombre = " + nombre + ", " +
-                "email = " + email + ", " +
-                "apellido = " + apellido + ", " +
-                "telefono = " + telefono + ", " +
-                "ciudad = " + ciudad + ", " +
-                "pais = " + pais + ", " +
-                "codigoPostal = " + codigoPostal + ")";
+        return "Cliente{" +
+                "id=" + id +
+                ", TipoIdentificacion='" + tipoidentificacion + '\'' +
+                ", NumeroIdentificacion='" + numeroIdentificacion + '\'' +
+                ", nombre='" + nombre + '\'' +
+                ", email='" + email + '\'' +
+                ", apellido='" + apellido + '\'' +
+                ", telefono='" + telefono + '\'' +
+                ", ciudad='" + ciudad + '\'' +
+                ", pais='" + pais + '\'' +
+                ", codigoPostal=" + codigoPostal +
+                ", pedidos=" + pedidos +
+                ", direccion='" + direccion + '\'' +
+                '}';
     }
 }

@@ -4,6 +4,7 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layouts/adminlte}">
 <head>
+    <meta charset="UTF-8">
     <title>Actualizar Cliente</title>
 </head>
 <body>
@@ -13,7 +14,14 @@
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
-                    <h1><i class="fas fa-user-edit mr-3"></i>Actualizar Cliente</h1>
+                    <h1><i class="fas fa-user-edit mr-2 text-warning"></i> Actualizar Cliente</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a th:href="@{/Home}">Inicio</a></li>
+                        <li class="breadcrumb-item"><a th:href="@{/listarclientes}">Clientes</a></li>
+                        <li class="breadcrumb-item active">Actualizar</li>
+                    </ol>
                 </div>
             </div>
         </div>
@@ -22,90 +30,101 @@
     <section class="content">
         <div class="container-fluid">
             <div class="row justify-content-center">
-                <div class="col-lg-10">
-                    <div class="card card-outline card-warning shadow"> <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-users mr-2 text-warning"></i>
-                            Editar Información del Cliente
-                        </h3>
-                    </div>
+                <div class="col-md-11">
 
-                        <form th:action="@{/clientes/{id}(id=${clientes.id})}"
-                              th:object="${clientes}"
-                              method="POST"
-                              class="needs-validation"
-                              novalidate>
+                    <div class="card card-warning card-outline shadow">
+                        <div class="card-header bg-white">
+                            <h3 class="card-title font-weight-bold">
+                                <i class="fas fa-edit mr-2 text-warning"></i>Editar Información del Cliente
+                            </h3>
+                        </div>
+
+                        <form th:action="@{/clientes/{id}(id=${clientes.id})}" th:object="${clientes}" method="POST" class="needs-validation" novalidate>
+
+                            <input type="hidden" th:field="*{id}">
 
                             <div class="card-body">
-                                <div class="border-bottom mb-3 pb-2">
-                                    <h5 class="text-primary"><i class="fas fa-id-card mr-2"></i>Información Personal</h5>
+
+                                <h5 class="text-primary border-bottom pb-2 mb-3">
+                                    <i class="fas fa-id-card mr-2"></i>Información Personal
+                                </h5>
+
+                                <div class="row">
+                                    <div class="col-md-3 form-group">
+                                        <label for="tipoidentificacion"><i class="fas fa-fingerprint mr-1"></i> Tipo ID</label>
+                                        <select id="tipoidentificacion" th:field="*{tipoidentificacion}" class="form-control custom-select" required>
+                                            <option value="" disabled>Seleccione...</option>
+                                            <option th:value="'C.C'" th:text="'C.C (Cédula)'"></option>
+                                            <option th:value="'NIT'" th:text="'NIT'"></option>
+                                        </select>
+                                        <div class="invalid-feedback">Seleccione un tipo.</div>
+                                    </div>
+
+                                    <div class="col-md-3 form-group">
+                                        <label for="numeroIdentificacion"><i class="fas fa-hashtag mr-1"></i> Número ID</label>
+                                        <input type="text" id="numeroIdentificacion" th:field="*{numeroIdentificacion}" class="form-control" placeholder="123456..." required>
+                                        <div class="invalid-feedback">Ingrese el número de identificación.</div>
+                                    </div>
+
+                                    <div class="col-md-3 form-group">
+                                        <label for="nombre"><i class="fas fa-user mr-1"></i> Nombre</label>
+                                        <input type="text" id="nombre" th:field="*{nombre}" class="form-control" placeholder="Ej: Juan" required>
+                                        <div class="invalid-feedback">Ingrese el nombre.</div>
+                                    </div>
+
+                                    <div class="col-md-3 form-group">
+                                        <label for="apellido"><i class="fas fa-user mr-1"></i> Apellido</label>
+                                        <input type="text" id="apellido" th:field="*{apellido}" class="form-control" placeholder="Ej: Pérez" required>
+                                        <div class="invalid-feedback">Ingrese el apellido.</div>
+                                    </div>
                                 </div>
+
+                                <h5 class="text-primary border-bottom pb-2 mt-4 mb-3">
+                                    <i class="fas fa-address-book mr-2"></i>Información de Contacto
+                                </h5>
 
                                 <div class="row">
                                     <div class="col-md-6 form-group">
-                                        <label for="nombre" class="required">Nombre</label>
-                                        <input type="text" th:field="*{nombre}" class="form-control" placeholder="Ej: Juan" required>
-                                        <div class="invalid-feedback">Por favor ingrese el nombre.</div>
+                                        <label for="email"><i class="fas fa-envelope mr-1"></i> Correo Electrónico</label>
+                                        <input type="email" id="email" th:field="*{email}" class="form-control" placeholder="ejemplo@correo.com" required>
+                                        <div class="invalid-feedback">Ingrese un correo válido.</div>
                                     </div>
                                     <div class="col-md-6 form-group">
-                                        <label for="apellido" class="required">Apellido</label>
-                                        <input type="text" th:field="*{apellido}" class="form-control" placeholder="Ej: Pérez" required>
-                                        <div class="invalid-feedback">Por favor ingrese el apellido.</div>
+                                        <label for="telefono"><i class="fas fa-phone mr-1"></i> Número Telefónico</label>
+                                        <input type="tel" id="telefono" th:field="*{telefono}" class="form-control" placeholder="3001234567" required>
+                                        <div class="invalid-feedback">Ingrese el teléfono.</div>
                                     </div>
                                 </div>
 
-                                <div class="border-bottom mb-3 pb-2 mt-4">
-                                    <h5 class="text-primary"><i class="fas fa-address-book mr-2"></i>Información de Contacto</h5>
-                                </div>
+                                <h5 class="text-primary border-bottom pb-2 mt-4 mb-3">
+                                    <i class="fas fa-map-marked-alt mr-2"></i>Dirección de Envío
+                                </h5>
 
                                 <div class="row">
-                                    <div class="col-md-6 form-group">
-                                        <label for="email" class="required">Correo Electrónico</label>
-                                        <div class="input-group">
-                                            <div class="input-group-prepend">
-                                                <span class="input-group-text"><i class="fas fa-envelope"></i></span>
-                                            </div>
-                                            <input type="email" th:field="*{email}" class="form-control" placeholder="ejemplo@correo.com" required>
-                                            <div class="invalid-feedback">Ingrese un correo válido.</div>
-                                        </div>
+                                    <div class="col-md-3 form-group">
+                                        <label for="pais"><i class="fas fa-globe mr-1"></i> País</label>
+                                        <input type="text" id="pais" th:field="*{pais}" class="form-control" placeholder="Ej: Colombia" required>
                                     </div>
-                                    <div class="col-md-6 form-group">
-                                        <label for="telefono" class="required">Número Telefónico</label>
-                                        <div class="input-group">
-                                            <div class="input-group-prepend">
-                                                <span class="input-group-text"><i class="fas fa-phone"></i></span>
-                                            </div>
-                                            <input type="tel" th:field="*{telefono}" class="form-control" placeholder="3001234567" pattern="[0-9]{10}" required>
-                                            <div class="invalid-feedback">Ingrese un teléfono válido (10 dígitos).</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="border-bottom mb-3 pb-2 mt-4">
-                                    <h5 class="text-primary"><i class="fas fa-map-marked-alt mr-2"></i>Dirección</h5>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-4 form-group">
-                                        <label for="ciudad" class="required">Ciudad</label>
-                                        <input type="text" th:field="*{ciudad}" class="form-control" placeholder="Ej: Bogotá" required>
+                                    <div class="col-md-3 form-group">
+                                        <label for="ciudad"><i class="fas fa-city mr-1"></i> Ciudad</label>
+                                        <input type="text" id="ciudad" th:field="*{ciudad}" class="form-control" placeholder="Ej: Bogotá" required>
                                     </div>
                                     <div class="col-md-4 form-group">
-                                        <label for="pais" class="required">País</label>
-                                        <input type="text" th:field="*{pais}" class="form-control" placeholder="Ej: Colombia" required>
+                                        <label for="direccion"><i class="fas fa-map-pin mr-1"></i> Dirección Exacta</label>
+                                        <input type="text" id="direccion" th:field="*{direccion}" class="form-control" placeholder="Calle 123 #45..." required>
                                     </div>
-                                    <div class="col-md-4 form-group">
-                                        <label for="codigoPostal" class="required">C. Postal</label>
-                                        <input type="text" th:field="*{codigoPostal}" class="form-control" placeholder="Ej: 110111" required>
+                                    <div class="col-md-2 form-group">
+                                        <label for="codigoPostal"><i class="fas fa-mail-bulk mr-1"></i> C. Postal</label>
+                                        <input type="text" id="codigoPostal" th:field="*{codigoPostal}" class="form-control" placeholder="110111">
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="card-footer text-right">
-                                <a th:href="@{/listarclientes}" class="btn btn-default mr-2">
+                            <div class="card-footer bg-white text-right">
+                                <a th:href="@{/listarclientes}" class="btn btn-default mr-2 border shadow-sm">
                                     <i class="fas fa-times mr-1"></i> Cancelar
                                 </a>
-                                <button type="submit" class="btn btn-warning">
+                                <button type="submit" class="btn btn-warning shadow-sm">
                                     <i class="fas fa-save mr-1"></i> Guardar Cambios
                                 </button>
                             </div>
@@ -118,22 +137,17 @@
 </div>
 
 <th:block layout:fragment="scripts">
-    <script>
-        (function () {
-            'use strict'
-            window.addEventListener('load', function () {
-                var forms = document.getElementsByClassName('needs-validation')
-                Array.prototype.filter.call(forms, function (form) {
-                    form.addEventListener('submit', function (event) {
-                        if (form.checkValidity() === false) {
-                            event.preventDefault()
-                            event.stopPropagation()
-                        }
-                        form.classList.add('was-validated')
-                    }, false)
-                })
-            }, false)
-        })()
+    <script th:inline="javascript">
+        $(document).ready(function() {
+            // Validación de Bootstrap 4
+            $('.needs-validation').on('submit', function(event) {
+                if (this.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                $(this).addClass('was-validated');
+            });
+        });
     </script>
 </th:block>
 

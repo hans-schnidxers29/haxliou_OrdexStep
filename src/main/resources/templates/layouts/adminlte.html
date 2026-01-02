@@ -6,23 +6,21 @@
 
 <head>
     <meta charset="UTF-8">
-    <title th:text="${title} ?: 'Gestor de Pedidos'">Gestor de Pedidos</title>
+    <title th:text="${title} ?: 'Gestor de Pedidos'">Ordex-Step</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
     <!-- Google Font -->
     <link rel="stylesheet"
           href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
-
     <!-- Font Awesome -->
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-
+    <link rel="shortcut icon" th:href="@{/adminlte/img/LogoOrdex.ico}">
     <!-- AdminLTE CSS LOCAL -->
     <link rel="stylesheet" th:href="@{/adminlte/css/adminlte.min.css}">
-
     <link rel="stylesheet" th:href="@{/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css}">
     <link rel="stylesheet" th:href="@{/plugins/datatables-responsive/css/responsive.bootstrap4.min.css}">
     <link rel="stylesheet" th:href="@{/plugins/chart.js/Chart.min.css}">
+    <link rel="stylesheet" th:href="@{/plugins/sweetalert2/sweetalert2.min.css}">
 
     <!-- CSS adicionales de cada página -->
     <th:block layout:fragment="css"></th:block>
@@ -76,27 +74,27 @@
     <!-- SIDEBAR -->
     <aside class="main-sidebar sidebar-dark-primary elevation-4">
         <a th:href="@{/Home}" class="brand-link">
-            <i class="fas fa-store ml-3"></i>
+            <i class="fas fa-store ml-3 text-primary"></i>
             <span class="brand-text font-weight-light ml-2">Mi Sistema</span>
         </a>
 
         <div class="sidebar">
             <nav class="mt-2">
-                <ul class="nav nav-pills nav-sidebar flex-column"
+                <ul class="nav nav-pills nav-sidebar flex-column nav-child-indent"
                     data-widget="treeview"
                     role="menu"
                     data-accordion="false">
 
                     <li class="nav-item">
                         <a th:href="@{/Home}" class="nav-link">
-                            <i class="nav-icon fas fa-home"></i>
+                            <i class="nav-icon fas fa-tachometer-alt"></i>
                             <p>Inicio</p>
                         </a>
                     </li>
 
-                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                    <li class="nav-item has-treeview" sec:authorize="isAuthenticated()">
                         <a href="#" class="nav-link">
-                            <i class="nav-icon fas fa-users"></i>
+                            <i class="nav-icon fas fa-shopping-basket"></i>
                             <p>
                                 Pedidos
                                 <i class="right fas fa-angle-left"></i>
@@ -105,13 +103,13 @@
                         <ul class="nav nav-treeview">
                             <li class="nav-item">
                                 <a th:href="@{/pedidos/listarpedidos}" class="nav-link">
-                                    <i class="far fa-circle nav-icon"></i>
+                                    <i class="far fa-list-alt nav-icon"></i>
                                     <p>Listado de Pedidos</p>
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a th:href="@{/pedidios/nuevo}" class="nav-link">
-                                    <i class="far fa-circle nav-icon"></i>
+                                <a th:href="@{/pedidos/nuevo}" class="nav-link">
+                                    <i class="fas fa-plus-circle nav-icon"></i>
                                     <p>Nuevo Pedido</p>
                                 </a>
                             </li>
@@ -120,7 +118,7 @@
 
                     <li class="nav-item has-treeview" sec:authorize="isAuthenticated()">
                         <a href="#" class="nav-link">
-                            <i class="nav-icon fas fa-users"></i>
+                            <i class="nav-icon fas fa-user-friends"></i>
                             <p>
                                 Clientes
                                 <i class="right fas fa-angle-left"></i>
@@ -129,22 +127,22 @@
                         <ul class="nav nav-treeview">
                             <li class="nav-item">
                                 <a th:href="@{/listarclientes}" class="nav-link">
-                                    <i class="far fa-circle nav-icon"></i>
+                                    <i class="far fa-address-book nav-icon"></i>
                                     <p>Listado de Clientes</p>
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a th:href="@{/crearcliente/nuevo}" class="nav-link">
-                                    <i class="far fa-circle nav-icon"></i>
+                                    <i class="fas fa-user-plus nav-icon"></i>
                                     <p>Nuevo Cliente</p>
                                 </a>
                             </li>
                         </ul>
                     </li>
 
-                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <li class="nav-item has-treeview" sec:authorize="hasRole('ADMIN')">
                         <a href="#" class="nav-link">
-                            <i class="nav-icon fas fa-users"></i>
+                            <i class="nav-icon fas fa-boxes"></i>
                             <p>
                                 Productos
                                 <i class="right fas fa-angle-left"></i>
@@ -153,28 +151,28 @@
                         <ul class="nav nav-treeview">
                             <li class="nav-item">
                                 <a th:href="@{/listarproductos}" class="nav-link">
-                                    <i class="far fa-circle nav-icon"></i>
+                                    <i class="fas fa-clipboard-list nav-icon"></i>
                                     <p>Listado de Productos</p>
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a th:href="@{/crearproducto/nuevo}" class="nav-link">
-                                    <i class="far fa-circle nav-icon"></i>
+                                    <i class="fas fa-box-open nav-icon"></i>
                                     <p>Crear Productos</p>
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a th:href="@{/categoria/crear}" class="nav-link">
-                                    <i class="far fa-circle nav-icon"></i>
+                                    <i class="fas fa-tags nav-icon"></i>
                                     <p>Crear Categoria</p>
                                 </a>
                             </li>
                         </ul>
                     </li>
 
-                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                    <li class="nav-item has-treeview" sec:authorize="isAuthenticated()">
                         <a href="#" class="nav-link">
-                            <i class="nav-icon fas fa-users"></i>
+                            <i class="nav-icon fas fa-cash-register"></i>
                             <p>
                                 Ventas
                                 <i class="right fas fa-angle-left"></i>
@@ -183,14 +181,39 @@
                         <ul class="nav nav-treeview">
                             <li class="nav-item">
                                 <a th:href="@{/ventas/listar}" class="nav-link">
-                                    <i class="far fa-circle nav-icon"></i>
+                                    <i class="fas fa-file-invoice-dollar nav-icon"></i>
                                     <p>Listado de Ventas</p>
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a th:href="@{/ventas/crear}" class="nav-link">
-                                    <i class="far fa-circle nav-icon"></i>
+                                    <i class="fas fa-cart-plus nav-icon"></i>
                                     <p>Crear Venta</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <li class="nav-header" sec:authorize="hasRole('ADMIN')">ADMINISTRACIÓN</li>
+                    <li class="nav-item has-treeview" sec:authorize="hasRole('ADMIN')">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-users-cog"></i>
+                            <p>
+                                Usuarios
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a th:href="@{/perfil}" class="nav-link">
+                                    <i class="fas fa-users nav-icon"></i>
+                                    <p>Gestión de Usuarios</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a th:href="@{/registro/usuario}" class="nav-link">
+                                    <i class="fas fa-user-shield nav-icon"></i>
+                                    <p>Nuevo Usuario</p>
                                 </a>
                             </li>
                         </ul>
@@ -224,7 +247,8 @@
 <script th:src="@{/plugins/datatables/jquery.dataTables.min.js}"></script>
 <script th:src="@{/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js}"></script>
 <script th:src="@{/plugins/datatables-responsive/js/dataTables.responsive.min.js}"></script>
-
+<script th:src="@{/plugins/sweetalert2/sweetalert2.min.js}"></script>
+<script th:src="@{/js/notifications.js}"></script>
 <!-- Script para menú activo -->
 <script th:src="@{/js/menu-active.js}"></script>
 

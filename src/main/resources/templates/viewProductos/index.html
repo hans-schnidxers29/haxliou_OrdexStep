@@ -95,6 +95,7 @@
 <th:block layout:fragment="scripts">
     <script>
         $(document).ready(function () {
+
             $('#tablaProductos').DataTable({
                 "responsive": true,
                 "autoWidth": false,
@@ -110,6 +111,16 @@
                 "order": [ [ 0, "asc" ] ]
             });
         });
+    </script>
+    <script th:inline="javascript" >
+        $(document).ready(function () {
+            // 1. Capturamos las variables de Spring/Thymeleaf para Toasts
+            const s = /*[[${success}]]*/ null;
+            const e = /*[[${error}]]*/ null;
+            const i = /*[[${info}]]*/ null;
+            const w = /*[[${warning}]]*/ null;
+            checkNotifications(s, e, i, w);
+        })
     </script>
 </th:block>
 

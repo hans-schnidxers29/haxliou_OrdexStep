@@ -19,10 +19,20 @@ public interface VentaRepositorio extends JpaRepository<Venta, Long> {
     @Query("SELECT SUM(v.total) FROM Venta v WHERE EXTRACT( MONTH from v.fechaVenta) = :mes AND EXTRACT (YEAR from v.fechaVenta) = :anio")
     BigDecimal sumaPorMes(@Param("mes") int mes, @Param("anio") int anio);
 
-    @Query("SELECT CAST(v.fechaVenta AS string) FROM Venta v")
-    List<String> listarFechas();
+    @Query(value = "SELECT MIN(v.fechaVenta) FROM Venta v GROUP BY EXTRACT(MONTH FROM v.fechaVenta), " +
+            "EXTRACT(YEAR FROM v.fechaVenta) ORDER BY MIN(v.fechaVenta) ASC")
+    List<LocalDateTime> listarFechasUnicasPorMes();
 
-    @Query("SELECT v.total FROM Venta v")
-    List<BigDecimal> ListaTotalVentas();
+    @Query(value = "SELECT SUM(v.total) FROM Venta v GROUP BY EXTRACT(MONTH FROM v.fechaVenta), " +
+            "EXTRACT(YEAR FROM v.fechaVenta) ORDER BY MIN(v.fechaVenta) ASC")
+    List<BigDecimal> listarTotalesAgrupadosPorMes();
+
+    @Query(value = "SELECT p.nombre, SUM(d.cantidad) as productos_vendidos \n" +
+            "from productos as p, detalle_venta as d \n" +
+            "WHERE p.id = d.producto_id\n" +
+            "GROUP by p.nombre\n" +
+            "ORDER by productos_vendidos DESC", nativeQuery = true)
+    List<Object[]> listarProductosVendidos();
+
 
 }

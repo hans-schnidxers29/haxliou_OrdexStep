@@ -34,15 +34,17 @@ public class ProductoControlador {
     }
 
     @PostMapping("/crearproducto")
-    public String guardarproducto(@ModelAttribute("productos") Productos producto){
+    public String guardarproducto(@ModelAttribute("productos") Productos producto,RedirectAttributes redirectAttributes){
         try {
             Productos productoGuardado = service.save(producto);
+            redirectAttributes.addFlashAttribute("success", "Producto guardado correctamente");
             System.out.println("Producto guardado con ID: " + productoGuardado.getNombre());
             return "redirect:/listarproductos";
         } catch (Exception e) {
             System.err.println("Error al guardar producto: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Error al guardar producto: " + e.getMessage());
             e.printStackTrace();
-            return "redirect:/crearproducto/nuevo?error=true";
+            return "redirect:/crearproducto/nuevo";
         }
     }
 
@@ -56,7 +58,6 @@ public class ProductoControlador {
     @PostMapping("/productos/{id}")
     public String ActualizarProducto(@PathVariable Long id,
                                      @ModelAttribute("producto") Productos producto,
-                                     @RequestParam("categoriaId") Long categoriaId,
                                      RedirectAttributes redirectAttributes) {
         try {
             // Buscar producto actual
@@ -68,7 +69,7 @@ public class ProductoControlador {
             }
 
             // Buscar categoría desde la BD
-            Categoria categoria = serviceCate.Buscarbyid(categoriaId);
+            Categoria categoria = serviceCate.Buscarbyid(producto.getCategoria().getId());
 
             if (categoria == null) {
                 redirectAttributes.addFlashAttribute("error", "Categoría no encontrada");
@@ -86,7 +87,7 @@ public class ProductoControlador {
             service.updateProductro(id, productoActual);
 
             redirectAttributes.addFlashAttribute("success", "Producto actualizado correctamente");
-            return "redirect:/listarproductos?success=true";
+            return "redirect:/listarproductos";
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -96,7 +97,8 @@ public class ProductoControlador {
     }
 
     @GetMapping("/productos/delete/{id}")
-    public String EliminarProdutos(@PathVariable Long id){
+    public String EliminarProdutos(@PathVariable Long id, RedirectAttributes redirectAttributes){
+        redirectAttributes.addFlashAttribute("success", "Producto eliminado correctamente");
         service.deleteProductoById(id);
         return "redirect:/listarproductos";
     }

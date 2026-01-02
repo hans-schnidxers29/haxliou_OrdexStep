@@ -18,4 +18,6 @@ public interface VentaServicio {
     Long  sumaproductosPordia(LocalDate fecha);
     List<String> ListaMeses();
     List<BigDecimal> listarTotalVentas();
+    List<String>NombreProductos();
+    List<Long>CantidadProductos();
 }

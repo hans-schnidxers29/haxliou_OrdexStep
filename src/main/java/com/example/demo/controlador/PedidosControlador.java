@@ -37,6 +37,8 @@ public class PedidosControlador {
         model.addAttribute("Estadisticas",pedidoService.ContarPorestados(EstadoPedido.PENDIENTE));
         model.addAttribute("Estadisticas2",pedidoService.estadoCEntregado(EstadoPedido.ENTREGADO));
         model.addAttribute("Estadisticas3",pedidoService.estadoCancelado(EstadoPedido.CANCELADO));
+        model.addAttribute("conteoPedidos",clienteService.ListaCLientePedidos());
+        model.addAttribute("nombresClientes",clienteService.NombreListPedidos());
         return "viewPedidos/index";
     }
 
@@ -69,7 +71,7 @@ public class PedidosControlador {
         try {
             // Validar que tenga detalles
             if (pedido.getDetalles() == null || pedido.getDetalles().isEmpty()) {
-                model.addAttribute("error", "El pedido debe tener al menos un producto");
+                model.addAttribute("info", "El pedido debe tener al menos un producto");
                 model.addAttribute("productos", productoService.listarProductos());
                 model.addAttribute("clientes", clienteService.listarcliente());
                 model.addAttribute("pedido", pedido);
@@ -78,7 +80,7 @@ public class PedidosControlador {
 
             // Validar cliente
             if (pedido.getCliente() == null || pedido.getCliente().getId() == null) {
-                model.addAttribute("error", "Debes seleccionar un cliente");
+                model.addAttribute("info", "Debes seleccionar un cliente");
                 model.addAttribute("productos", productoService.listarProductos());
                 model.addAttribute("clientes", clienteService.listarcliente());
                 model.addAttribute("pedido", pedido);
@@ -88,7 +90,7 @@ public class PedidosControlador {
             // ✅ BUSCAR CLIENTE COMPLETO DESDE LA BD
             Cliente clienteCompleto = clienteService.clientdById(pedido.getCliente().getId());
             if (clienteCompleto == null) {
-                model.addAttribute("error", "Cliente no encontrado");
+                model.addAttribute("info", "Cliente no encontrado");
                 model.addAttribute("productos", productoService.listarProductos());
                 model.addAttribute("clientes", clienteService.listarcliente());
                 model.addAttribute("pedido", pedido);
@@ -110,7 +112,7 @@ public class PedidosControlador {
                     Productos productoCompleto = productoService.productoById(detalle.getProducto().getId());
 
                     if (productoCompleto == null) {
-                        model.addAttribute("error", "Producto no encontrado");
+                        model.addAttribute("info", "Producto no encontrado");
                         model.addAttribute("productos", productoService.listarProductos());
                         model.addAttribute("clientes", clienteService.listarcliente());
                         model.addAttribute("pedido", pedido);
@@ -119,7 +121,7 @@ public class PedidosControlador {
 
                     // Verificar stock disponible
                     if (productoCompleto.getCantidad() < detalle.getCantidad()) {
-                        model.addAttribute("error", "Stock insuficiente para: " + productoCompleto.getNombre() +
+                        model.addAttribute("info", "Stock insuficiente para: " + productoCompleto.getNombre() +
                                 ". Disponible: " + productoCompleto.getCantidad());
                         model.addAttribute("productos", productoService.listarProductos());
                         model.addAttribute("clientes", clienteService.listarcliente());
@@ -164,6 +166,7 @@ public class PedidosControlador {
             BigDecimal total = subtotalPedido.add(pedido.getImpuesto());
             pedido.setTotal(total);
 
+            pedido.setEstado(EstadoPedido.PENDIENTE);
 
             // Guardar el pedido
             Pedidos pedidoGuardado = pedidoService.guardarpedidos(pedido);
@@ -171,7 +174,7 @@ public class PedidosControlador {
                     " - Cliente: " + pedidoGuardado.getCliente().getNombre());
 
             redirectAttributes.addFlashAttribute("success", "Pedido creado exitosamente");
-            return "redirect:/pedidos/listarpedidos?success=true";
+            return "redirect:/pedidos/listarpedidos";
 
         } catch (Exception e) {
             System.err.println("Error al guardar pedido: " + e.getMessage());
@@ -203,7 +206,7 @@ public class PedidosControlador {
 
         } catch (Exception e) {
             System.err.println("Error al obtener pedido: " + e.getMessage());
-            return "redirect:/pedidos/listarpedidos?error=true";
+            return "redirect:/pedidos/listarpedidos";
         }
     }
 
@@ -232,9 +235,9 @@ public class PedidosControlador {
                         // Buscar producto completo desde la BD
                         Productos productoCompleto = productoService.productoById(detalle.getProducto().getId());
                         if (productoCompleto == null) {
-                            redirectAttributes.addFlashAttribute("error",
+                            redirectAttributes.addFlashAttribute("info",
                                     "Producto no encontrado con ID: " + detalle.getProducto().getId());
-                            return "redirect:/pedidos/listarpedidos?error=true";
+                            return "redirect:/pedidos/listarpedidos";
                         }
 
                         // Asociar producto y pedido correctos
@@ -279,13 +282,13 @@ public class PedidosControlador {
             pedidoService.Updatepedido(id, pedido);
 
             redirectAttributes.addFlashAttribute("success", "Pedido actualizado correctamente");
-            return "redirect:/pedidos/listarpedidos?success=true";
+            return "redirect:/pedidos/listarpedidos";
 
         } catch (Exception e) {
             System.err.println("Error al actualizar pedido: " + e.getMessage());
             e.printStackTrace();
             redirectAttributes.addFlashAttribute("error", "Error al actualizar el pedido: " + e.getMessage());
-            return "redirect:/pedidos/listarpedidos?error=true";
+            return "redirect:/pedidos/listarpedidos";
         }
     }
 
@@ -293,13 +296,15 @@ public class PedidosControlador {
     @GetMapping("/eliminar/{id}")
     public String eliminarPedido(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
+            redirectAttributes.addFlashAttribute("success", "Pedido eliminado correctamente");
             pedidoService.deletepedidos(id);
             System.out.println("Pedido eliminado con ID: " + id);
-            return "redirect:/pedidos/listarpedidos?success=true";
+            return "redirect:/pedidos/listarpedidos";
 
         } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error al eliminar pedido: " + e.getMessage());
             System.err.println("Error al eliminar pedido: " + e.getMessage());
-            return "redirect:/pedidos/listarpedidos?error=true";
+            return "redirect:/pedidos/listarpedidos";
         }
     }
 
@@ -311,18 +316,18 @@ public class PedidosControlador {
 
             if (pedidoExistente == null) {
                 redirectAttributes.addFlashAttribute("error", "Pedido no encontrado");
-                return "redirect:/pedidos/listarpedidos?error=true";
+                return "redirect:/pedidos/listarpedidos";
             }
 
             // Verificar que el pedido no esté ya entregado o cancelado
             if (pedidoExistente.getEstado() == EstadoPedido.ENTREGADO) {
-                redirectAttributes.addFlashAttribute("error", "El pedido ya está entregado");
-                return "redirect:/pedidos/listarpedidos?error=true";
+                redirectAttributes.addFlashAttribute("info", "El pedido ya está entregado");
+                return "redirect:/pedidos/listarpedidos";
             }
 
             if (pedidoExistente.getEstado() == EstadoPedido.CANCELADO) {
                 redirectAttributes.addFlashAttribute("error", "No se puede entregar un pedido cancelado");
-                return "redirect:/pedidos/listarpedidos?error=true";
+                return "redirect:/pedidos/listarpedidos";
             }
 
            pedidoService.EntregarPedido(id);
@@ -330,14 +335,14 @@ public class PedidosControlador {
             System.out.println("Pedido " + id + " marcado como ENTREGADO");
             redirectAttributes.addFlashAttribute("success",
                     "Pedido #" + id + " entregado exitosamente");
-            return "redirect:/pedidos/listarpedidos?success=true";
+            return "redirect:/pedidos/listarpedidos";
 
         } catch (Exception e) {
             System.err.println("Error al entregar pedido: " + e.getMessage());
             e.printStackTrace();
             redirectAttributes.addFlashAttribute("error",
                     "Error al entregar el pedido: " + e.getMessage());
-            return "redirect:/pedidos/listarpedidos?error=true";
+            return "redirect:/pedidos/listarpedidos";
         }
     }
 
@@ -349,21 +354,21 @@ public class PedidosControlador {
             Pedidos pedidoExistente = pedidoService.pedidosByid(id);
 
             if (pedidoExistente == null) {
-                redirectAttributes.addFlashAttribute("error", "Pedido no encontrado");
-                return "redirect:/pedidos/listarpedidos?error=true";
+                redirectAttributes.addFlashAttribute("info", "Pedido no encontrado");
+                return "redirect:/pedidos/listarpedidos";
             }
 
             // Verificar que el pedido no esté ya cancelado
             if (pedidoExistente.getEstado() == EstadoPedido.CANCELADO) {
-                redirectAttributes.addFlashAttribute("error", "El pedido ya está cancelado");
-                return "redirect:/pedidos/listarpedidos?error=true";
+                redirectAttributes.addFlashAttribute("success", "El pedido ya está cancelado");
+                return "redirect:/pedidos/listarpedidos";
             }
 
             // Verificar que el pedido no esté entregado
             if (pedidoExistente.getEstado() == EstadoPedido.ENTREGADO) {
                 redirectAttributes.addFlashAttribute("error",
                         "No se puede cancelar un pedido que ya fue entregado");
-                return "redirect:/pedidos/listarpedidos?error=true";
+                return "redirect:/pedidos/listarpedidos";
             }
 
             // Cambiar el estado a CANCELADO
@@ -373,16 +378,17 @@ public class PedidosControlador {
             pedidoService.Updatepedido(id, pedidoExistente);
 
             System.out.println("Pedido " + id + " cancelado exitosamente");
+
             redirectAttributes.addFlashAttribute("success",
                     "Pedido #" + id + " cancelado exitosamente");
-            return "redirect:/pedidos/listarpedidos?success=true";
+            return "redirect:/pedidos/listarpedidos";
 
         } catch (Exception e) {
             System.err.println("Error al cancelar pedido: " + e.getMessage());
             e.printStackTrace();
             redirectAttributes.addFlashAttribute("error",
                     "Error al cancelar el pedido: " + e.getMessage());
-            return "redirect:/pedidos/listarpedidos?error=true";
+            return "redirect:/pedidos/listarpedidos";
         }
     }
 

@@ -6,90 +6,138 @@
       layout:decorate="~{layouts/adminlte}">
 
 <head>
-    <title>Home - Gestor de Pedidos</title>
+    <title>Dashboard - Gestor de Pedidos</title>
+    <style>
+        .small-box { transition: transform .3s; border-radius: 15px; overflow: hidden; }
+        .small-box:hover { transform: translateY(-5px); box-shadow: 0 1rem 3rem rgba(0,0,0,.175)!important; }
+        .small-box .icon { top: 10px; right: 15px; font-size: 60px; color: rgba(0,0,0,0.15); }
+        .card-custom { border-radius: 15px; }
+    </style>
 </head>
 
 <body>
-
 <div layout:fragment="content">
 
     <div class="content-header">
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
-                    <h1 class="m-0">Bienvenido al Panel de Gestión</h1>
+                    <h1 class="m-0 font-weight-bold"><i class="fas fa-tachometer-alt mr-2 text-primary"></i>Panel de Gestión</h1>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row">
-        <!-- Card Pedidos -->
-        <div class="col-lg-3 col-md-6" sec:authorize="isAuthenticated()">
-            <div class="small-box bg-warning shadow">
-                <div class="inner">
-                    <h3>Pedidos</h3>
-                    <p>Gestión de órdenes actuales</p>
-                </div>
-                <div class="icon">
-                    <i class="fas fa-shopping-cart"></i>
-                </div>
-                <a th:href="@{/pedidos/listarpedidos}" class="small-box-footer">
-                    Ir a Pedidos <i class="fas fa-arrow-circle-right"></i>
-                </a>
-            </div>
-        </div>
+    <section class="content">
+        <div class="container-fluid">
 
-        <!-- Card Clientes -->
-        <div class="col-lg-3 col-md-6" sec:authorize="isAuthenticated()">
-            <div class="small-box bg-primary shadow">
-                <div class="inner">
-                    <h3>Clientes</h3>
-                    <p>Directorio de clientes</p>
+            <div class="row">
+                <div class="col-lg-3 col-6" sec:authorize="isAuthenticated()">
+                    <div class="small-box bg-gradient-warning elevation-2">
+                        <div class="inner">
+                            <h3>Pedidos</h3>
+                            <p>Órdenes actuales</p>
+                        </div>
+                        <div class="icon"><i class="fas fa-shopping-cart"></i></div>
+                        <a th:href="@{/pedidos/listarpedidos}" class="small-box-footer">Gestionar <i class="fas fa-arrow-circle-right"></i></a>
+                    </div>
                 </div>
-                <div class="icon">
-                    <i class="fas fa-users"></i>
-                </div>
-                <a th:href="@{/listarclientes}" class="small-box-footer">
-                    Ir a Clientes <i class="fas fa-arrow-circle-right"></i>
-                </a>
-            </div>
-        </div>
 
-        <!-- Card Productos -->
-        <div class="col-lg-3 col-md-6" sec:authorize="hasRole('ADMIN')">
-            <div class="small-box bg-success shadow">
-                <div class="inner">
-                    <h3>Productos</h3>
-                    <p>Catálogo e Inventario</p>
+                <div class="col-lg-3 col-6" sec:authorize="isAuthenticated()">
+                    <div class="small-box bg-gradient-primary elevation-2">
+                        <div class="inner">
+                            <h3>Clientes</h3>
+                            <p>Directorio activo</p>
+                        </div>
+                        <div class="icon"><i class="fas fa-users"></i></div>
+                        <a th:href="@{/listarclientes}" class="small-box-footer">Ver lista <i class="fas fa-arrow-circle-right"></i></a>
+                    </div>
                 </div>
-                <div class="icon">
-                    <i class="fas fa-box"></i>
-                </div>
-                <a th:href="@{/listarproductos}" class="small-box-footer">
-                    Ir a Productos <i class="fas fa-arrow-circle-right"></i>
-                </a>
-            </div>
-        </div>
 
-        <!-- Card Ventas -->
-        <div class="col-lg-3 col-md-6" sec:authorize="isAuthenticated()">
-            <div class="small-box bg-danger shadow">
-                <div class="inner">
-                    <h3>Venta Directa</h3>
-                    <p>Registrar nueva venta</p>
+                <div class="col-lg-3 col-6" sec:authorize="hasRole('ADMIN')">
+                    <div class="small-box bg-gradient-success elevation-2">
+                        <div class="inner">
+                            <h3>Productos</h3>
+                            <p>Stock e Inventario</p>
+                        </div>
+                        <div class="icon"><i class="fas fa-box"></i></div>
+                        <a th:href="@{/listarproductos}" class="small-box-footer">Catálogo <i class="fas fa-arrow-circle-right"></i></a>
+                    </div>
                 </div>
-                <div class="icon">
-                    <i class="fas fa-cash-register"></i>
-                </div>
-                <a th:href="@{/ventas/listar}" class="small-box-footer">
-                    Ir a Ventas <i class="fas fa-arrow-circle-right"></i>
-                </a>
-            </div>
-        </div>
-    </div>
 
+                <div class="col-lg-3 col-6" sec:authorize="isAuthenticated()">
+                    <div class="small-box bg-gradient-danger elevation-2">
+                        <div class="inner">
+                            <h3>Ventas</h3>
+                            <p>Registro rápido</p>
+                        </div>
+                        <div class="icon"><i class="fas fa-cash-register"></i></div>
+                        <a th:href="@{/ventas/listar}" class="small-box-footer">Ir a caja <i class="fas fa-arrow-circle-right"></i></a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <div class="card card-custom card-outline card-primary shadow">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-chart-bar mr-1"></i>
+                                Ranking: Productos Más Vendidos
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart">
+                                <canvas id="bestSellersChart" style="min-height: 300px; height: 300px; max-height: 400px; max-width: 100%;"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
 </div>
 
+<th:block layout:fragment="scripts">
+    <script th:src="@{/plugins/chart.js/Chart.min.js}"></script>
+    <script th:inline="javascript">
+        $(function () {
+            // Recibimos los datos desde el Controller
+            // Esperamos una lista de nombres y una lista de cantidades vendidas
+            const nombresProductos = /*[[${nombresMasVendidos}]]*/ ['Sin Datos'];
+            const cantidadesVendidas = /*[[${cantidadesMasVendidas}]]*/ [0];
+
+            const ctx = document.getElementById('bestSellersChart').getContext('2d');
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: nombresProductos,
+                    datasets: [{
+                        label: 'Unidades Vendidas',
+                        backgroundColor: '#007bff',
+                        borderColor: '#0056b3',
+                        data: cantidadesVendidas,
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        yAxes: [{
+                            ticks: { beginAtZero: true, stepSize: 1 }
+                        }],
+                        xAxes: [{
+                            gridLines: { display: false }
+                        }]
+                    },
+                    legend: { display: false }
+                }
+            });
+        });
+    </script>
+</th:block>
 </body>
 </html>

@@ -54,6 +54,8 @@ public class VentaControlador {
         List<BigDecimal> valores = servicio.listarTotalVentas();
         model.addAttribute("labelsGrafica", etiquetas);
         model.addAttribute("datosGrafica", valores );
+        model.addAttribute("nombresProductos",servicio.NombreProductos());
+        model.addAttribute("conteoProductos",servicio.CantidadProductos());
         return "ViewVentas/index";
     }
 
@@ -95,20 +97,20 @@ public class VentaControlador {
 
             // Validar lista de detalles
             if (venta.getDetalles() == null || venta.getDetalles().isEmpty()) {
-                redirectAttributes.addFlashAttribute("mensaje", "Debe agregar productos a la venta");
-                return "redirect:/ventas/crear?error=true";
+                redirectAttributes.addFlashAttribute("info", "Debe agregar productos a la venta");
+                return "redirect:/ventas/crear";
             }
 
             // Validar cliente
             if (venta.getCliente() == null || venta.getCliente().getId() == null) {
-                redirectAttributes.addFlashAttribute("mensaje", "Debe seleccionar un cliente");
-                return "redirect:/ventas/crear?error=true";
+                redirectAttributes.addFlashAttribute("info", "Debe seleccionar un cliente");
+                return "redirect:/ventas/crear";
             }
 
             Cliente clienteCompleto = clienteService.clientdById(venta.getCliente().getId());
             if (clienteCompleto == null) {
-                redirectAttributes.addFlashAttribute("mensaje", "Cliente no encontrado");
-                return "redirect:/ventas/crear?error=true";
+                redirectAttributes.addFlashAttribute("info", "Cliente no encontrado");
+                return "redirect:/ventas/crear";
             }
             venta.setCliente(clienteCompleto);
 
@@ -127,16 +129,16 @@ public class VentaControlador {
 
                 Productos productoCompleto = productoServicio.productoById(detalle.getProducto().getId());
                 if (productoCompleto == null) {
-                    redirectAttributes.addFlashAttribute("mensaje",
+                    redirectAttributes.addFlashAttribute("info",
                             "Producto no encontrado");
-                    return "redirect:/ventas/crear?error=true";
+                    return "redirect:/ventas/crear";
                 }
 
                 // Stock
                 if (productoCompleto.getCantidad() < detalle.getCantidad()) {
-                    redirectAttributes.addFlashAttribute("mensaje",
+                    redirectAttributes.addFlashAttribute("info",
                             "Stock insuficiente para " + productoCompleto.getNombre());
-                    return "redirect:/ventas/crear?error=true";
+                    return "redirect:/ventas/crear";
                 }
 
                 detalle.setProducto(productoCompleto);
@@ -158,8 +160,8 @@ public class VentaControlador {
 
             // Sin productos válidos
             if (detallesValidos.isEmpty()) {
-                redirectAttributes.addFlashAttribute("mensaje", "Debes agregar productos válidos");
-                return "redirect:/ventas/crear?error=true";
+                redirectAttributes.addFlashAttribute("info", "Debes agregar productos válidos");
+                return "redirect:/ventas/crear";
             }
 
             venta.setDetalles(detallesValidos);
@@ -176,13 +178,13 @@ public class VentaControlador {
             // Guardar
             servicio.guardarVenta(venta);
 
-            redirectAttributes.addFlashAttribute("mensaje", "Venta creada exitosamente");
-            return "redirect:/ventas/listar?success=true";
+            redirectAttributes.addFlashAttribute("success", "Venta creada exitosamente");
+            return "redirect:/ventas/listar";
 
         } catch (Exception e) {
             e.printStackTrace();
-            redirectAttributes.addFlashAttribute("mensaje", "Error al crear la venta");
-            return "redirect:/ventas/crear?error=true";
+            redirectAttributes.addFlashAttribute("error", "Error al crear la venta");
+            return "redirect:/ventas/crear";
         }
     }
 
