@@ -106,7 +106,7 @@ public class PedidosControlador {
                 if (detalle.getProducto() != null &&
                         detalle.getProducto().getId() != null &&
                         detalle.getCantidad() != null &&
-                        detalle.getCantidad() > 0) {
+                        detalle.getCantidad().compareTo(detalle.getCantidad()) > 0) {
 
                     // Buscar producto completo desde la BD
                     Productos productoCompleto = productoService.productoById(detalle.getProducto().getId());
@@ -120,7 +120,7 @@ public class PedidosControlador {
                     }
 
                     // Verificar stock disponible
-                    if (productoCompleto.getCantidad() < detalle.getCantidad()) {
+                    if (productoCompleto.getCantidad().compareTo(detalle.getCantidad()) < 0) {
                         model.addAttribute("info", "Stock insuficiente para: " + productoCompleto.getNombre() +
                                 ". Disponible: " + productoCompleto.getCantidad());
                         model.addAttribute("productos", productoService.listarProductos());
@@ -139,7 +139,7 @@ public class PedidosControlador {
                     }
 
                     // Calcular subtotal del detalle
-                    BigDecimal cantidad = new BigDecimal(detalle.getCantidad());
+                    BigDecimal cantidad = detalle.getCantidad();
                     detalle.setSubtotal(detalle.getPrecioUnitario().multiply(cantidad));
 
                     subtotalPedido = subtotalPedido.add(detalle.getSubtotal());
@@ -230,7 +230,7 @@ public class PedidosControlador {
                     if (detalle.getProducto() != null &&
                             detalle.getProducto().getId() != null &&
                             detalle.getCantidad() != null &&
-                            detalle.getCantidad() > 0) {
+                            detalle.getCantidad().compareTo(detalle.getCantidad()) > 0) {
 
                         // Buscar producto completo desde la BD
                         Productos productoCompleto = productoService.productoById(detalle.getProducto().getId());
@@ -249,7 +249,7 @@ public class PedidosControlador {
                             detalle.setPrecioUnitario(productoCompleto.getPrecio());
                         }
 
-                        BigDecimal cantidad = new BigDecimal(detalle.getCantidad());
+                        BigDecimal cantidad =detalle.getCantidad();
                         detalle.setSubtotal(detalle.getPrecioUnitario().multiply(cantidad));
 
                         subtotalPedido = subtotalPedido.add(detalle.getSubtotal());

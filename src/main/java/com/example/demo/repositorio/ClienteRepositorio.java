@@ -21,4 +21,5 @@ public interface ClienteRepositorio  extends JpaRepository<Cliente,Long> {
             "  where p.estado = 'ENTREGADO' and p.id_cliente = c.id\n" +
             "GROUP by c.nombre ORDER by cantidad_pedidos DESC", nativeQuery = true)
     List<Object []>CantidadPorPedidos();
+
 }

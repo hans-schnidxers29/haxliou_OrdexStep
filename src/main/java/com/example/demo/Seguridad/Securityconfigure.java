@@ -9,7 +9,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -19,29 +18,45 @@ public class Securityconfigure {
     private ServicioUsuario usuarioServicio;
 
     @Autowired
-    private BCryptPasswordEncoder passwordEncoder;  // ✅ Cambiar aquí
+    private BCryptPasswordEncoder passwordEncoder;
 
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider auth = new DaoAuthenticationProvider();
         auth.setUserDetailsService(usuarioServicio);
-        auth.setPasswordEncoder(passwordEncoder);  // ✅ Ya no necesitas el cast
+        auth.setPasswordEncoder(passwordEncoder);
         return auth;
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // 🔹 Autorización de rutas
+                // Autorización de rutas
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/css/**", "/StyleLogin/**", "/IMG/**", "/js/**").permitAll()
-                        .requestMatchers("/registro**", "/js/**", "/css/**", "/img/**","/h2-console/**","/registro/nuevo").permitAll()
+                        .requestMatchers(
+                                "/css/**",
+                                "/StyleLogin/**",
+                                "/IMG/**",
+                                "/js/**",
+                                "/images/**",
+                                "/adminlte/**",
+                                "/plugins/**"
+                        ).permitAll()
+                        .requestMatchers(
+                                "/registro**",
+                                "/registro/nuevo",
+                                "/login**"
+                        ).permitAll().
+                        requestMatchers(
+                              "/listarproductos", "/crearproducto/nuevo",
+                                "/categoria/crear","/producto/actualizar/**"
+                        ).hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
 
-                // 🔹 Configuración del login
+                // Configuración del login
                 .formLogin(form -> form
-                        .loginPage("/login")      // Página personalizada de login
+                        .loginPage("/login")
                         .loginProcessingUrl("/login")
                         .usernameParameter("email")
                         .passwordParameter("password")
@@ -50,11 +65,12 @@ public class Securityconfigure {
                         .permitAll()
                 )
 
-                // 🔹 Configuración del logout
+                // Configuración del logout - SIN AntPathRequestMatcher
                 .logout(logout -> logout
+                        .logoutUrl("/logout")  // ✅ Usa logoutUrl() directamente
                         .invalidateHttpSession(true)
                         .clearAuthentication(true)
-                        .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+                        .deleteCookies("JSESSIONID")
                         .logoutSuccessUrl("/login?logout")
                         .permitAll()
                 );
