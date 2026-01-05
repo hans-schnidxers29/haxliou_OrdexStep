@@ -83,6 +83,10 @@ public class ProductoControlador {
             productoActual.setDescripcion(producto.getDescripcion());
             productoActual.setCategoria(categoria);  // ✅ Categoría gestionada
 
+            productoActual.setTipoVenta(producto.getTipoVenta());
+            productoActual.setCantidadMinima(producto.getCantidadMinima());
+            productoActual.setIncremento(producto.getIncremento());
+            productoActual.setStockMinimo(producto.getStockMinimo());
             // Guardar
             service.updateProductro(id, productoActual);
 

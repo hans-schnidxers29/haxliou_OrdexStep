@@ -2,34 +2,57 @@ package com.example.demo.Login;
 
 import java.util.Collection;
 import jakarta.persistence.*;
-import org.springframework.context.annotation.Primary;
 
 @Entity
 @Table(name = "usuarios", uniqueConstraints = @UniqueConstraint(columnNames = "email"))
-public class Usuario{
+public class Usuario {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "nombre")
+    // --- DATOS PERSONALES / REPRESENTANTE ---
+    @Column(name = "nombre", nullable = false)
     private String nombre;
 
     @Column(name = "apellido")
     private String apellido;
 
-    @Column(name = "email",unique = true)
+    @Column(name = "email", unique = true, nullable = false)
     private String email;
 
     private String password;
 
+    @Column(name = "telefono")
+    private String telefono;
+
+    @Column(name = "direccion_casa")
+    private String direccionCasa;
+
+
+    // --- RELACIÓN CON SEGURIDAD ---
     @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinTable(
             name = "usuarios_roles",
-            joinColumns = @JoinColumn(name = "usuario_id",referencedColumnName = "id"),
-            inverseJoinColumns = @JoinColumn(name = "rol_id",referencedColumnName = "id")
+            joinColumns = @JoinColumn(name = "usuario_id", referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(name = "rol_id", referencedColumnName = "id")
     )
     private Collection<Rol> roles;
+
+    // --- CONSTRUCTORES ---
+    public Usuario() {
+    }
+
+    public Usuario(Long id, String nombre, String apellido, String email, String password, String telefono, String direccionCasa, Collection<Rol> roles) {
+        this.id = id;
+        this.nombre = nombre;
+        this.apellido = apellido;
+        this.email = email;
+        this.password = password;
+        this.telefono = telefono;
+        this.direccionCasa = direccionCasa;
+        this.roles = roles;
+    }
 
     public Long getId() {
         return id;
@@ -71,6 +94,22 @@ public class Usuario{
         this.password = password;
     }
 
+    public String getTelefono() {
+        return telefono;
+    }
+
+    public void setTelefono(String telefono) {
+        this.telefono = telefono;
+    }
+
+    public String getDireccionCasa() {
+        return direccionCasa;
+    }
+
+    public void setDireccionCasa(String direccionCasa) {
+        this.direccionCasa = direccionCasa;
+    }
+
     public Collection<Rol> getRoles() {
         return roles;
     }
@@ -78,28 +117,4 @@ public class Usuario{
     public void setRoles(Collection<Rol> roles) {
         this.roles = roles;
     }
-
-    public Usuario(Long id, String nombre, String apellido, String email, String password, Collection<Rol> roles) {
-        super();
-        this.id = id;
-        this.nombre = nombre;
-        this.apellido = apellido;
-        this.email = email;
-        this.password = password;
-        this.roles = roles;
-    }
-
-    public Usuario(String nombre, String apellido, String email, String password, Collection<Rol> roles) {
-        super();
-        this.nombre = nombre;
-        this.apellido = apellido;
-        this.email = email;
-        this.password = password;
-        this.roles = roles;
-    }
-
-    public Usuario() {
-
-    }
-
 }

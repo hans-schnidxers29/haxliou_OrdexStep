@@ -14,7 +14,7 @@ import java.util.List;
 public interface VentaRepositorio extends JpaRepository<Venta, Long> {
 
     @Query("SELECT SUM(v.total) FROM Venta v")
-    Long sumaDeVentas();
+    BigDecimal sumaDeVentas();
 
     @Query("SELECT SUM(v.total) FROM Venta v WHERE EXTRACT( MONTH from v.fechaVenta) = :mes AND EXTRACT (YEAR from v.fechaVenta) = :anio")
     BigDecimal sumaPorMes(@Param("mes") int mes, @Param("anio") int anio);
@@ -34,5 +34,21 @@ public interface VentaRepositorio extends JpaRepository<Venta, Long> {
             "ORDER by productos_vendidos DESC", nativeQuery = true)
     List<Object[]> listarProductosVendidos();
 
+    @Query(value = "SELECT\n" +
+            "  SUM(total) AS total_ventas\n" +
+            "FROM venta\n" +
+            "WHERE DATE_TRUNC('month', fecha_venta) = DATE_TRUNC('month', CURRENT_DATE)", nativeQuery = true)
+    BigDecimal TotaVentasMes();
+
+    @Query(value = "SELECT SUM(producto_id) as productos_ventasHoy \n" +
+            "  from detalle_venta  as d, venta as v\n" +
+            "where DATE_TRUNC('day',v.fecha_venta) = DATE_trunc('day',CURRENT_DATE) and d.id = v.id", nativeQuery = true)
+    Long SumaVentasPorDia();
+
+    @Query(value = "SELECT v.metodo_pago as  Metodos, SUM(v.total) as totalpor_metodo\n" +
+            "FROM venta as v\n" +
+            "GROUP BY metodos\n" +
+            "ORDER BY totalpor_metodo  ASC", nativeQuery = true)
+    List<Object[]>ListaMetodosPago();
 
 }

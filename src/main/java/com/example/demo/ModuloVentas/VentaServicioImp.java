@@ -10,10 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
@@ -65,32 +62,37 @@ public class VentaServicioImp implements VentaServicio {
                 continue;
             }
 
-            if (detalle.getCantidad() == null || detalle.getCantidad() <= 0) {
+            // Validación de cantidad nula o menor/igual a cero usando compareTo
+            if (detalle.getCantidad() == null || detalle.getCantidad().compareTo(BigDecimal.ZERO) <= 0) {
                 continue;
             }
 
             // Buscar el producto completo desde la BD
             Productos productoBD = productoServicio.productoById(detalle.getProducto().getId());
 
-            // Verificar stock suficiente
-            if (productoBD.getCantidad() < detalle.getCantidad()) {
+            // Verificar stock suficiente (productoBD.getCantidad() < detalle.getCantidad())
+            // compareTo devuelve: -1 si es menor, 0 si es igual, 1 si es mayor
+            if (productoBD.getCantidad().compareTo(detalle.getCantidad()) < 0) {
                 throw new RuntimeException("Stock insuficiente para el producto: " + productoBD.getNombre() +
                         ". Disponible: " + productoBD.getCantidad() +
                         ", Solicitado: " + detalle.getCantidad());
             }
 
-            // Descontar stock
-            int nuevaCantidad = productoBD.getCantidad() - detalle.getCantidad();
+            // Guardamos la cantidad anterior para el log
+            BigDecimal cantidadAnterior = productoBD.getCantidad();
+
+            // Descontar stock usando .subtract()
+            BigDecimal nuevaCantidad = productoBD.getCantidad().subtract(detalle.getCantidad());
             productoBD.setCantidad(nuevaCantidad);
 
-            // Asociar el producto completo al detalle
+            // Asociar el producto completo al detalle para asegurar la persistencia de la relación
             detalle.setProducto(productoBD);
 
             // Guardar producto actualizado
             productoServicio.save(productoBD);
 
             System.out.println("Stock actualizado - Producto: " + productoBD.getNombre() +
-                    " - Cantidad anterior: " + (productoBD.getCantidad() + detalle.getCantidad()) +
+                    " - Cantidad anterior: " + cantidadAnterior +
                     " - Cantidad nueva: " + productoBD.getCantidad());
         }
     }
@@ -101,7 +103,7 @@ public class VentaServicioImp implements VentaServicio {
     }
 
     @Override
-    public Long totalVentas() {
+    public BigDecimal totalVentas() {
         return repositorioVenta.sumaDeVentas();
     }
 
@@ -117,10 +119,8 @@ public class VentaServicioImp implements VentaServicio {
     }
 
     @Override
-    public Long sumaproductosPordia(LocalDate fecha) {
-        LocalDateTime inicio = fecha.atStartOfDay(); // 00:00:00
-        LocalDateTime fin = fecha.plusDays(1).atStartOfDay(); // 00:00:00 del día siguiente
-        return detalleVentaRepositorio.sumaProductosPorDia(inicio, fin);
+    public Long sumaproductosPordia() {
+        return repositorioVenta.SumaVentasPorDia();
     }
 
     @Override
@@ -148,4 +148,33 @@ public class VentaServicioImp implements VentaServicio {
         List<Object[]>resultado =repositorioVenta.listarProductosVendidos();
         return resultado.stream().map(objeto -> (Long) objeto[1]).toList();
     }
+
+    @Override
+    public BigDecimal TotalVentasMesActual() {
+        return repositorioVenta.TotaVentasMes();
+    }
+
+    /**
+     * @return Lista de metodos de pago
+     */
+    @Override
+    public List<String> ListaMetodosPago() {
+        List<Object[]> resultado = repositorioVenta.ListaMetodosPago();
+        return resultado.stream()
+                .map(objeto -> objeto[0] == null ? "Desconocido" : objeto[0].toString())
+                .toList();
+    }
+
+    @Override
+    public List<Number> ListaMetodosPagoValores() {
+        List<Object[]> resultado = repositorioVenta.ListaMetodosPago();
+        return resultado.stream()
+                .map(objeto -> {
+                    // Convertimos de forma segura a Double para que JS no tenga problemas
+                    return (objeto[1] instanceof Number) ? (Number) objeto[1] : 0;
+                })
+                .toList();
+    }
+
+
 }

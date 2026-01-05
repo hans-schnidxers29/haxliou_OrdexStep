@@ -1,7 +1,6 @@
 package com.example.demo.ModuloVentas;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.List;
 
 public interface VentaServicio {
@@ -12,12 +11,15 @@ public interface VentaServicio {
     Venta buscarVenta(Long id);
     void DescontarStock(Venta venta);
     void descontarStock(Venta venta);
-    Long totalVentas();
+    BigDecimal totalVentas();
     BigDecimal sumapormes(int mes, int anio);
     BigDecimal sumaproductos();
-    Long  sumaproductosPordia(LocalDate fecha);
+    Long  sumaproductosPordia();
     List<String> ListaMeses();
     List<BigDecimal> listarTotalVentas();
     List<String>NombreProductos();
     List<Long>CantidadProductos();
+    BigDecimal TotalVentasMesActual();
+    List<String>ListaMetodosPago();
+    List<Number> ListaMetodosPagoValores();
 }

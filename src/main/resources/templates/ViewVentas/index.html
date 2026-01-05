@@ -13,8 +13,13 @@
         #tablaVentas { font-size: 1rem; }
         #tablaVentas thead th { vertical-align: middle; padding: 8px; text-transform: uppercase; font-size: 0.7rem; }
         #tablaVentas tbody td { vertical-align: middle; padding: 4px 8px; }
-        .small-box h3 { font-size: 1.5rem; }
-        /* Altura fija para que ambas gráficas se vean alineadas */
+
+        /* Mejoras solo para las Cards de datos (Small Boxes) */
+        .small-box { border-radius: 12px; overflow: hidden; transition: transform .3s; border: none; }
+        .small-box:hover { transform: translateY(-5px); }
+        .small-box h3 { font-size: 1.8rem; font-weight: 700; margin-bottom: 2px; }
+        .small-box p { font-size: 0.9rem; opacity: 0.9; }
+
         .chart-wrapper { min-height: 250px; height: 250px; max-height: 250px; width: 100%; }
     </style>
 </head>
@@ -41,26 +46,26 @@
 
             <div class="row">
                 <div class="col-lg-3 col-6">
-                    <div class="small-box bg-info shadow-sm">
+                    <div class="small-box bg-gradient-info elevation-2">
                         <div class="inner"><h3 th:text="${ventas.size()}">0</h3><p>Total Ventas</p></div>
                         <div class="icon"><i class="fas fa-shopping-cart"></i></div>
                     </div>
                 </div>
                 <div class="col-lg-3 col-6">
-                    <div class="small-box bg-success shadow-sm">
-                        <div class="inner"><h3>$<span th:text="${#numbers.formatDecimal(totalRecaudado,1,3)}"></span></h3><p>Recaudación Total</p></div>
+                    <div class="small-box bg-gradient-success elevation-2">
+                        <div class="inner"><h3>$<span th:text="${totalRecaudado}"></span></h3><p>Recaudación Total</p></div>
                         <div class="icon"><i class="fas fa-dollar-sign"></i></div>
                     </div>
                 </div>
                 <div class="col-lg-3 col-6">
-                    <div class="small-box bg-warning shadow-sm">
+                    <div class="small-box bg-gradient-warning elevation-2">
                         <div class="inner"><h3 th:text="${sumaproductos}">0</h3><p>Items Vendidos</p></div>
                         <div class="icon"><i class="fas fa-box"></i></div>
                     </div>
                 </div>
                 <div class="col-lg-3 col-6">
-                    <div class="small-box bg-danger shadow-sm">
-                        <div class="inner"><h3 th:text="${SumaProcDias}">0</h3><p>Vendidos Hoy</p></div>
+                    <div class="small-box bg-gradient-danger elevation-2">
+                        <div class="inner"><h3 th:text="${SumaPorDias}">0</h3><p>Vendidos Hoy</p></div>
                         <div class="icon"><i class="fas fa-calendar-check"></i></div>
                     </div>
                 </div>
@@ -138,16 +143,12 @@
 
     <script th:inline="javascript">
         $(document).ready(function () {
-
-            // 1. Capturamos las variables de Spring/Thymeleaf para Toasts
             const s = /*[[${success}]]*/ null;
             const e = /*[[${error}]]*/ null;
             const i = /*[[${info}]]*/ null;
             const w = /*[[${warning}]]*/ null;
-
             checkNotifications(s, e, i, w);
 
-            // 1. Configuración DataTable
             $('#tablaVentas').DataTable({
                 "responsive": true,
                 "autoWidth": false,
@@ -160,47 +161,32 @@
                 "order": [ [ 0, "desc" ] ]
             });
 
-            // 2. Configuración Gráfica Lineal
-            const ctx = document.getElementById('ventasChart').getContext('2d');
-
-            // Inyectamos los datos desde el Controller usando Thymeleaf
-            const labelsDesdeController = [[${labelsGrafica}]];
-            const datosDesdeController = [[${datosGrafica}]];
-
-            new Chart(ctx, {
+            // Gráfica Lineal
+            new Chart(document.getElementById('ventasChart').getContext('2d'), {
                 type: 'line',
                 data: {
-                    labels: labelsDesdeController,
+                    labels: [[${labelsGrafica}]],
                     datasets: [{
                         label: 'Ventas ($)',
-                        data: datosDesdeController,
+                        data: [[${datosGrafica}]],
                         borderColor: '#007bff',
                         backgroundColor: 'rgba(0, 123, 255, 0.1)',
                         fill: true,
                         tension: 0.3,
-                        borderWidth: 2,
-                        pointRadius: 4,
-                        pointBackgroundColor: '#007bff'
+                        borderWidth: 2
                     }]
                 },
-                options: {
-                    maintainAspectRatio: false,
-                    responsive: true,
-                    scales: {
-                        yAxes: [{
-                            ticks: { beginAtZero: true }
-                        }]
-                    }
-                }
+                options: { maintainAspectRatio: false }
             });
-            const ctxProd = document.getElementById('productosChart').getContext('2d');
-            new Chart(ctxProd, {
+
+            // Gráfica Barras
+            new Chart(document.getElementById('productosChart').getContext('2d'), {
                 type: 'bar',
                 data: {
-                    labels: [[${nombresProductos}]], // Asegúrate de enviar esto desde el Controller
+                    labels: [[${nombresProductos}]],
                     datasets: [{
-                        label: 'Cantidad Vendida',
-                        data: [[${conteoProductos}]], // Asegúrate de enviar esto desde el Controller
+                        label: 'Cant. Vendida',
+                        data: [[${conteoProductos}]],
                         backgroundColor: 'rgba(32, 201, 151, 0.8)',
                         borderColor: '#20c997',
                         borderWidth: 1

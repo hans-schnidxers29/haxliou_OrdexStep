@@ -38,6 +38,12 @@ public class ClienteControlador {
     @PostMapping("/crear")
     public String guardarcliente(@ModelAttribute Cliente cliente, Model model, RedirectAttributes redirectAttributes){
         try {
+            if(service.VerifcarCliente(cliente.getNumeroIdentificacion())){
+                redirectAttributes.addFlashAttribute("info",
+                        "Cliente con Identificacion " + cliente.getNumeroIdentificacion() + " ya Registrado");
+                model.addAttribute("cliente", cliente); // para no perder los datos ingresados
+                return "redirect:/crearcliente/nuevo";
+            }
             service.save(cliente);
             redirectAttributes.addFlashAttribute("successs","Cliente creado exitosamente");
             return "redirect:/listarclientes";

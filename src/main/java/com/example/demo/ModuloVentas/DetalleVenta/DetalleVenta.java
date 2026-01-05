@@ -23,7 +23,7 @@ public class DetalleVenta {
     private Productos producto;
 
     @Column(nullable = false)
-    private Integer cantidad;
+    private BigDecimal cantidad;
 
     @Column(nullable = false,precision = 10, scale = 3)
     private BigDecimal precioUnitario;
@@ -34,7 +34,7 @@ public class DetalleVenta {
     @Column(nullable = false, precision = 10, scale = 3)
     private BigDecimal subtotal;
 
-    public DetalleVenta(Long id, Venta venta, Productos producto, Integer cantidad, BigDecimal precioUnitario, BigDecimal descuento, BigDecimal subtotal) {
+    public DetalleVenta(Long id, Venta venta, Productos producto, BigDecimal cantidad, BigDecimal precioUnitario, BigDecimal descuento, BigDecimal subtotal) {
         this.id = id;
         this.venta = venta;
         this.producto = producto;
@@ -44,7 +44,7 @@ public class DetalleVenta {
         this.subtotal = subtotal;
     }
 
-    public DetalleVenta(Venta venta, Productos producto, Integer cantidad, BigDecimal precioUnitario, BigDecimal descuento, BigDecimal subtotal) {
+    public DetalleVenta(Venta venta, Productos producto,BigDecimal cantidad, BigDecimal precioUnitario, BigDecimal descuento, BigDecimal subtotal) {
         this.venta = venta;
         this.producto = producto;
         this.cantidad = cantidad;
@@ -60,7 +60,7 @@ public class DetalleVenta {
     @PreUpdate
     public void calcularSubtotal() {
         if (cantidad != null && precioUnitario != null) {
-            this.subtotal = precioUnitario.multiply(BigDecimal.valueOf(cantidad));
+            this.subtotal = precioUnitario.multiply(cantidad);
         }
     }
 
@@ -90,11 +90,11 @@ public class DetalleVenta {
         this.producto = producto;
     }
 
-    public Integer getCantidad() {
+    public BigDecimal getCantidad() {
         return cantidad;
     }
 
-    public void setCantidad(Integer cantidad) {
+    public void setCantidad(BigDecimal cantidad) {
         this.cantidad = cantidad;
     }
 

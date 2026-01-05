@@ -10,6 +10,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -76,37 +77,42 @@ public class PedidosServiceImp implements PedidoService{
     public void DescantorStock(Pedidos pedidos) {
         for (DetallePedido detalle : pedidos.getDetalles()) {
 
-
+            // 1. Validaciones de seguridad
             if (detalle.getProducto() == null || detalle.getProducto().getId() == null) {
                 continue;
             }
 
-            if (detalle.getCantidad() == null || detalle.getCantidad() <= 0) {
+            // 2. Validación de cantidad: detalle.getCantidad() > 0
+            if (detalle.getCantidad() == null || detalle.getCantidad().compareTo(BigDecimal.ZERO) <= 0) {
                 continue;
             }
 
-            // Buscar el producto completo desde la BD
+            // 3. Buscar el producto completo desde la BD
             Productos productoBD = productoServicio.productoById(detalle.getProducto().getId());
 
-            // Verificar stock suficiente
-            if (productoBD.getCantidad() < detalle.getCantidad()) {
+            // 4. Verificar stock suficiente: productoBD.getCantidad() < detalle.getCantidad()
+            // compareTo devuelve -1 si el stock en BD es menor a lo solicitado
+            if (productoBD.getCantidad().compareTo(detalle.getCantidad()) < 0) {
                 throw new RuntimeException("Stock insuficiente para el producto: " + productoBD.getNombre() +
                         ". Disponible: " + productoBD.getCantidad() +
                         ", Solicitado: " + detalle.getCantidad());
             }
 
-            // Descontar stock
-            int nuevaCantidad = productoBD.getCantidad() - detalle.getCantidad();
+            // 5. Guardar cantidad original para el registro (Log)
+            BigDecimal cantidadAnterior = productoBD.getCantidad();
+
+            // 6. Descontar stock: productoBD.getCantidad() - detalle.getCantidad()
+            BigDecimal nuevaCantidad = productoBD.getCantidad().subtract(detalle.getCantidad());
             productoBD.setCantidad(nuevaCantidad);
 
-            // Asociar el producto completo al detalle
+            // 7. Sincronizar objetos
             detalle.setProducto(productoBD);
 
-            // Guardar producto actualizado
+            // 8. Persistir cambios
             productoServicio.save(productoBD);
 
-            System.out.println("Stock actualizado - Producto: " + productoBD.getNombre() +
-                    " - Cantidad anterior: " + (productoBD.getCantidad() + detalle.getCantidad()) +
+            System.out.println("Stock actualizado (Pedido) - Producto: " + productoBD.getNombre() +
+                    " - Cantidad anterior: " + cantidadAnterior +
                     " - Cantidad nueva: " + productoBD.getCantidad());
         }
     }
@@ -145,4 +151,5 @@ public class PedidosServiceImp implements PedidoService{
         // Cambiar el estado
         pedido.setEstado(EstadoPedido.ENTREGADO);
     }
+
 }
