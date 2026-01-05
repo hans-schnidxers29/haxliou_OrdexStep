@@ -12,4 +12,5 @@ public interface ClienteService {
     void update(Cliente cliente);
     List<Long>ListaCLientePedidos();
     List<String>NombreListPedidos();
+    boolean VerifcarCliente(String numeroIdentificacion);
 }

@@ -1,54 +1,82 @@
 package com.example.demo.entidad;
 
-
 import jakarta.persistence.*;
-
 import java.math.BigDecimal;
-import java.util.List;
 
 @Entity
-@Table(name="productos")
+@Table(name = "productos")
 public class Productos {
 
     @Id
-    @GeneratedValue(strategy= GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name="nombre",nullable = false)
+    @Column(name = "nombre", nullable = false)
     private String nombre;
 
-    private String Descripcion;
+    @Column(name = "descripcion")
+    private String descripcion;
 
-    @Column(name="precio", nullable = false, scale = 3, precision = 10)
+    @Column(name = "precio", nullable = false, precision = 10, scale = 2)
     private BigDecimal precio;
 
-    @Column(name="cantidad", nullable = false)
-    private Integer cantidad = 0;
+    @Column(name = "cantidad", nullable = false)
+    private BigDecimal cantidad = BigDecimal.ZERO;  // ✅ Cambiar a BigDecimal para soportar decimales
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_venta", nullable = false)
+    private TipoVenta tipoVenta = TipoVenta.UNIDAD;  // ✅ Por defecto venta por unidad
+
+    @Column(name = "cantidad_minima", precision = 10, scale = 3)
+    private BigDecimal cantidadMinima;  // ✅ Para definir venta mínima (ej: 0.5 kg)
+
+    @Column(name = "incremento", precision = 10, scale = 3)
+    private BigDecimal incremento;  // ✅ Para definir incrementos (ej: 0.25 kg)
+
+    @Column(name = "stock_minimo", precision = 10, scale = 3)
+    private BigDecimal stockMinimo;  // ✅ Alerta de stock bajo
 
     @ManyToOne
     @JoinColumn(name = "categoria_id")
     private Categoria categoria;
 
-
-    public Productos (String nombre, String descripcion, BigDecimal precio, Integer cantidad,Categoria categoria) {
-        this.nombre = nombre;
-        Descripcion = descripcion;
-        this.precio = precio;
-        this.cantidad = cantidad;
-        this.categoria= categoria;
-    }
-
+    // Constructores
     public Productos() {
     }
 
-    public Categoria getCategoria() {
-        return categoria;
-    }
-
-    public void setCategoria(Categoria categoria) {
+    public Productos(String nombre, String descripcion, BigDecimal precio,
+                     BigDecimal cantidad, Categoria categoria, TipoVenta tipoVenta) {
+        this.nombre = nombre;
+        this.descripcion = descripcion;
+        this.precio = precio;
+        this.cantidad = cantidad;
         this.categoria = categoria;
+        this.tipoVenta = tipoVenta;
     }
 
+    // Métodos útiles
+    public boolean esVentaPorPeso() {
+        return this.tipoVenta == TipoVenta.PESO;
+    }
+
+    public boolean tieneStockDisponible(BigDecimal cantidadSolicitada) {
+        return this.cantidad.compareTo(cantidadSolicitada) >= 0;
+    }
+
+    public boolean necesitaReabastecimiento() {
+        return stockMinimo != null && this.cantidad.compareTo(stockMinimo) <= 0;
+    }
+
+    public String getUnidadMedida() {
+        switch (tipoVenta) {
+            case PESO: return "kg";
+            case VOLUMEN: return "L";
+            case METRO: return "m";
+            default: return "unidad";
+        }
+    }
+
+    // Getters y Setters
     public Long getId() {
         return id;
     }
@@ -66,11 +94,11 @@ public class Productos {
     }
 
     public String getDescripcion() {
-        return Descripcion;
+        return descripcion;
     }
 
     public void setDescripcion(String descripcion) {
-        Descripcion = descripcion;
+        this.descripcion = descripcion;
     }
 
     public BigDecimal getPrecio() {
@@ -81,11 +109,51 @@ public class Productos {
         this.precio = precio;
     }
 
-    public Integer getCantidad() {
+    public BigDecimal getCantidad() {
         return cantidad;
     }
 
-    public void setCantidad(Integer cantidad) {
+    public void setCantidad(BigDecimal cantidad) {
         this.cantidad = cantidad;
+    }
+
+    public TipoVenta getTipoVenta() {
+        return tipoVenta;
+    }
+
+    public void setTipoVenta(TipoVenta tipoVenta) {
+        this.tipoVenta = tipoVenta;
+    }
+
+    public BigDecimal getCantidadMinima() {
+        return cantidadMinima;
+    }
+
+    public void setCantidadMinima(BigDecimal cantidadMinima) {
+        this.cantidadMinima = cantidadMinima;
+    }
+
+    public BigDecimal getIncremento() {
+        return incremento;
+    }
+
+    public void setIncremento(BigDecimal incremento) {
+        this.incremento = incremento;
+    }
+
+    public BigDecimal getStockMinimo() {
+        return stockMinimo;
+    }
+
+    public void setStockMinimo(BigDecimal stockMinimo) {
+        this.stockMinimo = stockMinimo;
+    }
+
+    public Categoria getCategoria() {
+        return categoria;
+    }
+
+    public void setCategoria(Categoria categoria) {
+        this.categoria = categoria;
     }
 }

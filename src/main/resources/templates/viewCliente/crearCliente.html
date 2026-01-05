@@ -135,8 +135,11 @@
 <th:block layout:fragment="scripts">
     <script th:inline="javascript">
         $(document).ready(function() {
-            // Notificaciones si las tienes configuradas
-            checkNotifications(/*[[${success}]]*/ null, /*[[${error}]]*/ null);
+            const s = /*[[${success}]]*/ null;
+            const e = /*[[${error}]]*/ null;
+            const i = /*[[${info}]]*/ null;
+            const w = /*[[${warning}]]*/ null;
+            checkNotifications(s, e, i, w);
 
             // Validación de Bootstrap 4
             $('.needs-validation').on('submit', function(event) {

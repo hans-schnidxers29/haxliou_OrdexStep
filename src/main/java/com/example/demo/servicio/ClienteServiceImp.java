@@ -51,4 +51,9 @@ public class ClienteServiceImp implements ClienteService {
         List<Object[]>Resultado= repositorio.CantidadPorPedidos();
         return Resultado.stream().map(objeto -> (String) objeto[0]).toList();
     }
+
+    @Override
+    public boolean VerifcarCliente(String numeroIdentificacion) {
+        return repositorio.existsByNumeroIdentificacion(numeroIdentificacion);
+    }
 }

@@ -2,7 +2,7 @@
 <html lang="es"
       xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       layout:decorate="~{layouts/adminlte}">
 
 <head>
@@ -11,7 +11,8 @@
         .small-box { transition: transform .3s; border-radius: 15px; overflow: hidden; }
         .small-box:hover { transform: translateY(-5px); box-shadow: 0 1rem 3rem rgba(0,0,0,.175)!important; }
         .small-box .icon { top: 10px; right: 15px; font-size: 60px; color: rgba(0,0,0,0.15); }
-        .card-custom { border-radius: 15px; }
+        .card-custom { border-radius: 15px; border: none; }
+        .chart-container { position: relative; height: 300px; width: 100%; }
     </style>
 </head>
 
@@ -22,7 +23,14 @@
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
-                    <h1 class="m-0 font-weight-bold"><i class="fas fa-tachometer-alt mr-2 text-primary"></i>Panel de Gestión</h1>
+                    <h1 class="m-0 font-weight-bold text-dark">
+                        <i class="fas fa-tachometer-alt mr-2 text-primary"></i>Panel de Gestión
+                    </h1>
+                </div>
+                <div class="col-sm-6 text-right">
+                     <span class="badge badge-info p-2 shadow-sm">
+                         <i class="far fa-calendar-alt mr-1"></i> [[${#temporals.format(#temporals.createNow(), 'dd/MM/yyyy HH:mm')}]]
+                     </span>
                 </div>
             </div>
         </div>
@@ -32,64 +40,117 @@
         <div class="container-fluid">
 
             <div class="row">
-                <div class="col-lg-3 col-6" sec:authorize="isAuthenticated()">
+                <div class="col-lg-3 col-6">
                     <div class="small-box bg-gradient-warning elevation-2">
                         <div class="inner">
-                            <h3>Pedidos</h3>
-                            <p>Órdenes actuales</p>
+                            <h3 th:text="${totalPedidosPendientes ?: 0}">0</h3>
+                            <p>Pedidos por Despachar</p>
                         </div>
-                        <div class="icon"><i class="fas fa-shopping-cart"></i></div>
-                        <a th:href="@{/pedidos/listarpedidos}" class="small-box-footer">Gestionar <i class="fas fa-arrow-circle-right"></i></a>
+                        <div class="icon"><i class="fas fa-shipping-fast"></i></div>
+                        <a th:href="@{/pedidos/listarpedidos}" class="small-box-footer">Ver Pedidos <i class="fas fa-arrow-circle-right"></i></a>
                     </div>
                 </div>
 
-                <div class="col-lg-3 col-6" sec:authorize="isAuthenticated()">
+                <div class="col-lg-3 col-6">
                     <div class="small-box bg-gradient-primary elevation-2">
                         <div class="inner">
-                            <h3>Clientes</h3>
-                            <p>Directorio activo</p>
+                            <h3 th:text="${totalClientes ?: 0}">0</h3>
+                            <p>Clientes Registrados</p>
                         </div>
                         <div class="icon"><i class="fas fa-users"></i></div>
-                        <a th:href="@{/listarclientes}" class="small-box-footer">Ver lista <i class="fas fa-arrow-circle-right"></i></a>
+                        <a th:href="@{/listarclientes}" class="small-box-footer">Directorio <i class="fas fa-arrow-circle-right"></i></a>
                     </div>
                 </div>
 
-                <div class="col-lg-3 col-6" sec:authorize="hasRole('ADMIN')">
+                <div class="col-lg-3 col-6">
                     <div class="small-box bg-gradient-success elevation-2">
                         <div class="inner">
-                            <h3>Productos</h3>
-                            <p>Stock e Inventario</p>
+                            <h3>$<span th:text="${recaudacionMes}">0</span></h3>
+                            <p>Ventas del Mes</p>
                         </div>
-                        <div class="icon"><i class="fas fa-box"></i></div>
-                        <a th:href="@{/listarproductos}" class="small-box-footer">Catálogo <i class="fas fa-arrow-circle-right"></i></a>
+                        <div class="icon"><i class="fas fa-dollar-sign"></i></div>
+                        <a th:href="@{/ventas/listar}" class="small-box-footer">Ir a Ventas <i class="fas fa-arrow-circle-right"></i></a>
                     </div>
                 </div>
 
-                <div class="col-lg-3 col-6" sec:authorize="isAuthenticated()">
+                <div class="col-lg-3 col-6">
                     <div class="small-box bg-gradient-danger elevation-2">
                         <div class="inner">
-                            <h3>Ventas</h3>
-                            <p>Registro rápido</p>
+                            <h3 th:text="${totalProductosBajoStock}">0</h3>
+                            <p>Stock Crítico</p>
                         </div>
-                        <div class="icon"><i class="fas fa-cash-register"></i></div>
-                        <a th:href="@{/ventas/listar}" class="small-box-footer">Ir a caja <i class="fas fa-arrow-circle-right"></i></a>
+                        <div class="icon"><i class="fas fa-exclamation-triangle"></i></div>
+                        <a th:href="@{/listarproductos}" class="small-box-footer">Revisar Stock <i class="fas fa-arrow-circle-right"></i></a>
                     </div>
                 </div>
             </div>
 
             <div class="row mt-4">
-                <div class="col-md-12">
-                    <div class="card card-custom card-outline card-primary shadow">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="fas fa-chart-bar mr-1"></i>
-                                Ranking: Productos Más Vendidos
+                <div class="col-md-8">
+                    <div class="card card-custom card-outline card-primary shadow-sm">
+                        <div class="card-header bg-white">
+                            <h3 class="card-title font-weight-bold text-primary">
+                                <i class="fas fa-chart-bar mr-1"></i> Top 5: Productos Más Vendidos
                             </h3>
                         </div>
                         <div class="card-body">
-                            <div class="chart">
-                                <canvas id="bestSellersChart" style="min-height: 300px; height: 300px; max-height: 400px; max-width: 100%;"></canvas>
+                            <div class="chart-container">
+                                <canvas id="bestSellersChart"></canvas>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card card-custom card-outline card-info shadow-sm">
+                        <div class="card-header bg-white">
+                            <h3 class="card-title font-weight-bold text-info">
+                                <i class="fas fa-wallet mr-1"></i> Métodos de Pago
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="paymentMethodsChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card card-custom shadow-sm border-left border-danger">
+                        <div class="card-header bg-white">
+                            <h3 class="card-title font-weight-bold text-danger">
+                                <i class="fas fa-box-open mr-1"></i> Alertas de Reposición (Stock < 10)
+                            </h3>
+                        </div>
+                        <div class="card-body p-0">
+                            <table class="table table-hover m-0">
+                                <thead class="bg-light">
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Stock Actual</th>
+                                    <th>Estado</th>
+                                    <th class="text-center">Acción</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="prod : ${productosAlerta}">
+                                    <td th:text="${prod[0]}">Nombre</td>
+
+                                    <td class="font-weight-bold" th:text="${prod[1]}">0</td>
+
+                                    <td>
+                                        <span class="badge badge-danger" th:if="${prod[1] <= 3}">Urgente</span>
+                                        <span class="badge badge-warning" th:if="${prod[1] > 3}">Bajo</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <a th:href="@{/crearproducto/nuevo}" class="btn btn-xs btn-outline-dark">Comprar más</a>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -103,37 +164,48 @@
     <script th:src="@{/plugins/chart.js/Chart.min.js}"></script>
     <script th:inline="javascript">
         $(function () {
-            // Recibimos los datos desde el Controller
-            // Esperamos una lista de nombres y una lista de cantidades vendidas
+            // --- GRÁFICA DE BARRAS (TOP PRODUCTOS) ---
             const nombresProductos = /*[[${nombresMasVendidos}]]*/ ['Sin Datos'];
             const cantidadesVendidas = /*[[${cantidadesMasVendidas}]]*/ [0];
 
-            const ctx = document.getElementById('bestSellersChart').getContext('2d');
-
-            new Chart(ctx, {
+            new Chart(document.getElementById('bestSellersChart').getContext('2d'), {
                 type: 'bar',
                 data: {
                     labels: nombresProductos,
                     datasets: [{
-                        label: 'Unidades Vendidas',
+                        label: 'Unidades',
                         backgroundColor: '#007bff',
-                        borderColor: '#0056b3',
                         data: cantidadesVendidas,
-                        borderRadius: 5
+                        borderRadius: 8
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    scales: {
-                        yAxes: [{
-                            ticks: { beginAtZero: true, stepSize: 1 }
-                        }],
-                        xAxes: [{
-                            gridLines: { display: false }
-                        }]
-                    },
-                    legend: { display: false }
+                    legend: { display: false },
+                    scales: { yAxes: [{ ticks: { beginAtZero: true } }] }
+                }
+            });
+
+            // --- GRÁFICA DE PIE (MÉTODOS DE PAGO) ---
+            const metodosLabels = /*[[${metodosPagoLabels}]]*/ ['sin datos'];
+            const metodosData = /*[[${metodosPagoValores}]]*/ [0];
+            console.log("Labels detectados:", metodosLabels);
+            console.log("Valores detectados:", metodosData);
+
+            new Chart(document.getElementById('paymentMethodsChart').getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: metodosLabels,
+                    datasets: [{
+                        data: metodosData,
+                        backgroundColor: ['#28a745', '#007bff', '#ffc107', '#dc3545']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    legend: { position: 'bottom' }
                 }
             });
         });

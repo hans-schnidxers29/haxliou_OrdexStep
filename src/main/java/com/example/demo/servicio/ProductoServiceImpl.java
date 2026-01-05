@@ -6,6 +6,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -36,19 +37,41 @@ public class ProductoServiceImpl implements ProductoServicio{
 
     @Transactional
     @Override
-    public void updateProductro(Long id,Productos producto) {
-        Productos p1 = repositorio.findById(id).orElseThrow(()->new RuntimeException("producto no encontrado"));
-        p1.setId(producto.getId());
+    public void updateProductro(Long id, Productos producto) {
+        Productos p1 = repositorio.findById(id)
+                .orElseThrow(() -> new RuntimeException("Producto no encontrado con ID: " + id));
+
         p1.setNombre(producto.getNombre());
-        p1.setCantidad(producto.getCantidad());
-        p1.setPrecio(producto.getPrecio());
         p1.setDescripcion(producto.getDescripcion());
-        if(producto.getCategoria() != null){
+        p1.setPrecio(producto.getPrecio());
+        p1.setCantidad(producto.getCantidad());
+
+        if (producto.getCategoria() != null) {
             p1.setCategoria(producto.getCategoria());
         }
+
         repositorio.save(p1);
     }
 
+    @Override
+    public List<String> NombreProductosVentas() {
+        List<Object[]>resultado = repositorio.ListarProductosMasVendidos();
+        return resultado.stream().map(objeto ->(String) objeto[0]).toList();
+    }
+
+    @Override
+    public List<BigDecimal> CantidadProductosVentas() {
+        List<Object[]>resultado = repositorio.ListarProductosMasVendidos();
+        return resultado.stream().map(objeto ->(BigDecimal) objeto[1]).toList();
+    }
+
+    /**
+     * @return
+     */
+    @Override
+    public List<Object[]> verificarStock() {
+        return repositorio.StockBajo();
+    }
 
 
 }

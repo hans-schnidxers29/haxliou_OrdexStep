@@ -36,7 +36,8 @@ public class VentaControlador {
     private ClienteService clienteService;
 
     private PdfServicio pdfServicio;
-  
+
+
     // Inyectar el servicio
     public VentaControlador(PdfServicio pdfServicio) {
         this.pdfServicio = pdfServicio;
@@ -49,7 +50,7 @@ public class VentaControlador {
         model.addAttribute("ventas", servicio.ListarVenta());
         model.addAttribute("totalRecaudado",servicio.totalVentas());
         model.addAttribute("sumaproductos",servicio.sumaproductos());
-        model.addAttribute("SumaProcDias", servicio.sumaproductosPordia(LocalDate.now()));
+        model.addAttribute("SumaPorDias", servicio.sumaproductosPordia());
         List<String> etiquetas = servicio.ListaMeses();
         List<BigDecimal> valores = servicio.listarTotalVentas();
         model.addAttribute("labelsGrafica", etiquetas);
@@ -123,21 +124,37 @@ public class VentaControlador {
                 if (detalle.getProducto() == null ||
                         detalle.getProducto().getId() == null ||
                         detalle.getCantidad() == null ||
-                        detalle.getCantidad() <= 0) {
+                        detalle.getCantidad().compareTo(BigDecimal.ZERO) <= 0) {
                     continue;
                 }
 
                 Productos productoCompleto = productoServicio.productoById(detalle.getProducto().getId());
                 if (productoCompleto == null) {
-                    redirectAttributes.addFlashAttribute("info",
+                    redirectAttributes.addFlashAttribute("error",
                             "Producto no encontrado");
                     return "redirect:/ventas/crear";
                 }
 
-                // Stock
-                if (productoCompleto.getCantidad() < detalle.getCantidad()) {
-                    redirectAttributes.addFlashAttribute("info",
-                            "Stock insuficiente para " + productoCompleto.getNombre());
+                // ✅ VALIDACIÓN 1: Cantidad mínima de venta (si aplica)
+                if (productoCompleto.getCantidadMinima() != null &&
+                        detalle.getCantidad().compareTo(productoCompleto.getCantidadMinima()) < 0) {
+                    redirectAttributes.addFlashAttribute("warning",
+                            String.format("La cantidad mínima de venta para '%s' es %s %s",
+                                    productoCompleto.getNombre(),
+                                    productoCompleto.getCantidadMinima(),
+                                    productoCompleto.getUnidadMedida()));
+                    return "redirect:/ventas/crear";
+                }
+
+                // ✅ VALIDACIÓN 2: Stock suficiente
+                if (productoCompleto.getCantidad().compareTo(detalle.getCantidad()) < 0) {
+                    redirectAttributes.addFlashAttribute("error",
+                            String.format("Stock insuficiente para '%s'. Disponible: %s %s, Solicitado: %s %s",
+                                    productoCompleto.getNombre(),
+                                    productoCompleto.getCantidad(),
+                                    productoCompleto.getUnidadMedida(),
+                                    detalle.getCantidad(),
+                                    productoCompleto.getUnidadMedida()));
                     return "redirect:/ventas/crear";
                 }
 
@@ -150,7 +167,7 @@ public class VentaControlador {
                 }
 
                 // Subtotal
-                BigDecimal cantidad = new BigDecimal(detalle.getCantidad());
+                BigDecimal cantidad = detalle.getCantidad();
                 detalle.setSubtotal(detalle.getPrecioUnitario().multiply(cantidad));
 
                 subtotalVenta = subtotalVenta.add(detalle.getSubtotal());
@@ -173,8 +190,10 @@ public class VentaControlador {
             }
 
             venta.setTotal(subtotalVenta.add(venta.getImpuesto()));
-            //descontar del stock
+
+            // Descontar del stock
             servicio.DescontarStock(venta);
+
             // Guardar
             servicio.guardarVenta(venta);
 
@@ -183,7 +202,7 @@ public class VentaControlador {
 
         } catch (Exception e) {
             e.printStackTrace();
-            redirectAttributes.addFlashAttribute("error", "Error al crear la venta");
+            redirectAttributes.addFlashAttribute("error", "Error al crear la venta: " + e.getMessage());
             return "redirect:/ventas/crear";
         }
     }
