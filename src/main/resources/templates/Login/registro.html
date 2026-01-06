@@ -7,7 +7,6 @@
 
     <link rel="icon" type="image/png" th:href="@{/adminlte/img/RDEX.png}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
     <link rel="stylesheet" th:href="@{/css/registro.css}">
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -32,8 +31,8 @@
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="nombre">Nombre <span class="required">*</span></label>
-                        <input type="text" id="nombre" th:field="*{nombre}"
+                        <label for="nombrePersonal">Nombre <span class="required">*</span></label>
+                        <input type="text" id="nombrePersonal" th:field="*{nombre}"
                                placeholder="Tu nombre" required>
                     </div>
 
@@ -52,8 +51,8 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="telefono">Teléfono</label>
-                        <input type="tel" id="telefono" th:field="*{telefono}"
+                        <label for="telefonoPersonal">Teléfono Personal</label>
+                        <input type="tel" id="telefonoPersonal" th:field="*{telefono}"
                                placeholder="+57 300 123 4567">
                     </div>
                 </div>
@@ -75,41 +74,54 @@
             <div class="form-section">
                 <div class="section-title">
                     <i class="fas fa-building"></i>
-                    Datos de la Empresa (Opcional)
+                    Datos de la Empresa
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="nit">NIT</label>
-                        <input type="text" id="nit" name="nit"
-                               placeholder="123456789-0">
-                        <small class="help-text">Número de identificación tributaria</small>
+                        <label for="nombre">Nombre de la Empresa <span class="required">*</span></label>
+                        <input type="text" id="nombre" name="nombre"
+                               placeholder="Ej: Mi Negocio" required>
                     </div>
 
                     <div class="form-group">
-                        <label for="razonSocial">Razón Social</label>
+                        <label for="numeroTelefono">Teléfono de la Empresa <span class="required">*</span></label>
+                        <input type="tel" id="numeroTelefono" name="numeroTelefono"
+                               placeholder="Ej: 605 1234567" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nit">NIT <span class="required">*</span></label>
+                        <input type="text" id="nit" name="nit"
+                               placeholder="123456789-0" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="razonSocial">Razón Social <span class="required">*</span></label>
                         <input type="text" id="razonSocial" name="razonSocial"
-                               placeholder="Nombre legal de la empresa">
+                               placeholder="Nombre legal" required>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="direccionEmpresa">Dirección de la Empresa</label>
+                    <label for="direccionEmpresa">Dirección de la Empresa <span class="required">*</span></label>
                     <input type="text" id="direccionEmpresa" name="direccionEmpresa"
-                           placeholder="Dirección comercial">
+                           placeholder="Dirección comercial" required>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="actividadEconomica">Actividad Económica</label>
+                        <label for="actividadEconomica">Actividad Económica <span class="required">*</span></label>
                         <input type="text" id="actividadEconomica" name="actividadEconomica"
-                               placeholder="Ej: Comercio al por menor">
+                               placeholder="Ej: Comercio" required>
                     </div>
 
                     <div class="form-group">
-                        <label for="tipoOperacion">Tipo de Operación</label>
+                        <label for="tipoOperacion">Tipo de Operación <span class="required">*</span></label>
                         <input type="text" id="tipoOperacion" name="tipoOperacion"
-                               placeholder="Ej: Venta, Servicio">
+                               placeholder="Ej: Venta" required>
                     </div>
                 </div>
             </div>
@@ -150,7 +162,6 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const urlParams = new URLSearchParams(window.location.search);
-
         if (urlParams.get('success') === 'true') {
             Swal.fire({
                 toast: true,

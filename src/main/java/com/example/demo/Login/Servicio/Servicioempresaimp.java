@@ -12,7 +12,14 @@ public class Servicioempresaimp implements ServicioEmpresa{
     private EmpresaRepositorio empresaRepositorio;
 
     @Override
-    public Empresa saveEmpresa(Empresa empresa) {
-        return empresaRepositorio.save(empresa);
+    public void saveEmpresa(Empresa empresa) {
+        empresaRepositorio.save(empresa);
+    }
+
+    @Override
+    public Empresa DatosEmpresa(Long id) {
+        Empresa empresa = empresaRepositorio.findById(id).orElseThrow(
+                () -> new RuntimeException("Empresa no encontrada"));
+        return empresa;
     }
 }

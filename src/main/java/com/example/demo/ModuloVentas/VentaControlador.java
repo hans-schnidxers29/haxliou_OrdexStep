@@ -1,5 +1,7 @@
 package com.example.demo.ModuloVentas;
 
+import com.example.demo.Login.Empresa;
+import com.example.demo.Login.Servicio.ServicioEmpresa;
 import com.example.demo.ModuloVentas.DetalleVenta.DetalleVenta;
 import com.example.demo.entidad.Cliente;
 import com.example.demo.entidad.Productos;
@@ -36,6 +38,9 @@ public class VentaControlador {
     private ClienteService clienteService;
 
     private PdfServicio pdfServicio;
+
+    @Autowired
+    private ServicioEmpresa servicioEmpresa;
 
 
     // Inyectar el servicio
@@ -222,17 +227,17 @@ public class VentaControlador {
 
         Venta venta = servicio.buscarVenta(id);
 
-        BigDecimal subtotal = venta.getDetalles()
-                .stream()
-                .map(DetalleVenta::getSubtotal)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        // Usamos tu método DatosEmpresa con ID 1
+        Empresa empresa = servicioEmpresa.DatosEmpresa(1L);
 
+        BigDecimal subtotal = venta.getSubtotal();
         BigDecimal impuesto = venta.getTotal().subtract(subtotal);
 
         Map<String, Object> datos = new HashMap<>();
         datos.put("venta", venta);
         datos.put("subtotal", subtotal);
         datos.put("impuesto", impuesto);
+        datos.put("empresa", empresa); // Pasamos el objeto empresa completo
 
         byte[] pdf = pdfServicio.generarPdf("pdf/ticketVenta", datos);
 

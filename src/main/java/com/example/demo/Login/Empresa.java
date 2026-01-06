@@ -13,6 +13,9 @@ public class Empresa {
     @Column(name = "nit", unique = true)
     private String nit;
 
+    @Column(name = "nombre")
+    private String nombre;
+
     @Column(name = "razon_social")
     private String razonSocial;
 
@@ -25,6 +28,9 @@ public class Empresa {
     @Column(name = "tipo_operacion") // Ejemplo: Venta, Servicio, etc.
     private String tipoOperacion;
 
+    @Column(name = "numero_telefono")
+    private Integer numeroTelefono;
+
     @ManyToOne
     @JoinColumn(name = "usuario_id")
     private Usuario Propietario;
@@ -33,9 +39,11 @@ public class Empresa {
 
     }
 
-    public Empresa(Long id, String nit, String razonSocial, String direccionEmpresa, String actividadEconomica, String tipoOperacion, Usuario propietario) {
+    public Empresa(Long id, String nit,String nombre,Integer numeroTelefono, String razonSocial, String direccionEmpresa, String actividadEconomica, String tipoOperacion, Usuario propietario) {
         this.id = id;
         this.nit = nit;
+        this.nombre = nombre;
+        this.numeroTelefono = numeroTelefono;
         this.razonSocial = razonSocial;
         this.direccionEmpresa = direccionEmpresa;
         this.actividadEconomica = actividadEconomica;
@@ -97,6 +105,22 @@ public class Empresa {
 
     public void setPropietario(Usuario propietario) {
         Propietario = propietario;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public Integer getNumeroTelefono() {
+        return numeroTelefono;
+    }
+
+    public void setNumeroTelefono(Integer numeroTelefono) {
+        this.numeroTelefono = numeroTelefono;
     }
 }
 

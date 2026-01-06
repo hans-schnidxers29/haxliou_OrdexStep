@@ -5,5 +5,8 @@ import com.example.demo.Login.Empresa;
 
 public interface ServicioEmpresa {
 
-    Empresa saveEmpresa(Empresa empresa);
+    void saveEmpresa(Empresa empresa);
+
+    Empresa DatosEmpresa(Long id);
+
 }
