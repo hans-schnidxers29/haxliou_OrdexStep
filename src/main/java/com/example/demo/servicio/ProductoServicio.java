@@ -16,4 +16,5 @@ public interface ProductoServicio {
     List<BigDecimal>CantidadProductosVentas();
     List<Object[]>verificarStock();
 
+
 }

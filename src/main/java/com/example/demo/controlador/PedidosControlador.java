@@ -106,7 +106,7 @@ public class PedidosControlador {
                 if (detalle.getProducto() != null &&
                         detalle.getProducto().getId() != null &&
                         detalle.getCantidad() != null &&
-                        detalle.getCantidad().compareTo(detalle.getCantidad()) > 0) {
+                        detalle.getCantidad().compareTo(BigDecimal.ZERO) > 0) {
 
                     // Buscar producto completo desde la BD
                     Productos productoCompleto = productoService.productoById(detalle.getProducto().getId());
