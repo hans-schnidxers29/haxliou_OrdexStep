@@ -95,7 +95,6 @@ public class VentaControlador {
                              RedirectAttributes redirectAttributes,
                              Model model) {
         try {
-
             // Validar lista de detalles
             if (venta.getDetalles() == null || venta.getDetalles().isEmpty()) {
                 redirectAttributes.addFlashAttribute("info", "Debe agregar productos a la venta");
@@ -130,30 +129,38 @@ public class VentaControlador {
 
                 Productos productoCompleto = productoServicio.productoById(detalle.getProducto().getId());
                 if (productoCompleto == null) {
-                    redirectAttributes.addFlashAttribute("error",
-                            "Producto no encontrado");
+                    redirectAttributes.addFlashAttribute("error", "Producto no encontrado");
                     return "redirect:/ventas/crear";
                 }
 
-                // ✅ VALIDACIÓN 1: Cantidad mínima de venta (si aplica)
+                // --- LÓGICA DE CONVERSIÓN GRAMOS A KILOS ---
+                BigDecimal cantidadOriginal = detalle.getCantidad(); // Lo que viene del form (ej: 500g)
+                BigDecimal cantidadProcesada = cantidadOriginal;
+
+                // Si el producto se vende por PESO, convertimos los gramos recibidos a KG
+                if ("PESO".equals(productoCompleto.getTipoVenta().name())) {
+                    cantidadProcesada = cantidadOriginal.divide(new BigDecimal("1000"));
+                    // Seteamos la cantidad convertida al detalle para que el stock se descuente correctamente
+                    detalle.setCantidad(cantidadProcesada);
+                }
+
+                // ✅ VALIDACIÓN 1: Cantidad mínima de venta (comparando en la unidad base: KG)
                 if (productoCompleto.getCantidadMinima() != null &&
-                        detalle.getCantidad().compareTo(productoCompleto.getCantidadMinima()) < 0) {
+                        cantidadProcesada.compareTo(productoCompleto.getCantidadMinima()) < 0) {
                     redirectAttributes.addFlashAttribute("warning",
-                            String.format("La cantidad mínima de venta para '%s' es %s %s",
+                            String.format("La cantidad mínima para '%s' es %s %s",
                                     productoCompleto.getNombre(),
                                     productoCompleto.getCantidadMinima(),
                                     productoCompleto.getUnidadMedida()));
                     return "redirect:/ventas/crear";
                 }
 
-                // ✅ VALIDACIÓN 2: Stock suficiente
-                if (productoCompleto.getCantidad().compareTo(detalle.getCantidad()) < 0) {
+                // ✅ VALIDACIÓN 2: Stock suficiente (comparando KG disponibles vs KG solicitados)
+                if (productoCompleto.getCantidad().compareTo(cantidadProcesada) < 0) {
                     redirectAttributes.addFlashAttribute("error",
-                            String.format("Stock insuficiente para '%s'. Disponible: %s %s, Solicitado: %s %s",
+                            String.format("Stock insuficiente para '%s'. Disponible: %s %s",
                                     productoCompleto.getNombre(),
                                     productoCompleto.getCantidad(),
-                                    productoCompleto.getUnidadMedida(),
-                                    detalle.getCantidad(),
                                     productoCompleto.getUnidadMedida()));
                     return "redirect:/ventas/crear";
                 }
@@ -161,17 +168,15 @@ public class VentaControlador {
                 detalle.setProducto(productoCompleto);
                 detalle.setVenta(venta);
 
-                // Precio unitario
+                // Precio unitario (Precio por KG o por Unidad)
                 if (detalle.getPrecioUnitario() == null) {
                     detalle.setPrecioUnitario(productoCompleto.getPrecio());
                 }
 
-                // Subtotal
-                BigDecimal cantidad = detalle.getCantidad();
-                detalle.setSubtotal(detalle.getPrecioUnitario().multiply(cantidad));
+                // Subtotal: Precio * Cantidad (si es peso, ya es Precio_KG * Cantidad_KG)
+                detalle.setSubtotal(detalle.getPrecioUnitario().multiply(cantidadProcesada));
 
                 subtotalVenta = subtotalVenta.add(detalle.getSubtotal());
-
                 detallesValidos.add(detalle);
             }
 
@@ -189,9 +194,11 @@ public class VentaControlador {
                 venta.setImpuesto(BigDecimal.ZERO);
             }
 
+            // El total es Subtotal + Impuesto (Asumiendo que el impuesto es un valor fijo, no porcentaje)
+            // Si el impuesto en tu objeto Venta es porcentaje, deberías calcularlo antes.
             venta.setTotal(subtotalVenta.add(venta.getImpuesto()));
 
-            // Descontar del stock
+            // Descontar del stock (Usa las cantidades ya convertidas en los detalles)
             servicio.DescontarStock(venta);
 
             // Guardar

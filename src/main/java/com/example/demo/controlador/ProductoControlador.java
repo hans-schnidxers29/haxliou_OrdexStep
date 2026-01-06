@@ -9,6 +9,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.math.BigDecimal;
+
 
 @Controller
 public class ProductoControlador {
@@ -105,6 +107,26 @@ public class ProductoControlador {
         redirectAttributes.addFlashAttribute("success", "Producto eliminado correctamente");
         service.deleteProductoById(id);
         return "redirect:/listarproductos";
+    }
+
+    @GetMapping("/producto/stock/{id}")
+    public String MostrarStock(@PathVariable Long id, Model model){
+        model.addAttribute("producto",service.productoById(id));
+        return "viewProductos/Agregar-Stock";
+    }
+
+    @PostMapping("producto/stock-agregar/{id}")
+    public String AgregarStock(@PathVariable Long id, @RequestParam BigDecimal cantidad, RedirectAttributes redirectAttributes){
+        try{
+            service.AgregarStock(id,cantidad);
+            redirectAttributes.addFlashAttribute("success","Stock agregado correctamente");
+            return "redirect:/listarproductos";
+        }catch (Exception e){
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("error","Error al agregar stock: " + e.getMessage());
+            return "redirect:/listarproductos";
+        }
+
     }
 
 
