@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/adminlte}">
+<body>
+<div layout:fragment="content">
+    <section class="content-header">
+        <div class="container-fluid">
+            <h1>Actualizar Stock</h1>
+        </div>
+    </section>
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-6 offset-md-3">
+                    <div class="card card-outline card-success shadow">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-plus-circle mr-2"></i>
+                                <span th:text="${producto.nombre}"></span>
+                            </h3>
+                        </div>
+
+                        <form th:action="@{/producto/stock-agregar/{id}(id= ${producto.id})}" method="post" th:object="${producto}">
+                            <input type="hidden" name="id" th:value="${producto.id}">
+
+                            <div class="card-body">
+                                <div class="row mb-3">
+                                    <div class="col-6">
+                                        <label class="text-muted">Stock Actual:</label>
+                                        <h4 th:text="${producto.cantidad} + ' ' + ${producto.getUnidadMedida()}"></h4>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="text-muted">Categoría:</label>
+                                        <p th:text="${producto.categoria.nombrecategoria}"></p>
+                                    </div>
+                                </div>
+
+                                <hr>
+
+                                <div class="form-group">
+                                    <label for="cantidad">Cantidad a Ingresar:</label>
+                                    <div class="input-group">
+                                        <input type="number" step="0.001" name="cantidad" id="cantidad"
+                                               class="form-control form-control-lg"
+                                               placeholder="0.00" required autofocus>
+                                        <div class="input-group-append">
+                                            <span class="input-group-text" th:text="${producto.getUnidadMedida()}"></span>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">La cantidad ingresada se sumará al inventario actual</small>
+                                </div>
+                            </div>
+
+                            <div class="card-footer text-right">
+                                <a th:href="@{/listarproductos}" class="btn btn-default">Cancelar</a>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-save mr-1"></i> Guardar Cambios
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+</body>
+</html>

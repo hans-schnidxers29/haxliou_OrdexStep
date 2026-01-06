@@ -144,9 +144,9 @@ public class VentaServicioImp implements VentaServicio {
     }
 
     @Override
-    public List<Long> CantidadProductos() {
+    public List<Number> CantidadProductos() {
         List<Object[]>resultado =repositorioVenta.listarProductosVendidos();
-        return resultado.stream().map(objeto -> (Long) objeto[1]).toList();
+        return resultado.stream().map(objeto -> (Number) objeto[1]).toList();
     }
 
     @Override
