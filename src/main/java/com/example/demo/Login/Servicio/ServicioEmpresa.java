@@ -1,6 +1,6 @@
 package com.example.demo.Login.Servicio;
 
-import com.example.demo.Login.Empresa;
+import com.example.demo.entidad.Empresa;
 
 
 public interface ServicioEmpresa {

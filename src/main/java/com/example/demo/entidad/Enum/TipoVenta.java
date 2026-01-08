@@ -1,4 +1,4 @@
-package com.example.demo.entidad;
+package com.example.demo.entidad.Enum;
 
 public enum TipoVenta {
     UNIDAD("Unidad"),
@@ -14,7 +14,6 @@ public enum TipoVenta {
 
     public String getDescripcion() {
         return descripcion;
-
     }
 }
 

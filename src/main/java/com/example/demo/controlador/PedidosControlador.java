@@ -2,6 +2,7 @@ package com.example.demo.controlador;
 
 
 import com.example.demo.entidad.*;
+import com.example.demo.entidad.Enum.EstadoPedido;
 import com.example.demo.servicio.ClienteService;
 import com.example.demo.servicio.PedidoService;
 import com.example.demo.servicio.ProductoServicio;
@@ -119,14 +120,36 @@ public class PedidosControlador {
                         return "viewPedidos/crearPedidos";
                     }
 
-                    // Verificar stock disponible
-                    if (productoCompleto.getCantidad().compareTo(detalle.getCantidad()) < 0) {
-                        model.addAttribute("info", "Stock insuficiente para: " + productoCompleto.getNombre() +
-                                ". Disponible: " + productoCompleto.getCantidad());
-                        model.addAttribute("productos", productoService.listarProductos());
-                        model.addAttribute("clientes", clienteService.listarcliente());
-                        model.addAttribute("pedido", pedido);
-                        return "viewPedidos/crearPedidos";
+                    // --- LÓGICA DE CONVERSIÓN GRAMOS A KILOS ---
+                    BigDecimal cantidadOriginal = detalle.getCantidad(); // Lo que viene del form (ej: 500g)
+                    BigDecimal cantidadProcesada = cantidadOriginal;
+
+                    // Si el producto se vende por PESO, convertimos los gramos recibidos a KG
+                    if ("PESO".equals(productoCompleto.getTipoVenta().name())) {
+                        cantidadProcesada = cantidadOriginal.divide(new BigDecimal("1000"));
+                        // Seteamos la cantidad convertida al detalle para que el stock se descuente correctamente
+                        detalle.setCantidad(cantidadProcesada);
+                    }
+
+                    // ✅ VALIDACIÓN 1: Cantidad mínima de venta (comparando en la unidad base: KG)
+                    if (productoCompleto.getCantidadMinima() != null &&
+                            cantidadProcesada.compareTo(productoCompleto.getCantidadMinima()) < 0) {
+                        redirectAttributes.addFlashAttribute("warning",
+                                String.format("La cantidad mínima para '%s' es %s %s",
+                                        productoCompleto.getNombre(),
+                                        productoCompleto.getCantidadMinima(),
+                                        productoCompleto.getUnidadMedida()));
+                        return "redirect:/ventas/crear";
+                    }
+
+                    // ✅ VALIDACIÓN 2: Stock suficiente (comparando KG disponibles vs KG solicitados)
+                    if (productoCompleto.getCantidad().compareTo(cantidadProcesada) < 0) {
+                        redirectAttributes.addFlashAttribute("error",
+                                String.format("Stock insuficiente para '%s'. Disponible: %s %s",
+                                        productoCompleto.getNombre(),
+                                        productoCompleto.getCantidad(),
+                                        productoCompleto.getUnidadMedida()));
+                        return "redirect:/ventas/crear";
                     }
 
                     // Asignar producto completo
@@ -138,6 +161,7 @@ public class PedidosControlador {
                         detalle.setPrecioUnitario(productoCompleto.getPrecio());
                     }
 
+
                     // Calcular subtotal del detalle
                     BigDecimal cantidad = detalle.getCantidad();
                     detalle.setSubtotal(detalle.getPrecioUnitario().multiply(cantidad));
@@ -145,6 +169,10 @@ public class PedidosControlador {
                     subtotalPedido = subtotalPedido.add(detalle.getSubtotal());
                     detallesValidos.add(detalle);
                 }
+            }
+
+            if (pedido.getFlete() == null){
+                pedido.setFlete(BigDecimal.ZERO);
             }
 
             // Validar que haya al menos un detalle válido
@@ -249,6 +277,7 @@ public class PedidosControlador {
                             detalle.setPrecioUnitario(productoCompleto.getPrecio());
                         }
 
+
                         BigDecimal cantidad =detalle.getCantidad();
                         detalle.setSubtotal(detalle.getPrecioUnitario().multiply(cantidad));
 
@@ -261,6 +290,9 @@ public class PedidosControlador {
             // Reemplazar los detalles válidos
             pedido.setDetalles(detallesValidos);
 
+            if (pedido.getFlete() == null){
+                pedido.setFlete(BigDecimal.ZERO);
+            }
             // Calcular totales
             pedido.setSubtotal(subtotalPedido);
             if (pedido.getImpuesto() == null) pedido.setImpuesto(BigDecimal.ZERO);

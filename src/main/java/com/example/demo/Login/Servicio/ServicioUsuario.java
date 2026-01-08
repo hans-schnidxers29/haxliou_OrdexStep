@@ -11,5 +11,6 @@ public interface ServicioUsuario extends UserDetailsService {
     List<Usuario> ListarUSer();
     void deleteUser(Long id);
     void updateUser(Usuario usuario, Long id);
+    Usuario findByEmail(String email);
 
 }

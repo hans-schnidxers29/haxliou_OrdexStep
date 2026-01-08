@@ -1,6 +1,7 @@
 package com.example.demo.ModuloVentas;
 
 
+import com.example.demo.Login.Usuario;
 import com.example.demo.ModuloVentas.DetalleVenta.DetalleVenta;
 import com.example.demo.entidad.Cliente;
 import jakarta.persistence.*;
@@ -37,13 +38,18 @@ public class Venta {
     @Column(name = "metodo_pago", nullable = false)
     private String metodoPago;
 
+    @ManyToOne
+    @JoinColumn(name = "vendedor_id", nullable = false)
+    private Usuario Vendedor;
+
     @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL)
     private List<DetalleVenta> detalles = new ArrayList<>();
 
     public Venta() {
     }
 
-    public Venta(Long id, Cliente cliente, LocalDateTime fechaVenta, BigDecimal impuesto, BigDecimal total, BigDecimal subtotal, String metodoPago, List<DetalleVenta> detalles) {
+    public Venta(Long id, Cliente cliente, Usuario Vendedor,LocalDateTime fechaVenta, BigDecimal impuesto,
+                 BigDecimal total, BigDecimal subtotal, String metodoPago, List<DetalleVenta> detalles) {
         this.id = id;
         this.cliente = cliente;
         this.fechaVenta = fechaVenta;
@@ -52,6 +58,7 @@ public class Venta {
         this.subtotal = subtotal;
         this.metodoPago = metodoPago;
         this.detalles = detalles;
+        this.Vendedor = Vendedor;
     }
 
     public BigDecimal getSubtotal() {
@@ -116,5 +123,13 @@ public class Venta {
 
     public void setDetalles(List<DetalleVenta> detalles) {
         this.detalles = detalles;
+    }
+
+    public Usuario getVendedor() {
+        return Vendedor;
+    }
+
+    public void setVendedor(Usuario vendedor) {
+        Vendedor = vendedor;
     }
 }

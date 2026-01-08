@@ -1,5 +1,6 @@
-package com.example.demo.Login;
+package com.example.demo.entidad;
 
+import com.example.demo.Login.Usuario;
 import jakarta.persistence.*;
 
 @Entity

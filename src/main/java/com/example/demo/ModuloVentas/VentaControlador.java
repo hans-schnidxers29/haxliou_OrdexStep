@@ -1,6 +1,8 @@
 package com.example.demo.ModuloVentas;
 
-import com.example.demo.Login.Empresa;
+import com.example.demo.Login.Servicio.ServicioUsuario;
+import com.example.demo.Login.Usuario;
+import com.example.demo.entidad.Empresa;
 import com.example.demo.Login.Servicio.ServicioEmpresa;
 import com.example.demo.ModuloVentas.DetalleVenta.DetalleVenta;
 import com.example.demo.entidad.Cliente;
@@ -12,13 +14,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -41,6 +44,9 @@ public class VentaControlador {
 
     @Autowired
     private ServicioEmpresa servicioEmpresa;
+
+    @Autowired
+    private ServicioUsuario servicioUsuario;
 
 
     // Inyectar el servicio
@@ -98,7 +104,7 @@ public class VentaControlador {
     @PostMapping("/crear/nueva")
     public String CrearVenta(@ModelAttribute("venta") Venta venta,
                              RedirectAttributes redirectAttributes,
-                             Model model) {
+                             Model model, @AuthenticationPrincipal UserDetails userDetails) {
         try {
             // Validar lista de detalles
             if (venta.getDetalles() == null || venta.getDetalles().isEmpty()) {
@@ -139,7 +145,7 @@ public class VentaControlador {
                 }
 
                 // --- LÓGICA DE CONVERSIÓN GRAMOS A KILOS ---
-                BigDecimal cantidadOriginal = detalle.getCantidad(); // Lo que viene del form (ej: 500g)
+                BigDecimal cantidadOriginal = detalle.getCantidad(); 
                 BigDecimal cantidadProcesada = cantidadOriginal;
 
                 // Si el producto se vende por PESO, convertimos los gramos recibidos a KG
@@ -149,7 +155,7 @@ public class VentaControlador {
                     detalle.setCantidad(cantidadProcesada);
                 }
 
-                // ✅ VALIDACIÓN 1: Cantidad mínima de venta (comparando en la unidad base: KG)
+                // VALIDACIÓN 1: Cantidad mínima de venta (comparando en la unidad base: KG)
                 if (productoCompleto.getCantidadMinima() != null &&
                         cantidadProcesada.compareTo(productoCompleto.getCantidadMinima()) < 0) {
                     redirectAttributes.addFlashAttribute("warning",
@@ -205,6 +211,14 @@ public class VentaControlador {
 
             // Descontar del stock (Usa las cantidades ya convertidas en los detalles)
             servicio.DescontarStock(venta);
+
+            // extraemos el email del vendedor para mapear en la db
+            Usuario usuarioVendedor = servicioUsuario.findByEmail(userDetails.getUsername());
+            if(usuarioVendedor == null){
+                redirectAttributes.addFlashAttribute("error", "Usuario no encontrado");
+                return "redirect:/ventas/crear";
+            }
+            venta.setVendedor(usuarioVendedor);
 
             // Guardar
             servicio.guardarVenta(venta);

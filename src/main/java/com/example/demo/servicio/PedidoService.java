@@ -1,6 +1,6 @@
 package com.example.demo.servicio;
 
-import com.example.demo.entidad.EstadoPedido;
+import com.example.demo.entidad.Enum.EstadoPedido;
 import com.example.demo.entidad.Pedidos;
 
 import java.util.List;

@@ -1,11 +1,10 @@
 package com.example.demo.servicio;
 
 import com.example.demo.entidad.DetallePedido;
-import com.example.demo.entidad.EstadoPedido;
+import com.example.demo.entidad.Enum.EstadoPedido;
 import com.example.demo.entidad.Pedidos;
 import com.example.demo.entidad.Productos;
 import com.example.demo.repositorio.PedidoRepositorio;
-import com.example.demo.repositorio.ProductoRepositorio;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
