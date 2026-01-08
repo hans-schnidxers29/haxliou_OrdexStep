@@ -94,15 +94,19 @@
                                                     <select th:field="*{detalles[__${iterStat.index}__].producto.id}"
                                                             class="form-control producto-select" required
                                                             th:onchange="'actualizarPrecio(this, ' + ${iterStat.index} + ')'">
-                                                        <option th:each="p : ${productos}" th:value="${p.id}" th:text="${p.nombre}" th:data-precio="${p.precio}"></option>
+                                                        <option th:each="p : ${productos}"
+                                                                th:value="${p.id}"
+                                                                th:text="${p.nombre}"
+                                                                th:data-precio="${p.precio}"
+                                                                th:data-tipo="${p.tipoVenta.name()}"></option>
                                                     </select>
                                                 </div>
                                             </div>
                                             <div class="col-md-2">
                                                 <div class="form-group mb-2">
-                                                    <label class="small">Cant.</label>
+                                                    <label class="small">Cant. <span class="tipo-unidad">(un)</span></label>
                                                     <input type="number" th:field="*{detalles[__${iterStat.index}__].cantidad}"
-                                                           class="form-control cantidad-input" min="1" required
+                                                           class="form-control cantidad-input" min="1" step="0.001" required
                                                            th:onchange="'calcularSubtotal(this, ' + ${iterStat.index} + ')'">
                                                 </div>
                                             </div>
@@ -110,7 +114,7 @@
                                                 <div class="form-group mb-2">
                                                     <label class="small">P. Unit</label>
                                                     <input type="number" th:field="*{detalles[__${iterStat.index}__].precioUnitario}"
-                                                           class="form-control precio-unitario bg-light" readonly step="0.01">
+                                                           class="form-control precio-unitario bg-light" readonly step="0.001">
                                                 </div>
                                             </div>
                                             <div class="col-md-3">
@@ -118,7 +122,7 @@
                                                     <label class="small">Subtotal</label>
                                                     <div class="input-group">
                                                         <input type="number" th:field="*{detalles[__${iterStat.index}__].subtotal}"
-                                                               class="form-control subtotal-item bg-light text-bold" readonly step="0.01">
+                                                               class="form-control subtotal-item bg-light text-bold" readonly step="0.001">
                                                         <div class="input-group-append">
                                                             <button type="button" class="btn btn-danger" onclick="eliminarDetalle(this)"><i class="fas fa-trash"></i></button>
                                                         </div>
@@ -142,17 +146,21 @@
                             <div class="card-header"><h3 class="card-title font-weight-bold">Resumen de Cobro</h3></div>
                             <div class="card-body">
                                 <div class="d-flex justify-content-between mb-2">
-                                    <span>Subtotal:</span>
+                                    <span>Subtotal Productos:</span>
                                     <span class="font-weight-bold">$ <span id="labelSubtotal">0.00</span></span>
                                 </div>
                                 <div class="form-group">
+                                    <label>Flete / Envío</label>
+                                    <input type="number" th:field="*{flete}" id="flete" class="form-control" step="0.001" min="0" onchange="calcularTotal()">
+                                </div>
+                                <div class="form-group">
                                     <label>Impuesto (%)</label>
-                                    <input type="number" th:field="*{impuesto}" id="impuesto" class="form-control" step="0.01" onchange="calcularTotal()">
+                                    <input type="number" th:field="*{impuesto}" id="impuesto" class="form-control" step="0.001" onchange="calcularTotal()">
                                 </div>
                                 <hr>
                                 <div class="bg-light p-3 text-center border rounded mb-3">
                                     <span class="text-muted small d-block">TOTAL ACTUALIZADO</span>
-                                    <span class="h3 font-weight-bold text-primary">$ <span id="labelTotal">0.00</span></span>
+                                    <span class="h3 font-weight-bold text-primary">$ <span id="labelTotal">0.000</span></span>
                                     <input type="hidden" th:field="*{total}" id="inputTotal">
                                 </div>
                                 <button type="submit" class="btn btn-primary btn-block btn-lg shadow">
@@ -182,7 +190,7 @@
         let detalleCount = /*[[${pedido.detalles.size()}]]*/ 0;
 
         function agregarDetalle() {
-            let opciones = productosList.map(p => `<option value="${p.id}" data-precio="${p.precio}">${p.nombre}</option>`).join('');
+            let opciones = productosList.map(p => `<option value="${p.id}" data-precio="${p.precio}" data-tipo="${p.tipoVenta}">${p.nombre}</option>`).join('');
             const html = `
                 <div class="detalle-item">
                     <div class="row align-items-end">
@@ -195,7 +203,10 @@
                             </div>
                         </div>
                         <div class="col-md-2">
-                            <div class="form-group mb-2"><input type="number" name="detalles[${detalleCount}].cantidad" class="form-control cantidad-input" min="1" value="1" required onchange="calcularSubtotal(this, ${detalleCount})"></div>
+                            <div class="form-group mb-2">
+                                <label class="small">Cant. <span class="tipo-unidad">(un)</span></label>
+                                <input type="number" name="detalles[${detalleCount}].cantidad" class="form-control cantidad-input" min="1" value="1" step="0.001" required onchange="calcularSubtotal(this, ${detalleCount})">
+                            </div>
                         </div>
                         <div class="col-md-2">
                             <div class="form-group mb-2"><input type="number" name="detalles[${detalleCount}].precioUnitario" class="form-control precio-unitario bg-light" readonly step="0.01"></div>
@@ -221,31 +232,72 @@
 
         function actualizarPrecio(select, index) {
             const precio = $(select).find(':selected').data('precio') || 0;
+            const tipoVenta = $(select).find(':selected').data('tipo') || 'UNIDAD';
             const row = $(select).closest('.detalle-item');
+
+            // Actualizar el label de la unidad
+            const tipoUnidadLabel = row.find('.tipo-unidad');
+            if (tipoUnidadLabel.length) {
+                tipoUnidadLabel.text(tipoVenta === 'PESO' ? '(g)' : '(un)');
+            }
+
             row.find('.precio-unitario').val(parseFloat(precio).toFixed(2));
             calcularSubtotal(select, index);
         }
 
         function calcularSubtotal(el, index) {
             const row = $(el).closest('.detalle-item');
-            const cant = parseFloat(row.find('.cantidad-input').val()) || 0;
+            const select = row.find('.producto-select');
+            const tipoVenta = select.find(':selected').data('tipo') || 'UNIDAD';
+
+            let cant = parseFloat(row.find('.cantidad-input').val()) || 0;
             const prec = parseFloat(row.find('.precio-unitario').val()) || 0;
+
+            // Si es PESO, convertir gramos a kilos
+            if (tipoVenta === 'PESO') {
+                cant = cant / 1000;
+            }
+
             row.find('.subtotal-item').val((cant * prec).toFixed(2));
             calcularTotal();
         }
 
         function calcularTotal() {
-            let subtotal = 0;
-            $('.subtotal-item').each(function() { subtotal += parseFloat($(this).val()) || 0; });
-            const imp = parseFloat($('#impuesto').val()) || 0;
-            const total = subtotal + (subtotal * (imp / 100));
+            // 1. Calcular subtotal de todos los productos
+            let subtotalProductos = 0;
+            $('.subtotal-item').each(function() {
+                subtotalProductos += parseFloat($(this).val()) || 0;
+            });
 
-            $('#labelSubtotal').text(subtotal.toFixed(2));
+            // 2. Obtener flete e impuesto
+            const valorFlete = parseFloat($('#flete').val()) || 0;
+            const impuestoPorcentaje = parseFloat($('#impuesto').val()) || 0;
+
+            // 3. Calcular total: (Subtotal + Flete) + Impuesto sobre esa suma
+            const baseImponible = subtotalProductos + valorFlete;
+            const montoImpuesto = baseImponible * (impuestoPorcentaje / 100);
+            const total = baseImponible + montoImpuesto;
+
+            // 4. Actualizar etiquetas visuales
+            $('#labelSubtotal').text(subtotalProductos.toFixed(2));
             $('#labelTotal').text(total.toFixed(2));
             $('#inputTotal').val(total.toFixed(2));
         }
 
-        $(document).ready(() => calcularTotal());
+        // Calcular el total al cargar la página y actualizar los labels de unidad
+        $(document).ready(() => {
+            // Actualizar los labels de unidad según el tipo de producto
+            $('.detalle-item').each(function() {
+                const select = $(this).find('.producto-select');
+                const tipoVenta = select.find(':selected').data('tipo') || 'UNIDAD';
+                const tipoUnidadLabel = $(this).find('.tipo-unidad');
+                if (tipoUnidadLabel.length) {
+                    tipoUnidadLabel.text(tipoVenta === 'PESO' ? '(g)' : '(un)');
+                }
+            });
+
+            calcularTotal();
+        });
     </script>
 </th:block>
 </body>

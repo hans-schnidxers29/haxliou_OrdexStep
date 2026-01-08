@@ -1,6 +1,6 @@
 package com.example.demo.repositorio;
 
-import com.example.demo.entidad.EstadoPedido;
+import com.example.demo.entidad.Enum.EstadoPedido;
 import com.example.demo.entidad.Pedidos;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

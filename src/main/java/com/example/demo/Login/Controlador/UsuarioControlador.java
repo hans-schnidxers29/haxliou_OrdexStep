@@ -1,6 +1,6 @@
 package com.example.demo.Login.Controlador;
 
-import com.example.demo.Login.Empresa;
+import com.example.demo.entidad.Empresa;
 import com.example.demo.Login.Servicio.ServicioEmpresa;
 import com.example.demo.Login.Usuario;
 import com.example.demo.Login.Servicio.RolServicio;

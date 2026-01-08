@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/adminlte}">
+<head>
+  <title>Generador de Reportes Pro</title>
+</head>
+<body>
+
+<div layout:fragment="content">
+  <section class="content-header">
+    <div class="container-fluid">
+      <h1><i class="fas fa-file-download mr-2 text-primary"></i> Centro de Exportación Inteligente</h1>
+    </div>
+  </section>
+
+  <section class="content">
+    <div class="container-fluid">
+      <div class="row justify-content-center">
+        <div class="col-md-7">
+
+          <div class="card card-outline card-success shadow-lg">
+            <div class="card-header">
+              <h3 class="card-title font-weight-bold">Configuración del Reporte</h3>
+            </div>
+            <div class="card-body">
+              <form id="formGenerarReporte">
+                <div class="form-group">
+                  <label><i class="fas fa-database mr-1 text-info"></i> Seleccione el Módulo</label>
+                  <select class="form-control form-control-lg" id="tipoReporte">
+                    <option value="VENTAS">Historial de Ventas (Facturación)</option>
+                    <option value="PEDIDOS">Gestión de Pedidos (Estado y Entrega)</option>
+                    <option value="CLIENTES">Directorio de Clientes</option>
+                    <option value="TODO">Cierre Consolidado (Múltiples Hojas)</option>
+                  </select>
+                </div>
+
+                <div class="card bg-light border p-3 mt-4">
+                  <div class="custom-control custom-checkbox">
+                    <input class="custom-control-input" type="checkbox" id="checkCards" checked>
+                    <label for="checkCards" class="custom-control-label">
+                      <b>Incluir Resumen General (Cards)</b>
+                      <span class="d-block text-muted small">Añade los totales de recaudación y volumen al inicio del documento.</span>
+                    </label>
+                  </div>
+                </div>
+
+                <button type="button" onclick="procesarReporte()" class="btn btn-success btn-lg btn-block shadow mt-4">
+                  <i class="fas fa-file-excel mr-2"></i> GENERAR EXCEL (.XLSX)
+                </button>
+              </form>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div id="data-storage" style="display: none;">
+
+    <table id="tabla-VENTAS">
+      <thead>
+      <tr><th>ID</th><th>Cliente</th><th>Fecha</th><th>Método</th><th>Total</th></tr>
+      </thead>
+      <tbody>
+      <tr th:each="v : ${ventas}">
+        <td th:text="${v.id}"></td>
+        <td th:text="${v.cliente.nombre}"></td>
+        <td th:text="${#temporals.format(v.fechaVenta,'dd/MM/yyyy')}"></td>
+        <td th:text="${v.metodoPago}"></td>
+        <td th:text="${v.total}"></td>
+      </tr>
+      </tbody>
+    </table>
+
+    <table id="tabla-PEDIDOS">
+      <thead>
+      <tr><th>Nro Pedido</th><th>Cliente</th><th>Fecha</th><th>Estado</th></tr>
+      </thead>
+      <tbody>
+      <tr th:each="p : ${pedidos}">
+        <td th:text="${p.id}"></td>
+        <td th:text="${p.cliente.nombre}"></td>
+        <td th:text="${#temporals.format(p.fechaPedido,'dd/MM/yyyy')}"></td>
+        <td th:text="${p.estado}"></td>
+      </tr>
+      </tbody>
+    </table>
+
+    <table id="tabla-CLIENTES">
+      <thead>
+      <tr><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Dirección</th></tr>
+      </thead>
+      <tbody>
+      <tr th:each="c : ${clientes}">
+        <td th:text="${c.nombre}"></td>
+        <td th:text="${c.email}"></td>
+        <td th:text="${c.telefono}"></td>
+        <td th:text="${c.direccion}"></td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<th:block layout:fragment="scripts">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script th:inline="javascript">
+    function procesarReporte() {
+        const tipo = $('#tipoReporte').val();
+        const incluirResumen = $('#checkCards').is(':checked');
+
+        Swal.fire({
+            title: 'Construyendo Reporte',
+            text: 'Extrayendo datos de ' + tipo.toLowerCase(),
+            timer: 800,
+            didOpen: () => { Swal.showLoading(); }
+        }).then(() => {
+            generarExcel(tipo, incluirResumen);
+        });
+    }
+
+    function generarExcel(tipo, incluir) {
+        try {
+            const wb = XLSX.utils.book_new();
+
+            // Función auxiliar para obtener el resumen de las cards
+            const getResumenAOAs = () => [
+                ["RESUMEN EJECUTIVO DE GESTIÓN"],
+                ["Fecha de descarga:", new Date().toLocaleDateString()],
+                ["Recaudación Total:", $('#val-total').text()],
+                ["Ventas Totales:", $('#val-ventas').text()],
+                ["Items Movilizados:", $('#val-items').text()],
+                ["Ventas del Día:", $('#val-hoy').text()],
+                [] // Fila vacía
+            ];
+
+            // Caso: Un solo módulo
+            if (tipo !== "TODO") {
+                let datosFinales = incluir ? getResumenAOAs() : [];
+                const tablaHTML = document.getElementById('tabla-' + tipo);
+
+                if (tablaHTML) {
+                    const ws_temp = XLSX.utils.table_to_sheet(tablaHTML);
+                    const arrayDatos = XLSX.utils.sheet_to_json(ws_temp, {header: 1});
+                    datosFinales = datosFinales.concat(arrayDatos);
+
+                    const ws = XLSX.utils.aoa_to_sheet(datosFinales);
+                    XLSX.utils.book_append_sheet(wb, ws, "Reporte_" + tipo);
+                } else {
+                    console.error("No se encontró la tabla: tabla-" + tipo);
+                }
+            }
+            // Caso: Consolidado (Múltiples pestañas)
+            else {
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(getResumenAOAs()), "Resumen");
+
+                const modulos = ["VENTAS", "PEDIDOS", "CLIENTES"];
+                modulos.forEach(m => {
+                    const tbl = document.getElementById('tabla-' + m);
+                    if (tbl) {
+                        const ws = XLSX.utils.table_to_sheet(tbl);
+                        XLSX.utils.book_append_sheet(wb, ws, m);
+                    }
+                });
+            }
+
+            // --- CORRECCIÓN DEL NOMBRE DEL ARCHIVO ---
+            // Reemplazamos las "/" de la fecha por "-" para evitar errores de extensión
+            const fechaLimpia = new Date().toLocaleDateString().replace(/\//g, "-");
+            const nombreArchivo = `Reporte_${tipo}_${fechaLimpia}.xlsx`;
+
+            // Forzar la descarga
+            XLSX.writeFile(wb, nombreArchivo);
+
+            Swal.fire('Completado', 'Tu archivo Excel se ha generado correctamente.', 'success');
+
+        } catch (error) {
+            console.error("Error al generar Excel:", error);
+            Swal.fire('Error', 'No se pudo generar el archivo. Verifica los datos en la consola.', 'error');
+        }
+    }
+</script>
+</th:block>
+</body>
+</html>

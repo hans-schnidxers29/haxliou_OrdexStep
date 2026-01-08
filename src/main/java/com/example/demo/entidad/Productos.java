@@ -1,5 +1,6 @@
 package com.example.demo.entidad;
 
+import com.example.demo.entidad.Enum.TipoVenta;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 
@@ -20,7 +21,7 @@ public class Productos {
     @Column(name = "precio", nullable = false, precision = 10, scale = 3)
     private BigDecimal precio;
 
-    @Column(name = "cantidad", nullable = false)
+    @Column(name = "cantidad", nullable = false, scale = 3, precision = 10)
     private BigDecimal cantidad = BigDecimal.ZERO;  // ✅ Cambiar a BigDecimal para soportar decimales
 
     @Enumerated(EnumType.STRING)

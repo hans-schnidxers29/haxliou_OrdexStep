@@ -228,6 +228,7 @@
                     </li>
 
                     <li class="nav-header" sec:authorize="hasRole('ADMIN')">ADMINISTRACIÓN</li>
+
                     <li class="nav-item has-treeview" sec:authorize="hasRole('ADMIN')">
                         <a href="#" class="nav-link">
                             <i class="nav-icon fas fa-users-cog"></i>
@@ -247,6 +248,50 @@
                                 <a th:href="@{/registro/usuario}" class="nav-link">
                                     <i class="fas fa-user-shield nav-icon"></i>
                                     <p>Nuevo Usuario</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- NUEVO: Reportes -->
+                    <li class="nav-item has-treeview" sec:authorize="hasRole('ADMIN')">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-chart-line"></i>
+                            <p>
+                                Reportes
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a th:href="@{/reportes}" class="nav-link">
+                                    <i class="fas fa-file-pdf nav-icon"></i>
+                                    <p>Generar Reporte</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- NUEVO: Gastos -->
+                    <li class="nav-item has-treeview" sec:authorize="hasRole('ADMIN')">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-money-bill-wave"></i>
+                            <p>
+                                Gastos
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a th:href="@{/egresos/listar}" class="nav-link">
+                                    <i class="fas fa-list nav-icon"></i>
+                                    <p>Listado de Gastos</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a th:href="@{/egresos/crear}" class="nav-link">
+                                    <i class="fas fa-plus-circle nav-icon"></i>
+                                    <p>Crear Gasto</p>
                                 </a>
                             </li>
                         </ul>
