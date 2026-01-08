@@ -63,6 +63,11 @@ public class ServicioUsuarioImp implements ServicioUsuario {
     }
 
     @Override
+    public Usuario findByEmail(String email) {
+        return repositorioUsuario.findByEmail(email);
+    }
+
+    @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Usuario usuario = repositorioUsuario.findByEmail(username);
         if (usuario == null) {

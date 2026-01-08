@@ -1,4 +1,4 @@
-package com.example.demo.entidad;
+package com.example.demo.entidad.Enum;
 
 
 public enum EstadoPedido {

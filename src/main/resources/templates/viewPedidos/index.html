@@ -67,8 +67,13 @@
             </div>
 
             <div class="card card-outline card-primary shadow">
-                <div class="card-header border-0">
+                <div class="card-header border-0 d-flex justify-content-between align-items-center">
                     <h3 class="card-title font-weight-bold">Listado General de Pedidos</h3>
+                    <div class="card-tools ml-auto">
+                        <button type="button" class="btn btn-outline-warning btn-sm shadow-sm" onclick="descargarPendientes()">
+                            <i class="fas fa-file-excel mr-1"></i> Descargar Pendientes
+                        </button>
+                    </div>
                 </div>
                 <div class="card-body">
                     <table id="tablaPedidos" class="table table-bordered table-striped table-hover w-100">
@@ -165,9 +170,11 @@
 
 <th:block layout:fragment="scripts">
     <script th:src="@{/plugins/chart.js/Chart.min.js}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
     <script th:inline="javascript">
         $(document).ready(function () {
-            // 1. Configuración DataTable (Original)
+            // 1. Configuración DataTable
             $('#tablaPedidos').DataTable({
                 "responsive": true,
                 "autoWidth": false,
@@ -183,16 +190,14 @@
                 "lengthMenu": [ [ 10, 25, 50, -1 ], [ 10, 25, 50, "Todos" ] ]
             });
 
-            // 2. Notificaciones (Original restaurado)
+            // 2. Notificaciones
             const s = /*[[${success}]]*/ null;
             const e = /*[[${error}]]*/ null;
             const i = /*[[${info}]]*/ null;
             const w = /*[[${warning}]]*/ null;
-
-
             checkNotifications(s, e, i, w);
 
-            // 3. Gráfica de Barras Clientes
+            // 3. Gráfica de Barras
             const ctx = document.getElementById('chartClientes').getContext('2d');
             const labelsClientes = /*[[${nombresClientes}]]*/ [];
             const dataPedidos = /*[[${conteoPedidos}]]*/ [];
@@ -219,6 +224,40 @@
                 }
             });
         });
+
+        // FUNCIÓN FUERA DEL READY PARA QUE SEA ACCESIBLE
+        function descargarPendientes() {
+            const listaPendientes = /*[[${pedidosPendientes}]]*/ [];
+
+            if (!listaPendientes || listaPendientes.length === 0) {
+                Swal.fire('Atención', 'No hay pedidos pendientes para exportar.', 'info');
+                return;
+            }
+
+            try {
+                const wb = XLSX.utils.book_new();
+                // Usamos formato compatible con Thymeleaf
+                const h = ["ID", "Cliente", "Fecha Pedido", "Total", "Estado"];
+                const filas = listaPendientes.map(p => [
+                    "#" + p.id,
+                    p.cliente ? p.cliente.nombre : 'N/A',
+                    p.fechaPedido ? p.fechaPedido.toString().split('T')[0] : 'N/A',
+                    p.total,
+                    "PENDIENTE"
+                ]);
+
+                const ws = XLSX.utils.aoa_to_sheet([h].concat(filas));
+                ws['!cols'] = [{wch: 10}, {wch: 30}, {wch: 20}, {wch: 15}, {wch: 15}];
+                XLSX.utils.book_append_sheet(wb, ws, "Pendientes");
+
+                const hoy = new Date().toISOString().slice(0, 10);
+                XLSX.writeFile(wb, "Pedidos_Pendientes_" + hoy + ".xlsx");
+                Swal.fire('Éxito', 'Descarga iniciada', 'success');
+            } catch (error) {
+                console.error("Error:", error);
+                Swal.fire('Error', 'No se pudo generar el Excel', 'error');
+            }
+        }
     </script>
 </th:block>
 

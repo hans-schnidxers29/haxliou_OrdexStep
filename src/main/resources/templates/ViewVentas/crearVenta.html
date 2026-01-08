@@ -22,69 +22,9 @@
 
     <section class="content">
         <div class="container-fluid">
-            <form th:action="@{/ventas/crear/nueva}" th:object="${venta}" method="POST">
+            <form th:action="@{/ventas/crear/nueva}" th:object="${venta}" method="POST" id="formVenta"  >
 
                 <div class="row">
-                    <div class="col-md-4">
-                        <div class="card card-primary card-outline shadow">
-                            <div class="card-header">
-                                <h3 class="card-title font-weight-bold">Datos de Facturación</h3>
-                            </div>
-                            <div class="card-body">
-                                <div class="form-group">
-                                    <label>Cliente <span class="text-danger">*</span></label>
-                                    <div class="input-group">
-                                        <select class="form-control select2" th:field="*{cliente}" required>
-                                            <option value="" disabled selected>Seleccione un cliente</option>
-                                            <option th:each="c : ${clientes}" th:value="${c.id}" th:text="${c.nombre}"></option>
-                                        </select>
-                                        <div class="input-group-append">
-                                            <a href="/crearcliente/nuevo" class="btn btn-outline-primary" title="Nuevo Cliente">
-                                                <i class="fas fa-plus"></i>
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="form-group">
-                                    <label>Método de Pago <span class="text-danger">*</span></label>
-                                    <select class="form-control" th:field="*{metodoPago}" required>
-                                        <option value="" disabled selected>Seleccione pago...</option>
-                                        <option value="EFECTIVO">Efectivo</option>
-                                        <option value="TRANSFERENCIA">Transferencia</option>
-                                        <option value="TARJETA">Tarjeta</option>
-                                        <option value="MIXTO">Mixto</option>
-                                    </select>
-                                </div>
-
-                                <hr>
-
-                                <div class="bg-light p-3 rounded">
-                                    <div class="d-flex justify-content-between mb-2">
-                                        <span>Subtotal:</span>
-                                        <input type="number" id="subtotalGeneral" class="form-control form-control-sm text-right border-0 bg-transparent font-weight-bold" readonly value="0.000">
-                                    </div>
-                                    <div class="form-group mb-2">
-                                        <label class="small">Impuesto (%)</label>
-                                        <input type="number" id="impuesto" th:field="*{impuesto}" class="form-control form-control-sm text-right" onchange="calcularTotal()" value="0">
-                                    </div>
-                                    <div class="d-flex justify-content-between text-lg text-primary font-weight-bold mt-3">
-                                        <span>TOTAL:</span>
-                                        <div>
-                                            $ <input type="number" id="totalVenta" th:field="*{total}" class="d-inline text-right border-0 bg-transparent font-weight-bold text-primary" readonly style="width: 120px;">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="card-footer">
-                                <button type="submit" class="btn btn-success btn-block shadow">
-                                    <i class="fas fa-save mr-1"></i> Finalizar Venta
-                                </button>
-                                <a href="/ventas/listar" class="btn btn-default btn-block mt-2">Cancelar</a>
-                            </div>
-                        </div>
-                    </div>
-
                     <div class="col-md-8">
                         <div class="card card-outline card-info shadow">
                             <div class="card-header d-flex justify-content-between align-items-center">
@@ -134,6 +74,64 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="col-md-4">
+                        <div class="card card-primary card-outline shadow">
+                            <div class="card-header">
+                                <h3 class="card-title font-weight-bold">Datos de Facturación</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label>Cliente <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <select class="form-control select2" th:field="*{cliente}" required>
+                                            <option value="" disabled selected>Seleccione un cliente</option>
+                                            <option th:each="c : ${clientes}" th:value="${c.id}" th:text="${c.nombre}"></option>
+                                        </select>
+                                        <div class="input-group-append">
+                                            <a href="/crearcliente/nuevo" class="btn btn-outline-primary" title="Nuevo Cliente">
+                                                <i class="fas fa-plus"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Método de Pago <span class="text-danger">*</span></label>
+                                    <select class="form-control" th:field="*{metodoPago}" id="metodoPagoSelect" required>
+                                        <option value="" disabled selected>Seleccione pago...</option>
+                                        <option value="EFECTIVO">Efectivo</option>
+                                        <option value="TRANSFERENCIA">Transferencia</option>
+                                        <option value="TARJETA">Tarjeta</option>
+                                        <option value="MIXTO">Mixto</option>
+                                    </select>
+                                </div>
+                                <hr>
+                                <div class="bg-light p-3 rounded">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Subtotal:</span>
+                                        <input type="number" id="subtotalGeneral" class="form-control form-control-sm text-right border-0 bg-transparent font-weight-bold" readonly value="0.000">
+                                    </div>
+                                    <div class="form-group mb-2">
+                                        <label class="small">Impuesto (%)</label>
+                                        <input type="number" id="impuesto" th:field="*{impuesto}" class="form-control form-control-sm text-right" onchange="calcularTotal()" value="0">
+                                    </div>
+                                    <div class="d-flex justify-content-between text-lg text-primary font-weight-bold mt-3">
+                                        <span>TOTAL:</span>
+                                        <div>
+                                            $ <input type="number" id="totalVenta" th:field="*{total}" class="d-inline text-right border-0 bg-transparent font-weight-bold text-primary" readonly style="width: 120px;">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <button type="button" onclick="validarYProcesar()" class="btn btn-success btn-block shadow">
+                                    <i class="fas fa-save mr-1"></i> Finalizar Venta
+                                </button>
+                                <a href="/ventas/listar" class="btn btn-default btn-block mt-2">Cancelar</a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </form>
         </div>
@@ -142,6 +140,7 @@
 
 <th:block layout:fragment="scripts">
     <script th:inline="javascript">
+        // --- TUS SCRIPTS ORIGINALES ---
         let detalleCount = 1;
 
         function agregarDetalle() {
@@ -197,7 +196,6 @@
             let cant = parseFloat(document.querySelector(`input[name="detalles[${i}].cantidad"]`).value) || 0;
             const precio = parseFloat(document.querySelector(`input[name="detalles[${i}].precioUnitario"]`).value) || 0;
 
-            // Si el producto es por peso, dividimos los gramos ingresados entre 1000 para calcular el subtotal por KG
             if (tipoVenta === 'PESO') {
                 cant = cant / 1000;
             }
@@ -226,7 +224,49 @@
             const i = /*[[${info}]]*/ null;
             const w = /*[[${warning}]]*/ null;
             checkNotifications(s, e, i, w);
-        })
+        });
+
+        // --- NUEVA LÓGICA DE CALCULADORA Y ENVÍO ---
+        async function validarYProcesar() {
+            const total = parseFloat(document.getElementById('totalVenta').value) || 0;
+            const metodo = document.getElementById('metodoPagoSelect').value;
+
+            if (total <= 0) {
+                Swal.fire('Atención', 'No puede realizar una venta con total 0', 'warning');
+                return;
+            }
+
+            if (metodo === 'EFECTIVO') {
+                const { value: montoPagado } = await Swal.fire({
+                    title: 'Calculadora de Cambio',
+                    text: `Total a cobrar: $${total.toFixed(3)}`,
+                    input: 'number',
+                    inputLabel: '¿Con cuánto paga el cliente?',
+                    inputAttributes: { step: '0.001' },
+                    showCancelButton: true,
+                    confirmButtonText: 'Ver Cambio',
+                    inputValidator: (value) => {
+                        if (!value || parseFloat(value) < total) {
+                            return `El monto debe ser mayor o igual a $${total.toFixed(3)}`;
+                        }
+                    }
+                });
+
+                if (montoPagado) {
+                    const cambio = parseFloat(montoPagado) - total;
+                    await Swal.fire({
+                        title: 'Cambio para el cliente:',
+                        html: `<h1 class="text-success font-weight-bold">$ ${cambio.toFixed(3)}</h1>`,
+                        confirmButtonText: 'LISTO',
+                        icon: 'success'
+                    });
+                    document.getElementById('formVenta').submit();
+                }
+            } else {
+                // Si no es efectivo (Tarjeta, Transferencia, etc) envía directo
+                document.getElementById('formVenta').submit();
+            }
+        }
     </script>
 </th:block>
 

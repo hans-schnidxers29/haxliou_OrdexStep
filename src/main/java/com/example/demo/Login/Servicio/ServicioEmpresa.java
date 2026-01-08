@@ -1,9 +1,12 @@
 package com.example.demo.Login.Servicio;
 
-import com.example.demo.Login.Empresa;
+import com.example.demo.entidad.Empresa;
 
 
 public interface ServicioEmpresa {
 
-    Empresa saveEmpresa(Empresa empresa);
+    void saveEmpresa(Empresa empresa);
+
+    Empresa DatosEmpresa(Long id);
+
 }

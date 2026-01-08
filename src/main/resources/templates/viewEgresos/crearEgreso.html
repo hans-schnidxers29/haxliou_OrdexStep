@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/adminlte}">
+<head>
+    <meta charset="UTF-8">
+    <title>Registrar Egreso</title>
+</head>
+<body>
+
+<div layout:fragment="content">
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1><i class="fas fa-money-bill-wave mr-2 text-danger"></i> Registrar Nuevo Egreso</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a th:href="@{/Home}">Inicio</a></li>
+                        <li class="breadcrumb-item"><a th:href="@{/egresos/listar}">Egresos</a></li>
+                        <li class="breadcrumb-item active">Nuevo Egreso</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row justify-content-center">
+                <div class="col-md-10">
+
+                    <div class="card card-danger card-outline shadow">
+                        <div class="card-header bg-white">
+                            <h3 class="card-title font-weight-bold">
+                                <i class="fas fa-file-invoice-dollar mr-2 text-danger"></i>Información del Egreso
+                            </h3>
+                        </div>
+
+                        <form th:action="@{/egresos/crear/nuevo}" th:object="${egreso}" method="POST" class="needs-validation" novalidate>
+
+                            <!-- Campo oculto para el usuario logueado -->
+                            <input type="hidden" th:field="*{usuario.id}" th:value="${usuarioLogueado != null ? usuarioLogueado.id : ''}">
+
+                            <div class="card-body">
+
+                                <h5 class="text-danger border-bottom pb-2 mb-3">
+                                    <i class="fas fa-info-circle mr-2"></i>Detalles del Gasto
+                                </h5>
+
+                                <div class="row">
+                                    <div class="col-md-6 form-group">
+                                        <label for="tipoEgreso"><i class="fas fa-tags mr-1"></i> Tipo de Egreso <span class="text-danger">*</span></label>
+                                        <select id="tipoEgreso" th:field="*{tipoEgreso}" class="form-control custom-select" required>
+                                            <option value="" disabled selected>Seleccione un tipo...</option>
+                                            <option value="GASTO_FIJO">Gasto Fijo</option>
+                                            <option value="GASTOS_VARIABLES">Gastos Variables</option>
+                                        </select>
+                                        <div class="invalid-feedback">Seleccione el tipo de egreso.</div>
+                                        <small class="form-text text-muted">
+                                            <strong>Fijo:</strong> Arriendo, nómina, servicios.
+                                            <strong>Variable:</strong> Materia prima, transporte.
+                                        </small>
+                                    </div>
+
+                                    <div class="col-md-6 form-group">
+                                        <label for="monto"><i class="fas fa-dollar-sign mr-1"></i> Monto <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text">$</span>
+                                            </div>
+                                            <input type="number"
+                                                   id="monto"
+                                                   th:field="*{monto}"
+                                                   class="form-control"
+                                                   placeholder="0.000"
+                                                   step="0.001"
+                                                   min="0"
+                                                   required>
+                                            <div class="invalid-feedback">Ingrese el monto del egreso.</div>
+                                        </div>
+                                        <small class="form-text text-muted">Ingrese el valor exacto del gasto</small>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-12 form-group">
+                                        <label for="descripcion"><i class="fas fa-clipboard mr-1"></i> Descripción del Gasto <span class="text-danger">*</span></label>
+                                        <textarea id="descripcion"
+                                                  th:field="*{descripcion}"
+                                                  class="form-control"
+                                                  rows="4"
+                                                  placeholder="Describa en detalle el motivo del egreso..."
+                                                  required></textarea>
+                                        <div class="invalid-feedback">Ingrese una descripción del egreso.</div>
+                                        <small class="form-text text-muted">Especifique el concepto, proveedor, o cualquier detalle relevante</small>
+                                    </div>
+                                </div>
+
+                                <!-- Información del registro (solo visual) -->
+                                <div class="alert alert-info mt-3">
+                                    <i class="fas fa-info-circle mr-2"></i>
+                                    <strong>Nota:</strong> Este egreso será registrado automáticamente con la fecha y hora actual,
+                                    y quedará asociado a tu usuario.
+                                </div>
+
+                            </div>
+
+                            <div class="card-footer bg-white text-right">
+                                <a th:href="@{/egresos/listar}" class="btn btn-default mr-2 border shadow-sm">
+                                    <i class="fas fa-times mr-1"></i> Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-danger shadow-sm">
+                                    <i class="fas fa-save mr-1"></i> Registrar Egreso
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Card de resumen (opcional) -->
+                    <div class="card card-outline card-secondary shadow-sm">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-chart-line mr-2"></i>Resumen Rápido</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-md-4">
+                                    <div class="info-box bg-light">
+                                        <span class="info-box-icon bg-danger"><i class="fas fa-money-bill-wave"></i></span>
+                                        <div class="info-box-content">
+                                            <span class="info-box-text">Monto Ingresado</span>
+                                            <span class="info-box-number" id="montoPreview">$ 0.000</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="info-box bg-light">
+                                        <span class="info-box-icon bg-info"><i class="fas fa-user"></i></span>
+                                        <div class="info-box-content">
+                                            <span class="info-box-text">Registrado por</span>
+                                            <span class="info-box-number" th:text="${usuarioLogueado != null ? usuarioLogueado.nombre : 'Usuario'}">Usuario</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="info-box bg-light">
+                                        <span class="info-box-icon bg-warning"><i class="fas fa-calendar"></i></span>
+                                        <div class="info-box-content">
+                                            <span class="info-box-text">Fecha</span>
+                                            <span class="info-box-number" id="fechaActual">--</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<th:block layout:fragment="scripts">
+    <script th:inline="javascript">
+        $(document).ready(function() {
+            // Notificaciones
+            const s = /*[[${success}]]*/ null;
+            const e = /*[[${error}]]*/ null;
+            const i = /*[[${info}]]*/ null;
+            const w = /*[[${warning}]]*/ null;
+            checkNotifications(s, e, i, w);
+
+            // Validación de Bootstrap 4
+            $('.needs-validation').on('submit', function(event) {
+                if (this.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                $(this).addClass('was-validated');
+            });
+
+            // Preview del monto en tiempo real
+            $('#monto').on('input', function() {
+                const valor = parseFloat($(this).val()) || 0;
+                $('#montoPreview').text('$ ' + valor.toLocaleString('es-CO', {
+                    minimumFractionDigits: 3,
+                    maximumFractionDigits: 3
+                }));
+            });
+
+            // Mostrar fecha actual
+            const ahora = new Date();
+            const fechaFormateada = ahora.toLocaleDateString('es-CO', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            });
+            $('#fechaActual').text(fechaFormateada);
+
+            // Confirmación antes de enviar
+            $('.needs-validation').on('submit', function(event) {
+                if (this.checkValidity() === true) {
+                    const monto = $('#monto').val();
+                    const tipo = $('#tipoEgreso option:selected').text();
+
+                    event.preventDefault();
+
+                    Swal.fire({
+                        title: '¿Confirmar Registro?',
+                        html: `
+                            <div class="text-left">
+                                <p><strong>Tipo:</strong> ${tipo}</p>
+                                <p><strong>Monto:</strong> $${parseFloat(monto).toFixed(3)}</p>
+                            </div>
+                        `,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#dc3545',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Sí, registrar',
+                        cancelButtonText: 'Cancelar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            this.submit();
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+</th:block>
+
+</body>
+</html>

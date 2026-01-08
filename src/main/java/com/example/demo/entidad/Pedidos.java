@@ -1,4 +1,7 @@
 package com.example.demo.entidad;
+
+
+import com.example.demo.entidad.Enum.EstadoPedido;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
@@ -38,6 +41,9 @@ public class Pedidos {
     @Column(columnDefinition = "TEXT")
     private String observaciones;
 
+    @Column(name = "Flete", precision = 10, scale = 3)
+    private BigDecimal Flete;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_cliente", nullable = false)
     private Cliente cliente;
@@ -53,6 +59,9 @@ public class Pedidos {
             this.subtotal = this.subtotal.add(detalle.getSubtotal());
         }
         this.total = this.subtotal.add(this.impuesto);
+    }
+
+    public Pedidos() {
     }
 
     // Métodos helper
@@ -75,6 +84,17 @@ public class Pedidos {
             });
         }
     }
+
+
+
+    public BigDecimal getFlete() {
+        return Flete;
+    }
+
+    public void setFlete(BigDecimal flete) {
+        Flete = flete;
+    }
+
     // Getters y Setters
     public Long getId() {
         return id;

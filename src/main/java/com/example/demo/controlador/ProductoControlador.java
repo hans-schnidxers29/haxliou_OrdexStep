@@ -1,5 +1,6 @@
 package com.example.demo.controlador;
 import com.example.demo.entidad.Categoria;
+import com.example.demo.entidad.Enum.TipoVenta;
 import com.example.demo.entidad.Productos;
 import com.example.demo.servicio.CategoriaService;
 import com.example.demo.servicio.ProductoServicio;
@@ -32,6 +33,7 @@ public class ProductoControlador {
         Productos p = new Productos();
         model.addAttribute("categoria",serviceCate.Listarcategoria());
         model.addAttribute("producto",p);
+        model.addAttribute("tiposVenta", TipoVenta.values());
         return "viewProductos/crearProductos";
     }
 
