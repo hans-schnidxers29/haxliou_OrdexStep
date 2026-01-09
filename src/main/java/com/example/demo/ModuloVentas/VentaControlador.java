@@ -22,10 +22,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/ventas")
@@ -60,8 +58,19 @@ public class VentaControlador {
     public String listar(Model model) {
         model.addAttribute("ventas", servicio.ListarVenta());
         model.addAttribute("totalRecaudado",servicio.totalVentas());
-        model.addAttribute("sumaproductos",servicio.sumaproductos());
-        model.addAttribute("SumaPorDias", servicio.sumaproductosPordia());
+
+        // Para sumaproductos (Unidades)
+        model.addAttribute("sumaproductos", Optional.ofNullable(servicio.sumaproductosPordia())
+                .flatMap(list -> list.stream().findFirst())
+                .map(obj -> (Number) obj[0])
+                .orElse(0));
+
+        // Para SumaPorDias (Dinero/Peso)
+        model.addAttribute("SumaPorDias", Optional.ofNullable(servicio.sumaproductosPordia())
+                .flatMap(list -> list.stream().findFirst())
+                .map(obj -> (BigDecimal) obj[1])
+                .orElse(BigDecimal.ZERO));
+
         List<String> etiquetas = servicio.ListaMeses();
         List<BigDecimal> valores = servicio.listarTotalVentas();
         model.addAttribute("labelsGrafica", etiquetas);
@@ -78,23 +87,17 @@ public class VentaControlador {
     public String crearVentaMostrarForm(Model model) {
 
         Venta venta = new Venta();
-
         // Cliente vacío
         venta.setCliente(new Cliente());
-
         // Lista inicializada
         venta.setDetalles(new ArrayList<>());
-
         // Agregar un detalle vacío
         DetalleVenta det = new DetalleVenta();
         det.setProducto(new Productos());
         det.setVenta(venta);
-        venta.getDetalles().add(det);
-
-        model.addAttribute("clientes", clienteService.listarcliente());
+        model.addAttribute("clientes", clienteService.clienteSimple());
         model.addAttribute("productos", productoServicio.listarProductos());
         model.addAttribute("venta", venta);
-
         return "ViewVentas/crearVenta";
     }
 
@@ -102,7 +105,7 @@ public class VentaControlador {
     // GUARDAR NUEVA VENTA
     // ============================
     @PostMapping("/crear/nueva")
-    public String CrearVenta(@ModelAttribute("venta") Venta venta,
+    public String CrearVenta(@ModelAttribute("ventas") Venta venta,
                              RedirectAttributes redirectAttributes,
                              Model model, @AuthenticationPrincipal UserDetails userDetails) {
         try {

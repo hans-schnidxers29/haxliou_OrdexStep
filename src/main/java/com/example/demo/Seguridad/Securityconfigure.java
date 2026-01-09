@@ -60,7 +60,7 @@ public class Securityconfigure {
                         .loginProcessingUrl("/login")
                         .usernameParameter("email")
                         .passwordParameter("password")
-                        .defaultSuccessUrl("home", true)
+                        .defaultSuccessUrl("/Home", true)
                         .failureUrl("/login?error")
                         .permitAll()
                 )

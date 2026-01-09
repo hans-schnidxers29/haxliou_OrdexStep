@@ -5,6 +5,7 @@ import com.example.demo.entidad.Enum.EstadoPedido;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +35,7 @@ public class Pedidos {
     @Column(name = "subtotal", precision = 10, scale = 3, nullable = false)
     private BigDecimal subtotal = BigDecimal.ZERO;
 
-    @Column(name = "impuesto", precision = 10, scale = 3, nullable = false)
+    @Column(name = "impuesto", precision = 10, scale = 2, nullable = false)
     private BigDecimal impuesto = BigDecimal.ZERO;
 
     @Column(name = "total", precision = 10, scale = 3, nullable = false)
@@ -56,11 +57,23 @@ public class Pedidos {
     @PrePersist
     @PreUpdate
     public void calcularTotales() {
+        // 1. Inicializar subtotal de productos
         this.subtotal = BigDecimal.ZERO;
-        for (DetallePedido detalle : detalles) {
-            this.subtotal = this.subtotal.add(detalle.getSubtotal());
+        if (this.detalles != null) {
+            for (DetallePedido detalle : detalles) {
+                this.subtotal = this.subtotal.add(detalle.getSubtotal());
+            }
         }
-        this.total = this.subtotal.add(this.impuesto);
+        BigDecimal valorFlete = (this.Flete != null) ? this.Flete : BigDecimal.ZERO;
+        BigDecimal porcentajeImpuesto = (this.impuesto != null) ? this.impuesto : BigDecimal.ZERO;
+
+        BigDecimal baseImponible = this.subtotal.add(valorFlete);
+
+        // 4. Calcular el MONTO del impuesto (Base * Porcentaje / 100)
+        BigDecimal montoImpuesto = baseImponible.multiply(porcentajeImpuesto)
+                .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+        // 5. Total Final = Base + Impuesto
+        this.total = baseImponible.add(montoImpuesto).setScale(2, RoundingMode.HALF_UP);
     }
 
     public Pedidos() {
@@ -78,12 +91,12 @@ public class Pedidos {
     }
 
     public void actualizarDetalles(List<DetallePedido> nuevosDetalles) {
-        this.detalles.clear();
+        this.detalles.clear(); // Limpia los anteriores
         if (nuevosDetalles != null) {
-            nuevosDetalles.forEach(detalle -> {
-                detalle.setPedido(this);
+            for (DetallePedido detalle : nuevosDetalles) {
+                detalle.setPedido(this); // Importante: Vincular de vuelta al pedido
                 this.detalles.add(detalle);
-            });
+            }
         }
     }
 

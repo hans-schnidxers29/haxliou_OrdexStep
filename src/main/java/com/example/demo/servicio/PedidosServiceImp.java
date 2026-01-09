@@ -53,10 +53,9 @@ public class PedidosServiceImp implements PedidoService{
         pedidos1.setFechaPedido(pedidos.getFechaPedido());
         pedidos1.setEstado(pedidos.getEstado());
         pedidos1.setObservaciones(pedidos.getObservaciones());
-
+        pedidos1.setFlete(pedidos.getFlete());
         // ✅ Actualizar detalles usando el método helper
         pedidos1.actualizarDetalles(pedidos.getDetalles());
-
         // Actualizar totales
         pedidos1.setSubtotal(pedidos.getSubtotal());
         pedidos1.setImpuesto(pedidos.getImpuesto());

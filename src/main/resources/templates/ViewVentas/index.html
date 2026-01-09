@@ -53,20 +53,30 @@
                 </div>
                 <div class="col-lg-3 col-6">
                     <div class="small-box bg-gradient-success elevation-2">
-                        <div class="inner"><h3>$<span th:text="${totalRecaudado}"></span></h3><p>Recaudación Total</p></div>
+                        <div class="inner"><h3>$<span th:text="${totalRecaudado}"></span></h3><p>Recaudación Hoy</p></div>
                         <div class="icon"><i class="fas fa-dollar-sign"></i></div>
                     </div>
                 </div>
                 <div class="col-lg-3 col-6">
                     <div class="small-box bg-gradient-warning elevation-2">
-                        <div class="inner"><h3 th:text="${sumaproductos}">0</h3><p>Items Vendidos</p></div>
-                        <div class="icon"><i class="fas fa-box"></i></div>
+                        <div class="inner">
+                            <h3 th:text="${sumaproductos != null ? #numbers.formatInteger(sumaproductos, 1) : '0'}">0</h3>
+                            <p>Ventas del día en unidades</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-box"></i>
+                        </div>
                     </div>
                 </div>
                 <div class="col-lg-3 col-6">
                     <div class="small-box bg-gradient-danger elevation-2">
-                        <div class="inner"><h3 th:text="${SumaPorDias}">0</h3><p>Vendidos Hoy</p></div>
-                        <div class="icon"><i class="fas fa-calendar-check"></i></div>
+                        <div class="inner">
+                            <h3 th:text="${SumaPorDias != null ? #numbers.formatDecimal(SumaPorDias, 1, 2) + ' kg' : '0.00 kg'}">0.00 kg</h3>
+                            <p>Ventas del día en kg</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-weight-hanging"></i>
+                        </div>
                     </div>
                 </div>
             </div>

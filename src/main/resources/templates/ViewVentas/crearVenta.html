@@ -6,6 +6,25 @@
       layout:decorate="~{layouts/adminlte}">
 <head>
     <title>Registrar Venta</title>
+    <style>
+        .cliente-card {
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            transition: all 0.3s;
+        }
+        .cliente-card.encontrado {
+            border: 2px solid #28a745;
+            background-color: #d4edda;
+        }
+        .cliente-info {
+            display: none;
+        }
+        .cliente-info.show {
+            display: block;
+        }
+    </style>
 </head>
 <body>
 
@@ -22,10 +41,72 @@
 
     <section class="content">
         <div class="container-fluid">
-            <form th:action="@{/ventas/crear/nueva}" th:object="${venta}" method="POST" id="formVenta"  >
+            <form th:action="@{/ventas/crear/nueva}" th:object="${venta}" method="POST" id="formVenta">
 
                 <div class="row">
                     <div class="col-md-8">
+                        <!-- Card de búsqueda de cliente -->
+                        <div class="card card-outline card-primary shadow">
+                            <div class="card-header">
+                                <h3 class="card-title font-weight-bold">
+                                    <i class="fas fa-user-search mr-1"></i> Buscar Cliente
+                                </h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="buscarNumeroId">
+                                                <i class="fas fa-id-card mr-1"></i> Número de Identificación
+                                                <span class="text-danger">*</span>
+                                            </label>
+                                            <div class="input-group">
+                                                <input type="text"
+                                                       id="buscarNumeroId"
+                                                       class="form-control form-control-lg"
+                                                       placeholder="Ingrese cédula o NIT..."
+                                                       autocomplete="off">
+                                                <div class="input-group-append">
+                                                    <button type="button"
+                                                            class="btn btn-primary btn-lg"
+                                                            onclick="buscarCliente()">
+                                                        <i class="fas fa-search"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <small class="text-muted">Presione Enter o clic en Buscar</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="d-block">&nbsp;</label>
+                                        <div class="cliente-card" id="clienteCard">
+                                            <div class="text-center text-muted" id="clienteNoSeleccionado">
+                                                <i class="fas fa-user-slash fa-2x mb-2"></i>
+                                                <p class="mb-0">Sin cliente seleccionado</p>
+                                            </div>
+                                            <div class="cliente-info" id="clienteInfo">
+                                                <h5 class="text-success mb-2">
+                                                    <i class="fas fa-check-circle mr-1"></i> Cliente Encontrado
+                                                </h5>
+                                                <p class="mb-1">
+                                                    <strong>Nombre:</strong> <span id="clienteNombre"></span>
+                                                </p>
+                                                <p class="mb-1">
+                                                    <strong>Email:</strong> <span id="clienteEmail"></span>
+                                                </p>
+                                                <p class="mb-0">
+                                                    <strong>Teléfono:</strong> <span id="clienteTelefono"></span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <!-- Campo oculto con el ID del cliente -->
+                                        <input type="hidden" name="cliente.id" id="clienteIdHidden">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card de productos -->
                         <div class="card card-outline card-info shadow">
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <h3 class="card-title font-weight-bold">Detalle de Productos</h3>
@@ -82,21 +163,6 @@
                             </div>
                             <div class="card-body">
                                 <div class="form-group">
-                                    <label>Cliente <span class="text-danger">*</span></label>
-                                    <div class="input-group">
-                                        <select class="form-control select2" th:field="*{cliente}" required>
-                                            <option value="" disabled selected>Seleccione un cliente</option>
-                                            <option th:each="c : ${clientes}" th:value="${c.id}" th:text="${c.nombre}"></option>
-                                        </select>
-                                        <div class="input-group-append">
-                                            <a href="/crearcliente/nuevo" class="btn btn-outline-primary" title="Nuevo Cliente">
-                                                <i class="fas fa-plus"></i>
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="form-group">
                                     <label>Método de Pago <span class="text-danger">*</span></label>
                                     <select class="form-control" th:field="*{metodoPago}" id="metodoPagoSelect" required>
                                         <option value="" disabled selected>Seleccione pago...</option>
@@ -140,9 +206,81 @@
 
 <th:block layout:fragment="scripts">
     <script th:inline="javascript">
-        // --- TUS SCRIPTS ORIGINALES ---
+        // Lista de clientes desde el servidor
+        const clientesData = /*[[${clientes}]]*/ [];
         let detalleCount = 1;
 
+        // ===== FUNCIONES DE BÚSQUEDA DE CLIENTE =====
+        function buscarCliente() {
+            const numeroId = document.getElementById('buscarNumeroId').value.trim();
+
+            if (!numeroId) {
+                Swal.fire('Atención', 'Ingrese un número de identificación', 'warning');
+                return;
+            }
+
+            // Buscar en la lista de clientes
+            const clienteEncontrado = clientesData.find(c => c.numeroIdentificacion === numeroId);
+
+            if (clienteEncontrado) {
+                mostrarClienteEncontrado(clienteEncontrado);
+            } else {
+                Swal.fire({
+                    title: 'Cliente no encontrado',
+                    text: '¿Desea registrar un nuevo cliente?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, registrar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.open('/crearcliente/nuevo', '_blank');
+                    }
+                });
+                limpiarCliente();
+            }
+        }
+
+        function mostrarClienteEncontrado(cliente) {
+            // Actualizar el campo oculto con el ID
+            document.getElementById('clienteIdHidden').value = cliente.id;
+
+            // Mostrar información del cliente
+            document.getElementById('clienteNombre').textContent = cliente.nombre + ' ' + (cliente.apellido || '');
+            document.getElementById('clienteEmail').textContent = cliente.email || 'N/A';
+            document.getElementById('clienteTelefono').textContent = cliente.telefono || 'N/A';
+
+            // Cambiar estilos
+            document.getElementById('clienteNoSeleccionado').style.display = 'none';
+            document.getElementById('clienteInfo').classList.add('show');
+            document.getElementById('clienteCard').classList.add('encontrado');
+
+            // Mensaje de éxito
+            Swal.fire({
+                icon: 'success',
+                title: 'Cliente encontrado',
+                text: cliente.nombre,
+                timer: 1500,
+                showConfirmButton: false
+            });
+        }
+
+        function limpiarCliente() {
+            document.getElementById('clienteIdHidden').value = '';
+            document.getElementById('clienteNoSeleccionado').style.display = 'block';
+            document.getElementById('clienteInfo').classList.remove('show');
+            document.getElementById('clienteCard').classList.remove('encontrado');
+        }
+
+        // Permitir buscar con Enter
+        document.getElementById('buscarNumeroId').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                buscarCliente();
+            }
+        });
+
+        // ===== FUNCIONES DE PRODUCTOS =====
         function agregarDetalle() {
             const container = document.getElementById('detallesContainer');
             const opciones = document.querySelector('.producto-select').innerHTML;
@@ -151,18 +289,18 @@
             tr.className = "detalle-item";
             tr.innerHTML = `
                 <td>
-                    <select name="detalles[${detalleCount}].producto.id" class="form-control producto-select" onchange="actualizarPrecio(${detalleCount})" required>
-                        ${opciones}
+                    <select name="detalles[\${detalleCount}].producto.id" class="form-control producto-select" onchange="actualizarPrecio(\${detalleCount})" required>
+                        \${opciones}
                     </select>
                 </td>
                 <td>
-                    <input type="number" name="detalles[${detalleCount}].cantidad" class="form-control" value="1" min="1" step="0.001" onchange="calcularSubtotal(${detalleCount})" required>
+                    <input type="number" name="detalles[\${detalleCount}].cantidad" class="form-control" value="1" min="1" step="0.001" onchange="calcularSubtotal(\${detalleCount})" required>
                 </td>
                 <td>
-                    <input type="number" name="detalles[${detalleCount}].precioUnitario" class="form-control precio-unitario" readonly step="0.001">
+                    <input type="number" name="detalles[\${detalleCount}].precioUnitario" class="form-control precio-unitario" readonly step="0.001">
                 </td>
                 <td>
-                    <input type="number" name="detalles[${detalleCount}].subtotal" class="form-control subtotal-item" readonly step="0.001">
+                    <input type="number" name="detalles[\${detalleCount}].subtotal" class="form-control subtotal-item" readonly step="0.001">
                 </td>
                 <td class="text-center">
                     <button type="button" class="btn btn-link text-danger p-0" onclick="eliminarFila(this)"><i class="fas fa-times-circle"></i></button>
@@ -218,16 +356,21 @@
             document.getElementById('totalVenta').value = totalFinal.toFixed(3);
         }
 
-        $(document).ready(function () {
-            const s = /*[[${success}]]*/ null;
-            const e = /*[[${error}]]*/ null;
-            const i = /*[[${info}]]*/ null;
-            const w = /*[[${warning}]]*/ null;
-            checkNotifications(s, e, i, w);
-        });
-
-        // --- NUEVA LÓGICA DE CALCULADORA Y ENVÍO ---
+        // ===== VALIDACIÓN Y ENVÍO =====
         async function validarYProcesar() {
+            // Validar que hay cliente seleccionado
+            const clienteId = document.getElementById('clienteIdHidden').value;
+            if (!clienteId) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Cliente requerido',
+                    text: 'Debe buscar y seleccionar un cliente antes de continuar',
+                    confirmButtonText: 'Entendido'
+                });
+                document.getElementById('buscarNumeroId').focus();
+                return;
+            }
+
             const total = parseFloat(document.getElementById('totalVenta').value) || 0;
             const metodo = document.getElementById('metodoPagoSelect').value;
 
@@ -267,6 +410,14 @@
                 document.getElementById('formVenta').submit();
             }
         }
+
+        $(document).ready(function () {
+            const s = /*[[${success}]]*/ null;
+            const e = /*[[${error}]]*/ null;
+            const i = /*[[${info}]]*/ null;
+            const w = /*[[${warning}]]*/ null;
+            checkNotifications(s, e, i, w);
+        });
     </script>
 </th:block>
 
