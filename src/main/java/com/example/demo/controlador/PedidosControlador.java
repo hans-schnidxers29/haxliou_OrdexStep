@@ -1,12 +1,17 @@
 package com.example.demo.controlador;
 
 
+import com.example.demo.Login.Servicio.ServicioEmpresa;
 import com.example.demo.entidad.*;
 import com.example.demo.entidad.Enum.EstadoPedido;
+import com.example.demo.pdf.PdfServicio;
 import com.example.demo.servicio.ClienteService;
 import com.example.demo.servicio.PedidoService;
 import com.example.demo.servicio.ProductoServicio;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -15,7 +20,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/pedidos")
@@ -29,6 +36,15 @@ public class PedidosControlador {
 
     @Autowired
     private ClienteService clienteService;
+
+    @Autowired
+    private ServicioEmpresa empresaService;
+
+    private PdfServicio pdfService;
+
+    public PedidosControlador(PdfServicio pdfService) {
+        this.pdfService = pdfService;
+    }
 
     /**
      * Listar todos los pedidos
@@ -405,7 +421,7 @@ public class PedidosControlador {
             pedidoExistente.setEstado(EstadoPedido.CANCELADO);
 
             // Actualizar el pedido
-            pedidoService.Updatepedido(id, pedidoExistente);
+            pedidoService.CancelarPedido(id);
 
             System.out.println("Pedido " + id + " cancelado exitosamente");
 
@@ -420,6 +436,34 @@ public class PedidosControlador {
                     "Error al cancelar el pedido: " + e.getMessage());
             return "redirect:/pedidos/listarpedidos";
         }
+    }
+
+    @GetMapping("/generarTicket/{id}")
+    public ResponseEntity<byte[]> generarTicket(@PathVariable Long id) throws Exception{
+
+        Pedidos pedido = pedidoService.pedidosByid(id);
+
+        Empresa empresa = empresaService.DatosEmpresa(1L);
+
+        BigDecimal Subtotal = pedido.getSubtotal();
+        BigDecimal Impuesto = pedido.getTotal().subtract(pedido.getSubtotal());
+        BigDecimal Total = pedido.getTotal();
+        BigDecimal flete = (pedido.getFlete() != null) ? pedido.getFlete() : BigDecimal.ZERO;
+
+        Map<String, Object> model = new HashMap<>();
+        model.put("pedido", pedido);
+        model.put("subtotal", Subtotal);
+        model.put("impuesto", Impuesto);
+        model.put("flete",flete);
+        model.put("total", Total);
+        model.put("empresa",empresa);
+        byte[] pdf = pdfService.generarPdf("pdf/ticketPedidos", model);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "inline; filename=ticket_pedido_" + id + ".pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdf);
     }
 
 }

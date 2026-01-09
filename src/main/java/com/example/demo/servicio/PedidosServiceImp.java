@@ -150,4 +150,20 @@ public class PedidosServiceImp implements PedidoService{
         pedido.setEstado(EstadoPedido.ENTREGADO);
     }
 
+    @Transactional
+    @Override
+    public void CancelarPedido(Long id) {
+     Pedidos pedido =   repositorio.findById(id).orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
+
+        if(pedido.getEstado()==EstadoPedido.CANCELADO){
+            throw new IllegalStateException("el Pedido ya fue Cancelado");
+        }
+
+        if(pedido.getEstado()==EstadoPedido.ENTREGADO){
+            throw  new IllegalStateException("el Pedido ya fue Entregado");
+        }
+
+        pedido.setEstado(EstadoPedido.CANCELADO);
+    }
+
 }
