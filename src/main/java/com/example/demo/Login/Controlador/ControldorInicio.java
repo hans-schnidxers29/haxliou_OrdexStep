@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class ControldorInicio {
 
-
     @Autowired
     private ServicioUsuario servicioUsuario;
 
@@ -36,7 +35,7 @@ public class ControldorInicio {
         return "Login/login";
     }
 
-    @GetMapping({"/", "/Home"})
+    @GetMapping( "/Home")
     public String verPaginaDeInicio(Model modelo) {
         modelo.addAttribute("usuarios", servicioUsuario.ListarUSer());
         modelo.addAttribute("nombresMasVendidos", productoServicio.NombreProductosVentas());

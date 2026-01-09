@@ -13,8 +13,12 @@ import java.util.List;
 @Repository
 public interface VentaRepositorio extends JpaRepository<Venta, Long> {
 
-    @Query("SELECT SUM(v.total) FROM Venta v")
-    BigDecimal sumaDeVentas();
+    @Query(value = "SELECT COALESCE(SUM(v.total), 0) " +
+            "FROM venta v " +
+            "WHERE v.fecha_venta >= :inicio " +
+            "  AND v.fecha_venta < :fin",
+            nativeQuery = true)
+    BigDecimal sumaVentasRango(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin);
 
     @Query("SELECT SUM(v.total) FROM Venta v WHERE EXTRACT( MONTH from v.fechaVenta) = :mes AND EXTRACT (YEAR from v.fechaVenta) = :anio")
     BigDecimal sumaPorMes(@Param("mes") int mes, @Param("anio") int anio);
@@ -40,15 +44,24 @@ public interface VentaRepositorio extends JpaRepository<Venta, Long> {
             "WHERE DATE_TRUNC('month', fecha_venta) = DATE_TRUNC('month', CURRENT_DATE)", nativeQuery = true)
     BigDecimal TotaVentasMes();
 
-    @Query(value = "SELECT SUM(producto_id) as productos_ventasHoy \n" +
-            "  from detalle_venta  as d, venta as v\n" +
-            "where DATE_TRUNC('day',v.fecha_venta) = DATE_trunc('day',CURRENT_DATE) and d.id = v.id", nativeQuery = true)
-    Long SumaVentasPorDia();
+    @Query(value = "SELECT " +
+            "    COALESCE(SUM(CASE WHEN p.tipo_venta = 'UNIDAD' THEN d.cantidad ELSE 0 END), 0) as total_unidades, " +
+            "    COALESCE(SUM(CASE WHEN p.tipo_venta = 'PESO' THEN d.cantidad ELSE 0 END), 0) as total_gramos " +
+            "FROM detalle_venta d " +
+            "JOIN venta v ON d.venta_id = v.id " +
+            "JOIN productos p ON d.producto_id = p.id " +
+            "WHERE v.fecha_venta >= :inicio " +
+            "  AND v.fecha_venta < :fin", nativeQuery = true)
+    List<Object[]> obtenerVentasPorRango(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin);
 
     @Query(value = "SELECT v.metodo_pago as  Metodos, SUM(v.total) as totalpor_metodo\n" +
             "FROM venta as v\n" +
             "GROUP BY metodos\n" +
             "ORDER BY totalpor_metodo  ASC", nativeQuery = true)
     List<Object[]>ListaMetodosPago();
+
+
+
+
 
 }

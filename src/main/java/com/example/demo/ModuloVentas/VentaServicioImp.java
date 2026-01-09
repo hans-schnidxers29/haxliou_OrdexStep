@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
@@ -104,7 +106,9 @@ public class VentaServicioImp implements VentaServicio {
 
     @Override
     public BigDecimal totalVentas() {
-        return repositorioVenta.sumaDeVentas();
+        LocalDateTime inicio = LocalDate.now().atStartOfDay(); // Hoy a las 00:00
+        LocalDateTime fin = inicio.plusDays(1);
+        return repositorioVenta.sumaVentasRango(inicio,fin);
     }
 
     @Override
@@ -119,8 +123,10 @@ public class VentaServicioImp implements VentaServicio {
     }
 
     @Override
-    public Long sumaproductosPordia() {
-        return repositorioVenta.SumaVentasPorDia();
+    public List<Object[]> sumaproductosPordia() {
+        LocalDateTime inicio = LocalDate.now().atStartOfDay(); // Hoy a las 00:00
+        LocalDateTime fin = inicio.plusDays(1);
+        return repositorioVenta.obtenerVentasPorRango(inicio, fin);
     }
 
     @Override
@@ -133,7 +139,7 @@ public class VentaServicioImp implements VentaServicio {
     }
 
     @Override
-    public List<BigDecimal> listarTotalVentas() {
+    public List<BigDecimal>listarTotalVentas() {
         return repositorioVenta.listarTotalesAgrupadosPorMes().stream().toList();
     }
 

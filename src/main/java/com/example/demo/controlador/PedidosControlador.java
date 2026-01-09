@@ -1,20 +1,28 @@
 package com.example.demo.controlador;
 
 
+import com.example.demo.Login.Servicio.ServicioEmpresa;
 import com.example.demo.entidad.*;
 import com.example.demo.entidad.Enum.EstadoPedido;
+import com.example.demo.pdf.PdfServicio;
 import com.example.demo.servicio.ClienteService;
 import com.example.demo.servicio.PedidoService;
 import com.example.demo.servicio.ProductoServicio;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/pedidos")
@@ -28,6 +36,15 @@ public class PedidosControlador {
 
     @Autowired
     private ClienteService clienteService;
+
+    @Autowired
+    private ServicioEmpresa empresaService;
+
+    private PdfServicio pdfService;
+
+    public PedidosControlador(PdfServicio pdfService) {
+        this.pdfService = pdfService;
+    }
 
     /**
      * Listar todos los pedidos
@@ -49,7 +66,7 @@ public class PedidosControlador {
     @GetMapping("/nuevo")
     public String mostrarFormularioNuevo(Model model) {
         model.addAttribute("productos", productoService.listarProductos());
-        model.addAttribute("clientes", clienteService.listarcliente());
+        model.addAttribute("clientes", clienteService.clienteSimple());
 
         Pedidos pedido = new Pedidos();
         pedido.setCliente(new Cliente()); // Inicializar cliente vacío
@@ -191,6 +208,7 @@ public class PedidosControlador {
             if (pedido.getImpuesto() == null) {
                 pedido.setImpuesto(BigDecimal.ZERO);
             }
+
             BigDecimal total = subtotalPedido.add(pedido.getImpuesto());
             pedido.setTotal(total);
 
@@ -243,88 +261,84 @@ public class PedidosControlador {
                                    @ModelAttribute("pedido") Pedidos pedido,
                                    RedirectAttributes redirectAttributes) {
         try {
-            // Validar que el pedido exista
             Pedidos pedidoExistente = pedidoService.pedidosByid(id);
             if (pedidoExistente == null) {
                 redirectAttributes.addFlashAttribute("error", "Pedido no encontrado");
-                return "redirect:/pedidos/listarpedidos?error=true";
+                return "redirect:/pedidos/listarpedidos";
             }
-            EstadoPedido estadoante = pedidoExistente.getEstado();
-            BigDecimal subtotalPedido = BigDecimal.ZERO;
+
+            EstadoPedido estadoAnterior = pedidoExistente.getEstado();
+            BigDecimal subtotalProductos = BigDecimal.ZERO;
             List<DetallePedido> detallesValidos = new ArrayList<>();
 
             if (pedido.getDetalles() != null) {
                 for (DetallePedido detalle : pedido.getDetalles()) {
-                    if (detalle.getProducto() != null &&
-                            detalle.getProducto().getId() != null &&
-                            detalle.getCantidad() != null &&
-                            detalle.getCantidad().compareTo(detalle.getCantidad()) > 0) {
+                    if (detalle.getProducto() != null && detalle.getProducto().getId() != null &&
+                            detalle.getCantidad() != null && detalle.getCantidad().compareTo(BigDecimal.ZERO) > 0) {
 
-                        // Buscar producto completo desde la BD
-                        Productos productoCompleto = productoService.productoById(detalle.getProducto().getId());
-                        if (productoCompleto == null) {
-                            redirectAttributes.addFlashAttribute("info",
-                                    "Producto no encontrado con ID: " + detalle.getProducto().getId());
-                            return "redirect:/pedidos/listarpedidos";
+                        Productos prod = productoService.productoById(detalle.getProducto().getId());
+                        if (prod != null) {
+                            detalle.setProducto(prod);
+                            detalle.setPedido(pedidoExistente);
+
+                            if (detalle.getPrecioUnitario() == null) {
+                                detalle.setPrecioUnitario(prod.getPrecio());
+                            }
+
+                            // --- CORRECCIÓN AQUÍ ---
+                            BigDecimal cantidadOriginal = detalle.getCantidad();
+                            BigDecimal cantTransformada;
+
+                            if ("PESO".equals(prod.getTipoVenta().name())) {
+                                // Convertimos gramos a kilos
+                                cantTransformada = cantidadOriginal.divide(new BigDecimal("1000"), 3, RoundingMode.HALF_UP);
+                                // IMPORTANTE: Seteamos la nueva cantidad en kilos al detalle para que se guarde así en la BD
+                                detalle.setCantidad(cantTransformada);
+                            } else {
+                                cantTransformada = cantidadOriginal;
+                            }
+
+                            BigDecimal subtotalItem = detalle.getPrecioUnitario().multiply(cantTransformada);
+                            detalle.setSubtotal(subtotalItem.setScale(3, RoundingMode.HALF_UP));
+
+                            subtotalProductos = subtotalProductos.add(detalle.getSubtotal());
+                            detallesValidos.add(detalle);
                         }
-
-                        // Asociar producto y pedido correctos
-                        detalle.setProducto(productoCompleto);
-                        detalle.setPedido(pedidoExistente);
-
-                        // Calcular subtotal si no está definido
-                        if (detalle.getPrecioUnitario() == null) {
-                            detalle.setPrecioUnitario(productoCompleto.getPrecio());
-                        }
-
-
-                        BigDecimal cantidad =detalle.getCantidad();
-                        detalle.setSubtotal(detalle.getPrecioUnitario().multiply(cantidad));
-
-                        subtotalPedido = subtotalPedido.add(detalle.getSubtotal());
-                        detallesValidos.add(detalle);
                     }
                 }
             }
 
-            // Reemplazar los detalles válidos
+            // 2. Lógica Financiera
+            BigDecimal flete = (pedido.getFlete() != null) ? pedido.getFlete() : BigDecimal.ZERO;
+            BigDecimal PorcentajeImpuesto = (pedido.getImpuesto() != null) ? pedido.getImpuesto() : BigDecimal.ZERO;
+
+            BigDecimal baseImponible = subtotalProductos.add(flete);
+            BigDecimal montoImpuesto = baseImponible.multiply(PorcentajeImpuesto);
+            BigDecimal totalFinal = baseImponible.add(montoImpuesto);
+
+            // 3. Asignar valores
             pedido.setDetalles(detallesValidos);
+            pedido.setSubtotal(subtotalProductos);
+            pedido.setFlete(flete);
+            pedido.setImpuesto(PorcentajeImpuesto);
+            pedido.setTotal(totalFinal.setScale(3, RoundingMode.HALF_UP));
 
-            if (pedido.getFlete() == null){
-                pedido.setFlete(BigDecimal.ZERO);
+            // 4. Manejo de Stock
+            if(pedido.getEstado() == EstadoPedido.ENTREGADO && estadoAnterior != EstadoPedido.ENTREGADO){
+                pedidoService.DescantorStock(pedido);
             }
-            // Calcular totales
-            pedido.setSubtotal(subtotalPedido);
-            if (pedido.getImpuesto() == null) pedido.setImpuesto(BigDecimal.ZERO);
-            pedido.setTotal(subtotalPedido.add(pedido.getImpuesto()));
 
-            if(pedido.getEstado()==EstadoPedido.ENTREGADO && estadoante!=EstadoPedido.ENTREGADO){
-                System.out.println("Estado cambió a ENTREGADO - Descontando stock...");
-                try {
-                    pedidoService.DescantorStock(pedido);
-                    System.out.println("Stock descontado exitosamente");
-                } catch (Exception e) {
-                    System.err.println("Error al descontar stock: " + e.getMessage());
-                    redirectAttributes.addFlashAttribute("error",
-                            "Error al descontar stock: " + e.getMessage());
-                    return "redirect:/pedidos/editar/" + id;
-                }
-            }
-            // Actualizar pedido usando el servicio
             pedidoService.Updatepedido(id, pedido);
 
             redirectAttributes.addFlashAttribute("success", "Pedido actualizado correctamente");
             return "redirect:/pedidos/listarpedidos";
 
         } catch (Exception e) {
-            System.err.println("Error al actualizar pedido: " + e.getMessage());
             e.printStackTrace();
-            redirectAttributes.addFlashAttribute("error", "Error al actualizar el pedido: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Error al actualizar: " + e.getMessage());
             return "redirect:/pedidos/listarpedidos";
         }
     }
-
-
     @GetMapping("/eliminar/{id}")
     public String eliminarPedido(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
@@ -407,7 +421,7 @@ public class PedidosControlador {
             pedidoExistente.setEstado(EstadoPedido.CANCELADO);
 
             // Actualizar el pedido
-            pedidoService.Updatepedido(id, pedidoExistente);
+            pedidoService.CancelarPedido(id);
 
             System.out.println("Pedido " + id + " cancelado exitosamente");
 
@@ -422,6 +436,34 @@ public class PedidosControlador {
                     "Error al cancelar el pedido: " + e.getMessage());
             return "redirect:/pedidos/listarpedidos";
         }
+    }
+
+    @GetMapping("/generarTicket/{id}")
+    public ResponseEntity<byte[]> generarTicket(@PathVariable Long id) throws Exception{
+
+        Pedidos pedido = pedidoService.pedidosByid(id);
+
+        Empresa empresa = empresaService.DatosEmpresa(1L);
+
+        BigDecimal Subtotal = pedido.getSubtotal();
+        BigDecimal Impuesto = pedido.getTotal().subtract(pedido.getSubtotal());
+        BigDecimal Total = pedido.getTotal();
+        BigDecimal flete = (pedido.getFlete() != null) ? pedido.getFlete() : BigDecimal.ZERO;
+
+        Map<String, Object> model = new HashMap<>();
+        model.put("pedido", pedido);
+        model.put("subtotal", Subtotal);
+        model.put("impuesto", Impuesto);
+        model.put("flete",flete);
+        model.put("total", Total);
+        model.put("empresa",empresa);
+        byte[] pdf = pdfService.generarPdf("pdf/ticketPedidos", model);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "inline; filename=ticket_pedido_" + id + ".pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdf);
     }
 
 }

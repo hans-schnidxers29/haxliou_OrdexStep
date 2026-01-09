@@ -1,0 +1,149 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <style type="text/css">
+        /* Configuración para Impresora Térmica de 80mm */
+        @page {
+            size: 226pt 842pt;
+            margin: 0;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            width: 210px; /* Ajustado para margen de seguridad en 80mm */
+            margin: 0;
+            padding: 10px;
+            color: #000;
+        }
+
+        .header {
+            text-align: center;
+            border-bottom: 1px dashed #000;
+            padding-bottom: 5px;
+            margin-bottom: 8px;
+        }
+
+        .title {
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .info {
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 5px;
+        }
+
+        th {
+            border-bottom: 1px solid #000;
+            text-align: left;
+            font-size: 11px;
+            padding-bottom: 3px;
+        }
+
+        td {
+            text-align: left;
+            padding: 5px 0;
+            vertical-align: top;
+        }
+
+        .totales {
+            border-top: 1px dashed #000;
+            margin-top: 5px;
+            padding-top: 5px;
+            text-align: right;
+            line-height: 1.5;
+        }
+
+        .footer {
+            text-align: center;
+            border-top: 1px dashed #000;
+            margin-top: 15px;
+            padding-top: 10px;
+            font-size: 10px;
+        }
+
+        .text-right { text-align: right; }
+        .bold { font-weight: bold; }
+    </style>
+</head>
+
+<body>
+
+<div class="header">
+    <div class="title" th:text="${empresa.nombre}">NOMBRE EMPRESA</div>
+    <div th:text="'NIT: ' + ${empresa.nit}">NIT</div>
+    <div th:text="${empresa.direccionEmpresa}">DIRECCION</div>
+    <div th:text="'Tel: ' + ${empresa.numeroTelefono}">TEL</div>
+    <div>Cartagena - Colombia</div>
+</div>
+
+<div class="info">
+    <strong>Factura Nro: </strong><span th:text="${pedido.id}">001</span><br/>
+    <strong>Fecha Pedido: </strong><span th:text="${#temporals.format(pedido.fechaPedido,'dd/MM/yyyy HH:mm')}"></span><br/>
+    <strong>Fecha Entrega: </strong><span th:text="${#temporals.format(pedido.fechaEntrega,'dd/MM/yyyy HH:mm')}"></span><br/>
+    <hr style="border: none; border-top: 1px solid #000;"/>
+    <strong>CLIENTE:</strong><br/>
+    <span th:text="${pedido.cliente.nombre + ' ' + (pedido.cliente.apellido ?: '')}">NOMBRE CLIENTE</span><br/>
+    <strong>CC/NIT: </strong><span th:text="${pedido.cliente.numeroIdentificacion ?: 'N/A'}"></span><br/>
+    <strong>TEL: </strong><span th:text="${pedido.cliente.telefono ?: 'N/A'}"></span> </div>
+
+<table>
+    <thead>
+    <tr>
+        <th style="width: 50%">Item</th>
+        <th style="width: 20%">Cant</th>
+        <th style="width: 30%" class="text-right">Total</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    <tr th:each="d : ${pedido.detalles}">
+        <td>
+            <span th:text="${d.producto.nombre}">PRODUCTO</span>
+        </td>
+        <td>
+            <span th:if="${d.producto.tipoVenta.name() == 'PESO'}"
+                  th:text="${#numbers.formatDecimal(d.cantidad * 1000, 1, 0)} + 'g'"></span>
+
+            <span th:unless="${d.producto.tipoVenta.name() == 'PESO'}"
+                  th:text="${#numbers.formatDecimal(d.cantidad, 1, 0)} + 'un'"></span>
+        </td>
+        <td class="text-right">
+            <span th:text="'$' + ${#numbers.formatDecimal(d.subtotal, 1, 'POINT', 2, 'COMMA')}"></span>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<div class="totales">
+    <div>Subtotal Prod: <span th:text="'$' + ${#numbers.formatDecimal(subtotal, 1, 'POINT', 2, 'COMMA')}"></span></div>
+
+    <div th:if="${flete != null and flete > 0}">
+        Flete/Envío: <span th:text="'$' + ${#numbers.formatDecimal(flete, 1, 'POINT', 2, 'COMMA')}"></span>
+    </div>
+
+    <div>Impuestos: <span th:text="'$' + ${#numbers.formatDecimal(impuesto, 1, 'POINT', 2, 'COMMA')}"></span></div>
+
+    <div style="font-size: 13px; font-weight: bold; margin-top: 5px;">
+        TOTAL A PAGAR: <span th:text="'$' + ${#numbers.formatDecimal(total, 1, 'POINT', 2, 'COMMA')}"></span>
+    </div>
+</div>
+
+<div class="footer">
+    ¡GRACIAS POR SU COMPRA!<br/>
+    Régimen Simplificado<br/>
+    Conserve este tiquete para cualquier reclamo.
+</div>
+
+</body>
+</html>
