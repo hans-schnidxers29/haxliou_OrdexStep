@@ -12,8 +12,6 @@ import java.util.List;
 
 
 
-
-
 @Entity
 @Table(name = "pedidos")
 public class Pedidos {
