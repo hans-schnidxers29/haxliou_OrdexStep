@@ -5,6 +5,7 @@ import com.example.demo.Login.Servicio.ServicioUsuario;
 import com.example.demo.ModuloVentas.VentaServicio;
 import com.example.demo.entidad.Enum.EstadoPedido;
 import com.example.demo.servicio.ClienteService;
+import com.example.demo.servicio.EgresoServicio;
 import com.example.demo.servicio.PedidoService;
 import com.example.demo.servicio.ProductoServicio;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +15,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
 public class ControldorInicio {
-
 
     @Autowired
     private ServicioUsuario servicioUsuario;
@@ -31,12 +31,17 @@ public class ControldorInicio {
     @Autowired
     private PedidoService pedidoservicio;
 
+    @Autowired
+    private EgresoServicio egresoServicio;
+
+
+
     @GetMapping("/login")
     public String iniciarSesion() {
         return "Login/login";
     }
 
-    @GetMapping({"/", "/Home"})
+    @GetMapping( "/Home")
     public String verPaginaDeInicio(Model modelo) {
         modelo.addAttribute("usuarios", servicioUsuario.ListarUSer());
         modelo.addAttribute("nombresMasVendidos", productoServicio.NombreProductosVentas());
@@ -60,6 +65,12 @@ public class ControldorInicio {
         model.addAttribute("ventas",ventaServicio.ListarVenta());
         model.addAttribute("pedidos",pedidoservicio.listarpedidos());
         model.addAttribute("clientes",clienteService.listarcliente());
+        model.addAttribute("egresos",egresoServicio.ListarGastos());
+        model.addAttribute("totalClientes",clienteService.listarcliente().size());
+        model.addAttribute("totalPedidos",pedidoservicio.listarpedidos().size());
+        model.addAttribute("totalVentas",ventaServicio.ListarVenta().size());
+        model.addAttribute("recaudacionTotal",ventaServicio.TotalVentasMesActual());
+
         return "pdf/reportes";
     }
 

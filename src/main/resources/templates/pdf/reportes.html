@@ -4,101 +4,285 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layouts/adminlte}">
 <head>
-  <title>Generador de Reportes Pro</title>
+  <title>Generador de Reportes</title>
+  <style>
+    .reporte-card {
+      transition: all 0.3s;
+      cursor: pointer;
+      border: 2px solid transparent;
+    }
+    .reporte-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.15) !important;
+      border-color: #007bff;
+    }
+    .reporte-card.selected {
+      border-color: #28a745;
+      background-color: #d4edda;
+    }
+    .reporte-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+    .stats-box {
+      background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+      border-radius: 15px;
+      padding: 20px;
+      color: white;
+      margin-bottom: 20px;
+    }
+    .stat-item {
+      text-align: center;
+      padding: 10px;
+    }
+    .stat-value {
+      font-size: 2rem;
+      font-weight: bold;
+      display: block;
+    }
+    .stat-label {
+      font-size: 0.85rem;
+      opacity: 0.9;
+      text-transform: uppercase;
+    }
+  </style>
 </head>
 <body>
 
 <div layout:fragment="content">
   <section class="content-header">
     <div class="container-fluid">
-      <h1><i class="fas fa-file-download mr-2 text-primary"></i> Centro de Exportación Inteligente</h1>
-    </div>
-  </section>
-
-  <section class="content">
-    <div class="container-fluid">
-      <div class="row justify-content-center">
-        <div class="col-md-7">
-
-          <div class="card card-outline card-success shadow-lg">
-            <div class="card-header">
-              <h3 class="card-title font-weight-bold">Configuración del Reporte</h3>
-            </div>
-            <div class="card-body">
-              <form id="formGenerarReporte">
-                <div class="form-group">
-                  <label><i class="fas fa-database mr-1 text-info"></i> Seleccione el Módulo</label>
-                  <select class="form-control form-control-lg" id="tipoReporte">
-                    <option value="VENTAS">Historial de Ventas (Facturación)</option>
-                    <option value="PEDIDOS">Gestión de Pedidos (Estado y Entrega)</option>
-                    <option value="CLIENTES">Directorio de Clientes</option>
-                    <option value="TODO">Cierre Consolidado (Múltiples Hojas)</option>
-                  </select>
-                </div>
-
-                <div class="card bg-light border p-3 mt-4">
-                  <div class="custom-control custom-checkbox">
-                    <input class="custom-control-input" type="checkbox" id="checkCards" checked>
-                    <label for="checkCards" class="custom-control-label">
-                      <b>Incluir Resumen General (Cards)</b>
-                      <span class="d-block text-muted small">Añade los totales de recaudación y volumen al inicio del documento.</span>
-                    </label>
-                  </div>
-                </div>
-
-                <button type="button" onclick="procesarReporte()" class="btn btn-success btn-lg btn-block shadow mt-4">
-                  <i class="fas fa-file-excel mr-2"></i> GENERAR EXCEL (.XLSX)
-                </button>
-              </form>
-            </div>
-          </div>
-
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1><i class="fas fa-chart-bar mr-2 text-primary"></i> Centro de Reportes</h1>
         </div>
       </div>
     </div>
   </section>
 
-  <div id="data-storage" style="display: none;">
+  <section class="content">
+    <div class="container-fluid">
 
+      <!-- Cards de estadísticas -->
+      <div class="stats-box shadow-lg">
+        <div class="row">
+          <div class="col-md-3 stat-item">
+            <span class="stat-value" th:text="${totalVentas ?: '0'}">0</span>
+            <span class="stat-label">Total Ventas</span>
+          </div>
+          <div class="col-md-3 stat-item">
+            <span class="stat-value">$ <span th:text="${#numbers.formatDecimal(recaudacionTotal, 1, 'COMMA', 2, 'POINT')}">0.00</span></span>
+            <span class="stat-label">Recaudación</span>
+          </div>
+          <div class="col-md-3 stat-item">
+            <span class="stat-value" th:text="${totalPedidos ?: '0'}">0</span>
+            <span class="stat-label">Pedidos</span>
+          </div>
+          <div class="col-md-3 stat-item">
+            <span class="stat-value" th:text="${totalClientes ?: '0'}">0</span>
+            <span class="stat-label">Clientes</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Selección de tipo de reporte -->
+      <div class="row">
+        <div class="col-md-3">
+          <div class="card reporte-card shadow text-center" onclick="seleccionarReporte('VENTAS', this)">
+            <div class="card-body">
+              <i class="fas fa-shopping-cart reporte-icon text-success"></i>
+              <h5 class="font-weight-bold">Ventas</h5>
+              <p class="text-muted small">Historial completo de facturación</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="card reporte-card shadow text-center" onclick="seleccionarReporte('PEDIDOS', this)">
+            <div class="card-body">
+              <i class="fas fa-boxes reporte-icon text-primary"></i>
+              <h5 class="font-weight-bold">Pedidos</h5>
+              <p class="text-muted small">Estado y gestión de pedidos</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="card reporte-card shadow text-center" onclick="seleccionarReporte('CLIENTES', this)">
+            <div class="card-body">
+              <i class="fas fa-users reporte-icon text-info"></i>
+              <h5 class="font-weight-bold">Clientes</h5>
+              <p class="text-muted small">Directorio completo</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="card reporte-card shadow text-center" onclick="seleccionarReporte('EGRESOS', this)">
+            <div class="card-body">
+              <i class="fas fa-money-bill-wave reporte-icon text-danger"></i>
+              <h5 class="font-weight-bold">Gastos</h5>
+              <p class="text-muted small">Registro de egresos</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Opciones y generación -->
+      <div class="row mt-4">
+        <div class="col-md-12">
+          <div class="card card-outline card-primary shadow">
+            <div class="card-header">
+              <h3 class="card-title font-weight-bold">
+                <i class="fas fa-cog mr-2"></i>Opciones de Exportación
+              </h3>
+            </div>
+            <div class="card-body">
+              <div class="row align-items-center">
+                <div class="col-md-4">
+                  <div class="custom-control custom-checkbox">
+                    <input class="custom-control-input" type="checkbox" id="checkResumen" checked>
+                    <label for="checkResumen" class="custom-control-label">
+                      <strong>Incluir Resumen Ejecutivo</strong>
+                      <span class="d-block text-muted small">Añade estadísticas al inicio</span>
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="custom-control custom-checkbox">
+                    <input class="custom-control-input" type="checkbox" id="checkTodo">
+                    <label for="checkTodo" class="custom-control-label">
+                      <strong>Exportar Todo (Consolidado)</strong>
+                      <span class="d-block text-muted small">Todas las hojas en un archivo</span>
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-4 text-right">
+                  <button type="button" onclick="generarReporte()" class="btn btn-success btn-lg shadow">
+                    <i class="fas fa-file-excel mr-2"></i> GENERAR EXCEL
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Datos ocultos para exportación -->
+  <div id="data-storage" style="display: none;">
+    <!-- Tabla de Ventas -->
     <table id="tabla-VENTAS">
       <thead>
-      <tr><th>ID</th><th>Cliente</th><th>Fecha</th><th>Método</th><th>Total</th></tr>
+      <tr>
+        <th>ID Venta</th>
+        <th>Cliente</th>
+        <th>Email Cliente</th>
+        <th>Fecha</th>
+        <th>Método Pago</th>
+        <th>Subtotal</th>
+        <th>Impuesto (%)</th>
+        <th>Total</th>
+      </tr>
       </thead>
       <tbody>
       <tr th:each="v : ${ventas}">
         <td th:text="${v.id}"></td>
         <td th:text="${v.cliente.nombre}"></td>
-        <td th:text="${#temporals.format(v.fechaVenta,'dd/MM/yyyy')}"></td>
+        <td th:text="${v.cliente.email}"></td>
+        <td th:text="${#temporals.format(v.fechaVenta,'dd/MM/yyyy HH:mm')}"></td>
         <td th:text="${v.metodoPago}"></td>
-        <td th:text="${v.total}"></td>
+        <td th:text="${#numbers.formatDecimal(v.total / (1 + v.impuesto/100), 1, 3)}"></td>
+        <td th:text="${v.impuesto}"></td>
+        <td th:text="${#numbers.formatDecimal(v.total, 1, 3)}"></td>
       </tr>
       </tbody>
     </table>
 
+    <!-- Tabla de Pedidos -->
     <table id="tabla-PEDIDOS">
       <thead>
-      <tr><th>Nro Pedido</th><th>Cliente</th><th>Fecha</th><th>Estado</th></tr>
+      <tr>
+        <th>ID Pedido</th>
+        <th>Cliente</th>
+        <th>Email</th>
+        <th>Fecha Pedido</th>
+        <th>Fecha Entrega</th>
+        <th>Estado</th>
+        <th>Flete</th>
+        <th>Impuesto (%)</th>
+        <th>Total</th>
+      </tr>
       </thead>
       <tbody>
       <tr th:each="p : ${pedidos}">
         <td th:text="${p.id}"></td>
         <td th:text="${p.cliente.nombre}"></td>
-        <td th:text="${#temporals.format(p.fechaPedido,'dd/MM/yyyy')}"></td>
+        <td th:text="${p.cliente.email}"></td>
+        <td th:text="${#temporals.format(p.fechaPedido,'dd/MM/yyyy HH:mm')}"></td>
+        <td th:text="${#temporals.format(p.fechaEntrega,'dd/MM/yyyy HH:mm')}"></td>
         <td th:text="${p.estado}"></td>
+        <td th:text="${#numbers.formatDecimal(p.flete, 1, 3)}"></td>
+        <td th:text="${p.impuesto}"></td>
+        <td th:text="${#numbers.formatDecimal(p.total, 1, 3)}"></td>
       </tr>
       </tbody>
     </table>
 
+    <!-- Tabla de Clientes -->
     <table id="tabla-CLIENTES">
       <thead>
-      <tr><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Dirección</th></tr>
+      <tr>
+        <th>ID</th>
+        <th>Tipo ID</th>
+        <th>Número ID</th>
+        <th>Nombre</th>
+        <th>Apellido</th>
+        <th>Email</th>
+        <th>Teléfono</th>
+        <th>Ciudad</th>
+        <th>Dirección</th>
+        <th>Código Postal</th>
+      </tr>
       </thead>
       <tbody>
       <tr th:each="c : ${clientes}">
+        <td th:text="${c.id}"></td>
+        <td th:text="${c.tipoidentificacion}"></td>
+        <td th:text="${c.numeroIdentificacion}"></td>
         <td th:text="${c.nombre}"></td>
+        <td th:text="${c.apellido}"></td>
         <td th:text="${c.email}"></td>
         <td th:text="${c.telefono}"></td>
+        <td th:text="${c.ciudad}"></td>
         <td th:text="${c.direccion}"></td>
+        <td th:text="${c.codigoPostal}"></td>
+      </tr>
+      </tbody>
+    </table>
+
+    <!-- Tabla de Egresos -->
+    <table id="tabla-EGRESOS">
+      <thead>
+      <tr>
+        <th>ID</th>
+        <th>Fecha</th>
+        <th>Tipo Gasto</th>
+        <th>Monto</th>
+        <th>Descripción</th>
+        <th>Usuario</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="e : ${egresos}">
+        <td th:text="${e.id}"></td>
+        <td th:text="${#temporals.format(e.fechaRegistro,'dd/MM/yyyy HH:mm:ss')}"></td>
+        <td th:text="${e.tipoEgreso.decripcion}"></td>
+        <td th:text="${#numbers.formatDecimal(e.monto, 1, 3)}"></td>
+        <td th:text="${e.descripcion}"></td>
+        <td th:text="${e.usuario.nombre}"></td>
       </tr>
       </tbody>
     </table>
@@ -106,83 +290,155 @@
 </div>
 
 <th:block layout:fragment="scripts">
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script th:inline="javascript">
-    function procesarReporte() {
-        const tipo = $('#tipoReporte').val();
-        const incluirResumen = $('#checkCards').is(':checked');
+    let reporteSeleccionado = null;
+
+    function seleccionarReporte(tipo, elemento) {
+      // Quitar selección anterior
+      document.querySelectorAll('.reporte-card').forEach(c => c.classList.remove('selected'));
+
+      // Seleccionar nuevo
+      elemento.classList.add('selected');
+      reporteSeleccionado = tipo;
+
+      // Desmarcar "exportar todo"
+      document.getElementById('checkTodo').checked = false;
+    }
+
+    function generarReporte() {
+      const exportarTodo = document.getElementById('checkTodo').checked;
+      const incluirResumen = document.getElementById('checkResumen').checked;
+
+      let tipo;
+      if (exportarTodo) {
+        tipo = 'TODO';
+      } else if (!reporteSeleccionado) {
+        Swal.fire('Atención', 'Seleccione un tipo de reporte o marque "Exportar Todo"', 'warning');
+        return;
+      } else {
+        tipo = reporteSeleccionado;
+      }
+
+      Swal.fire({
+        title: 'Generando Reporte',
+        html: 'Procesando datos...',
+        timer: 1000,
+        timerProgressBar: true,
+        didOpen: () => { Swal.showLoading(); }
+      }).then(() => {
+        procesarExcel(tipo, incluirResumen);
+      });
+    }
+
+    function procesarExcel(tipo, incluirResumen) {
+      try {
+        const wb = XLSX.utils.book_new();
+        const fecha = new Date();
+        const fechaStr = `${fecha.getDate().toString().padStart(2, '0')}-${(fecha.getMonth() + 1).toString().padStart(2, '0')}-${fecha.getFullYear()}`;
+
+        // Función para crear hoja de resumen
+        const crearHojaResumen = () => {
+          const resumen = [
+            ['REPORTE EMPRESARIAL - SISTEMA DE GESTIÓN'],
+            [''],
+            ['Fecha de Generación:', new Date().toLocaleString('es-CO')],
+            ['Generado por:', /*[[${#authentication.principal.username}]]*/ 'Usuario'],
+            [''],
+            ['ESTADÍSTICAS GENERALES'],
+            ['Total Ventas:', /*[[${totalVentas}]]*/ '0'],
+            ['Recaudación Total:', '$ ' + /*[[${recaudacionTotal}]]*/ '0'],
+            ['Total Pedidos:', /*[[${totalPedidos}]]*/ '0'],
+            ['Total Clientes:', /*[[${totalClientes}]]*/ '0'],
+            [''],
+            ['Este reporte contiene información confidencial de la empresa.']
+          ];
+          return XLSX.utils.aoa_to_sheet(resumen);
+        };
+
+        // Generar según tipo
+        if (tipo === 'TODO') {
+          // Hoja de resumen primero
+          if (incluirResumen) {
+            XLSX.utils.book_append_sheet(wb, crearHojaResumen(), 'Resumen Ejecutivo');
+          }
+
+          // Todas las hojas
+          const modulos = ['VENTAS', 'PEDIDOS', 'CLIENTES', 'EGRESOS'];
+          modulos.forEach(m => {
+            const tabla = document.getElementById('tabla-' + m);
+            if (tabla && tabla.querySelector('tbody tr')) {
+              const ws = XLSX.utils.table_to_sheet(tabla);
+              // Aplicar estilo a encabezados
+              const range = XLSX.utils.decode_range(ws['!ref']);
+              for (let C = range.s.c; C <= range.e.c; ++C) {
+                const address = XLSX.utils.encode_col(C) + "1";
+                if (!ws[address]) continue;
+                ws[address].s = {
+                  font: { bold: true },
+                  fill: { fgColor: { rgb: "4472C4" } },
+                  alignment: { horizontal: "center" }
+                };
+              }
+              XLSX.utils.book_append_sheet(wb, ws, m);
+            }
+          });
+        } else {
+          // Un solo reporte
+          let datosFinales = [];
+
+          if (incluirResumen) {
+            datosFinales = [
+              [`REPORTE DE ${tipo}`],
+              ['Fecha:', fechaStr],
+              ['']
+            ];
+          }
+
+          const tabla = document.getElementById('tabla-' + tipo);
+          if (tabla) {
+            const ws_temp = XLSX.utils.table_to_sheet(tabla);
+            const arrayDatos = XLSX.utils.sheet_to_json(ws_temp, {header: 1});
+            datosFinales = datosFinales.concat(arrayDatos);
+
+            const ws = XLSX.utils.aoa_to_sheet(datosFinales);
+            XLSX.utils.book_append_sheet(wb, ws, tipo);
+          }
+        }
+
+        // Generar archivo
+        const nombreArchivo = `Reporte_${tipo}_${fechaStr}.xlsx`;
+        XLSX.writeFile(wb, nombreArchivo);
 
         Swal.fire({
-            title: 'Construyendo Reporte',
-            text: 'Extrayendo datos de ' + tipo.toLowerCase(),
-            timer: 800,
-            didOpen: () => { Swal.showLoading(); }
-        }).then(() => {
-            generarExcel(tipo, incluirResumen);
+          icon: 'success',
+          title: '¡Reporte Generado!',
+          text: `Archivo: ${nombreArchivo}`,
+          confirmButtonText: 'Entendido'
         });
+
+      } catch (error) {
+        console.error("Error:", error);
+        Swal.fire('Error', 'No se pudo generar el reporte. ' + error.message, 'error');
+      }
     }
 
-    function generarExcel(tipo, incluir) {
-        try {
-            const wb = XLSX.utils.book_new();
+    // Auto-seleccionar "Exportar Todo" si se desmarca
+    document.getElementById('checkTodo').addEventListener('change', function() {
+      if (this.checked) {
+        document.querySelectorAll('.reporte-card').forEach(c => c.classList.remove('selected'));
+        reporteSeleccionado = null;
+      }
+    });
 
-            // Función auxiliar para obtener el resumen de las cards
-            const getResumenAOAs = () => [
-                ["RESUMEN EJECUTIVO DE GESTIÓN"],
-                ["Fecha de descarga:", new Date().toLocaleDateString()],
-                ["Recaudación Total:", $('#val-total').text()],
-                ["Ventas Totales:", $('#val-ventas').text()],
-                ["Items Movilizados:", $('#val-items').text()],
-                ["Ventas del Día:", $('#val-hoy').text()],
-                [] // Fila vacía
-            ];
-
-            // Caso: Un solo módulo
-            if (tipo !== "TODO") {
-                let datosFinales = incluir ? getResumenAOAs() : [];
-                const tablaHTML = document.getElementById('tabla-' + tipo);
-
-                if (tablaHTML) {
-                    const ws_temp = XLSX.utils.table_to_sheet(tablaHTML);
-                    const arrayDatos = XLSX.utils.sheet_to_json(ws_temp, {header: 1});
-                    datosFinales = datosFinales.concat(arrayDatos);
-
-                    const ws = XLSX.utils.aoa_to_sheet(datosFinales);
-                    XLSX.utils.book_append_sheet(wb, ws, "Reporte_" + tipo);
-                } else {
-                    console.error("No se encontró la tabla: tabla-" + tipo);
-                }
-            }
-            // Caso: Consolidado (Múltiples pestañas)
-            else {
-                XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(getResumenAOAs()), "Resumen");
-
-                const modulos = ["VENTAS", "PEDIDOS", "CLIENTES"];
-                modulos.forEach(m => {
-                    const tbl = document.getElementById('tabla-' + m);
-                    if (tbl) {
-                        const ws = XLSX.utils.table_to_sheet(tbl);
-                        XLSX.utils.book_append_sheet(wb, ws, m);
-                    }
-                });
-            }
-
-            // --- CORRECCIÓN DEL NOMBRE DEL ARCHIVO ---
-            // Reemplazamos las "/" de la fecha por "-" para evitar errores de extensión
-            const fechaLimpia = new Date().toLocaleDateString().replace(/\//g, "-");
-            const nombreArchivo = `Reporte_${tipo}_${fechaLimpia}.xlsx`;
-
-            // Forzar la descarga
-            XLSX.writeFile(wb, nombreArchivo);
-
-            Swal.fire('Completado', 'Tu archivo Excel se ha generado correctamente.', 'success');
-
-        } catch (error) {
-            console.error("Error al generar Excel:", error);
-            Swal.fire('Error', 'No se pudo generar el archivo. Verifica los datos en la consola.', 'error');
-        }
-    }
-</script>
+    $(document).ready(function () {
+      const s = /*[[${success}]]*/ null;
+      const e = /*[[${error}]]*/ null;
+      const i = /*[[${info}]]*/ null;
+      const w = /*[[${warning}]]*/ null;
+      checkNotifications(s, e, i, w);
+    });
+  </script>
 </th:block>
 </body>
 </html>

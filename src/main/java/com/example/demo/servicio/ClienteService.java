@@ -3,6 +3,7 @@ package com.example.demo.servicio;
 import com.example.demo.entidad.Cliente;
 
 import java.util.List;
+import java.util.Map;
 
 public interface ClienteService {
     List<Cliente> listarcliente();
@@ -13,4 +14,5 @@ public interface ClienteService {
     List<Long>ListaCLientePedidos();
     List<String>NombreListPedidos();
     boolean VerifcarCliente(String numeroIdentificacion);
+    List<Map<String, Object>> clienteSimple();
 }
