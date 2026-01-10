@@ -14,7 +14,7 @@ public interface VentaServicio {
     BigDecimal totalVentas();
     BigDecimal sumapormes(int mes, int anio);
     BigDecimal sumaproductos();
-    Long  sumaproductosPordia();
+    List<Object[]>  sumaproductosPordia();
     List<String> ListaMeses();
     List<BigDecimal> listarTotalVentas();
     List<String>NombreProductos();

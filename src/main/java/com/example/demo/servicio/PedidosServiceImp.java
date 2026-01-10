@@ -53,10 +53,9 @@ public class PedidosServiceImp implements PedidoService{
         pedidos1.setFechaPedido(pedidos.getFechaPedido());
         pedidos1.setEstado(pedidos.getEstado());
         pedidos1.setObservaciones(pedidos.getObservaciones());
-
+        pedidos1.setFlete(pedidos.getFlete());
         // ✅ Actualizar detalles usando el método helper
         pedidos1.actualizarDetalles(pedidos.getDetalles());
-
         // Actualizar totales
         pedidos1.setSubtotal(pedidos.getSubtotal());
         pedidos1.setImpuesto(pedidos.getImpuesto());
@@ -149,6 +148,22 @@ public class PedidosServiceImp implements PedidoService{
         }
         // Cambiar el estado
         pedido.setEstado(EstadoPedido.ENTREGADO);
+    }
+
+    @Transactional
+    @Override
+    public void CancelarPedido(Long id) {
+     Pedidos pedido =   repositorio.findById(id).orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
+
+        if(pedido.getEstado()==EstadoPedido.CANCELADO){
+            throw new IllegalStateException("el Pedido ya fue Cancelado");
+        }
+
+        if(pedido.getEstado()==EstadoPedido.ENTREGADO){
+            throw  new IllegalStateException("el Pedido ya fue Entregado");
+        }
+
+        pedido.setEstado(EstadoPedido.CANCELADO);
     }
 
 }

@@ -6,7 +6,10 @@ import com.example.demo.repositorio.ClienteRepositorio;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class ClienteServiceImp implements ClienteService {
@@ -55,5 +58,20 @@ public class ClienteServiceImp implements ClienteService {
     @Override
     public boolean VerifcarCliente(String numeroIdentificacion) {
         return repositorio.existsByNumeroIdentificacion(numeroIdentificacion);
+    }
+
+    @Override
+    public List<Map<String, Object>> clienteSimple() {
+        List<Map<String, Object>> clientesSimplificados = repositorio.findAll().stream().map(c -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", c.getId());
+            map.put("nombre", c.getNombre());
+            map.put("apellido", c.getApellido());
+            map.put("numeroIdentificacion", c.getNumeroIdentificacion());
+            map.put("email", c.getEmail());
+            map.put("telefono", c.getTelefono());
+            return map;
+        }).collect(Collectors.toList());
+        return  clientesSimplificados;
     }
 }

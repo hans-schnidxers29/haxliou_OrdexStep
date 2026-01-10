@@ -147,7 +147,7 @@
                             <div class="card-body">
                                 <div class="d-flex justify-content-between mb-2">
                                     <span>Subtotal Productos:</span>
-                                    <span class="font-weight-bold">$ <span id="labelSubtotal">0.00</span></span>
+                                    <span class="font-weight-bold">$ <span id="labelSubtotal">0.000</span></span>
                                 </div>
                                 <div class="form-group">
                                     <label>Flete / Envío</label>
@@ -209,12 +209,12 @@
                             </div>
                         </div>
                         <div class="col-md-2">
-                            <div class="form-group mb-2"><input type="number" name="detalles[${detalleCount}].precioUnitario" class="form-control precio-unitario bg-light" readonly step="0.01"></div>
+                            <div class="form-group mb-2"><input type="number" name="detalles[${detalleCount}].precioUnitario" class="form-control precio-unitario bg-light" readonly step="0.001"></div>
                         </div>
                         <div class="col-md-3">
                             <div class="form-group mb-2">
                                 <div class="input-group">
-                                    <input type="number" name="detalles[${detalleCount}].subtotal" class="form-control subtotal-item bg-light text-bold" readonly step="0.01">
+                                    <input type="number" name="detalles[${detalleCount}].subtotal" class="form-control subtotal-item bg-light text-bold" readonly step="0.001">
                                     <div class="input-group-append"><button type="button" class="btn btn-danger" onclick="eliminarDetalle(this)"><i class="fas fa-trash"></i></button></div>
                                 </div>
                             </div>
@@ -241,7 +241,7 @@
                 tipoUnidadLabel.text(tipoVenta === 'PESO' ? '(g)' : '(un)');
             }
 
-            row.find('.precio-unitario').val(parseFloat(precio).toFixed(2));
+            row.find('.precio-unitario').val(parseFloat(precio).toFixed(3));
             calcularSubtotal(select, index);
         }
 
@@ -258,7 +258,7 @@
                 cant = cant / 1000;
             }
 
-            row.find('.subtotal-item').val((cant * prec).toFixed(2));
+            row.find('.subtotal-item').val((cant * prec).toFixed(3));
             calcularTotal();
         }
 
@@ -279,9 +279,9 @@
             const total = baseImponible + montoImpuesto;
 
             // 4. Actualizar etiquetas visuales
-            $('#labelSubtotal').text(subtotalProductos.toFixed(2));
-            $('#labelTotal').text(total.toFixed(2));
-            $('#inputTotal').val(total.toFixed(2));
+            $('#labelSubtotal').text(subtotalProductos.toFixed(3));
+            $('#labelTotal').text(total.toFixed(3));
+            $('#inputTotal').val(total.toFixed(3));
         }
 
         // Calcular el total al cargar la página y actualizar los labels de unidad

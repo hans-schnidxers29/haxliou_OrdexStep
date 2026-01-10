@@ -17,5 +17,5 @@ public interface PedidoService {
     Long estadoCancelado(EstadoPedido estadoPedido);
     Long estadoCEntregado(EstadoPedido estadoPedido);
     void EntregarPedido (Long id);
-
+    void CancelarPedido (Long id);
 }
