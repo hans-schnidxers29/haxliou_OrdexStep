@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/adminlte}">
+
+<head>
+  <title>Listado de Proveedores</title>
+</head>
+
+<body>
+
+<section layout:fragment="content">
+
+  <!-- HEADER -->
+  <section class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1>
+            <i class="fas fa-truck mr-2"></i>
+            Listado de Proveedores
+          </h1>
+        </div>
+        <div class="col-sm-6 text-right">
+          <a th:href="@{/proveedores/crear}" class="btn btn-primary shadow-sm">
+            <i class="fas fa-user-plus mr-1"></i>
+            Nuevo Proveedor
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTENIDO -->
+  <section class="content">
+    <div class="container-fluid">
+      <div class="card card-outline card-primary shadow">
+
+        <div class="card-header">
+          <h3 class="card-title">Gestión de Proveedores</h3>
+          <div class="card-tools">
+          <!--  <span class="badge badge-info"
+                  th:text="${proveedores.size()} + ' Proveedores'">
+            </span>-->
+          </div>
+        </div>
+
+        <div class="card-body">
+
+          <!-- SIN PROVEEDORES -->
+          <div th:if="${#lists.isEmpty(proveedores)}"
+               class="text-center p-5">
+            <i class="fas fa-truck-loading fa-3x text-muted mb-3"></i>
+            <p class="text-muted">No hay proveedores registrados.</p>
+          </div>
+
+          <!-- TABLA -->
+          <div th:unless="${#lists.isEmpty(proveedores)}"
+               class="table-responsive">
+
+            <table id="tablaProveedores"
+                   class="table table-bordered table-striped table-hover">
+
+              <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Razón Social</th>
+                <th>Documento</th>
+                <th>Teléfono</th>
+                <th>Email</th>
+                <th>Dirección</th>
+                <th>Estado</th>
+                <th class="text-center">Acciones</th>
+              </tr>
+              </thead>
+
+              <tbody>
+              <tr th:each="proveedor : ${proveedores}">
+
+                <td class="font-weight-bold"
+                    th:text="${proveedor.nombre}">
+                </td>
+
+                <td th:text="${proveedor.razonSocial}"></td>
+
+                <td>
+                  <span class="badge badge-secondary">
+                    <span th:text="${proveedor.tipoDocumento}"></span>:
+                    <span th:text="${proveedor.numeroDocumento}"></span>
+                  </span>
+                </td>
+
+                <td th:text="${proveedor.telefono}"></td>
+
+                <td>
+                  <a th:href="'mailto:' + ${proveedor.email}"
+                     th:text="${proveedor.email}">
+                  </a>
+                </td>
+
+                <td th:text="${proveedor.direccion}"></td>
+
+                <td>
+                  <span class="badge shadow-sm"
+                        th:classappend="${proveedor.estado}
+                        ? 'badge-success' : 'badge-danger'"
+                        th:text="${proveedor.estado}
+                        ? 'Activo' : 'Inactivo'">
+                  </span>
+                </td>
+
+                <td class="text-center">
+                  <div class="btn-group">
+
+                    <a th:href="@{/proveedores/editar/{id}(id=${proveedor.id})}"
+                       class="btn btn-warning btn-sm"
+                       title="Editar">
+                      <i class="fas fa-edit"></i>
+                    </a>
+
+                    <button type="button"
+                            class="btn btn-danger btn-sm"
+                            th:data-id="${proveedor.id}"
+                            onclick="confirmarEliminar(this)"
+                            title="Eliminar">
+                      <i class="fas fa-trash"></i>
+                    </button>
+
+                  </div>
+                </td>
+
+              </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+</section>
+
+<!-- SCRIPTS PERSONALIZADOS -->
+<th:block layout:fragment="scripts">
+  <script th:inline="javascript">
+    $(document).ready(function () {
+
+      var success = /*[[${success}]]*/ null;
+      var error = /*[[${error}]]*/ null;
+
+      if (success) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Éxito',
+          text: success,
+          timer: 3000,
+          showConfirmButton: false
+        });
+      }
+
+      if (error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: error,
+          timer: 3000,
+          showConfirmButton: false
+        });
+      }
+    });
+  </script>
+</th:block>
+
+
+</body>
+</html>

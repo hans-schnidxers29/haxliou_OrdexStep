@@ -21,7 +21,7 @@ public class ProveedorControlador {
     @GetMapping("/listar")
     public String Listar(Model model){
         model.addAttribute("proveedores",proveedorServicio.listarproveedores());
-        return "viewProveedor/index";
+        return "viewProveedor/listarProveedor";
     }
 
 
@@ -31,7 +31,6 @@ public class ProveedorControlador {
         model.addAttribute("proveedor",p);
         return "viewProveedor/crearProveedor";
     }
-
 
     @PostMapping("crear/nuevo")
     public String CrearProveedor(@ModelAttribute("proveedor") Proveedores proveedor,
