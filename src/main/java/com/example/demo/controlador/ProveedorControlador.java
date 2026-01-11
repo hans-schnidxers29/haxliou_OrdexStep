@@ -65,24 +65,55 @@ public class ProveedorControlador {
 //        }
 //    }
 
+
     @GetMapping("/eliminar/{id}")
-    public String eliminarProveedor( @PathVariable Long id, RedirectAttributes redirectAttributes){
-        try{
-            proveedorServicio.VerificarProveedor(id);
-            proveedorServicio.deleteProveedorById(id);
-            redirectAttributes.addFlashAttribute("success", "Proveedor eliminado correctamente");
-            return "redirect:/proveedores/listar";
-        }catch (Exception e){
-            redirectAttributes.addFlashAttribute("error", "Error al eliminar el proveedor: " + e.getMessage());
-            return "redirect:/proveedores/listar";
-        }
+    public String eliminarProveedor(@PathVariable Long id,
+                                    RedirectAttributes redirect) {
+
+        proveedorServicio.deleteProveedorById(id);
+
+        redirect.addFlashAttribute("success",
+                "Proveedor eliminado correctamente");
+
+        return "redirect:/proveedores/listar";
     }
+
+
+
+
+
+//    @GetMapping("/eliminar/{id}")
+//    public String eliminarProveedor( @PathVariable Long id, RedirectAttributes redirectAttributes){
+//        try{
+//            proveedorServicio.VerificarProveedor(id);
+//            proveedorServicio.deleteProveedorById(id);
+//            redirectAttributes.addFlashAttribute("success", "Proveedor eliminado correctamente");
+//            return "redirect:/proveedores/listar";
+//        }catch (Exception e){
+//            redirectAttributes.addFlashAttribute("error", "Error al eliminar el proveedor: " + e.getMessage());
+//            return "redirect:/proveedores/listar";
+//        }
+//    }
 
     @GetMapping("/editar/{id}")
     public String editarProveedorForm(@PathVariable Long id, Model model){
         model.addAttribute("proveedor",proveedorServicio.proveedorById(id));
         return "viewProveedor/editarProveedor";
     }
+
+    @PostMapping("/editar")
+    public String actualizarProveedor(
+            @ModelAttribute("proveedor") Proveedores proveedor,
+            RedirectAttributes redirect) {
+
+        proveedorServicio.save(proveedor);
+
+        redirect.addFlashAttribute("success",
+                "Proveedor actualizado correctamente");
+
+        return "redirect:/proveedores/listar";
+    }
+
 
 //    @PostMapping("/editar/proveedor/{id}")
 //    public String ActualizarProveedor(@PathVariable Long id,@Valid @ModelAttribute("proveedor") Proveedores proveedor,

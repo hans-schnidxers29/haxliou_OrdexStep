@@ -144,6 +144,17 @@
 
 <!-- SCRIPTS PERSONALIZADOS -->
 <th:block layout:fragment="scripts">
+
+  <script>
+    function confirmarEliminar(btn) {
+      const id = btn.getAttribute("data-id");
+
+      if (confirm("¿Seguro que deseas eliminar este proveedor?")) {
+        window.location.href = "/proveedores/eliminar/" + id;
+      }
+    }
+  </script>
+
   <script th:inline="javascript">
     $(document).ready(function () {
 

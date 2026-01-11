@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/adminlte}">
+
+<head>
+    <title>Editar Proveedor</title>
+</head>
+
+<body>
+
+<section layout:fragment="content">
+
+    <h1 class="mb-4">Editar proveedor</h1>
+
+    <form th:action="@{/proveedores/editar}"
+          th:object="${proveedor}"
+          method="post">
+
+        <!-- ID obligatorio -->
+        <input type="hidden" th:field="*{id}"/>
+
+        <!-- numeroDocumento OBLIGATORIO -->
+        <input type="hidden" th:field="*{numeroDocumento}"/>
+
+        <div class="form-group">
+            <label>Nombre</label>
+            <input type="text" th:field="*{nombre}" class="form-control" required>
+        </div>
+
+        <div class="form-group col-md-6">
+            <label>Razón Social</label>
+            <input type="text"
+                   th:field="*{razonSocial}"
+                   class="form-control">
+        </div>
+
+        <div class="form-group">
+            <label>Teléfono</label>
+            <input type="text" th:field="*{telefono}" class="form-control">
+        </div>
+
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" th:field="*{email}" class="form-control">
+        </div>
+
+        <div class="form-group">
+            <label>Estado</label>
+            <select th:field="*{estado}" class="form-control">
+                <option value="true">Activo</option>
+                <option value="false">Inactivo</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Dirección</label>
+            <input type="text"
+                   th:field="*{direccion}"
+                   class="form-control"
+                   placeholder="Dirección del proveedor">
+        </div>
+
+
+        <button type="submit" class="btn btn-primary">Actualizar</button>
+        <a th:href="@{/proveedores/listar}" class="btn btn-secondary">Cancelar</a>
+
+    </form>
+
+
+</section>
+
+</body>
+</html>
