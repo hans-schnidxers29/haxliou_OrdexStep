@@ -44,7 +44,16 @@ public class ProveedorServicoImp implements ProveedorServicio{
 
     @Override
     public void updateProveedor(Long id, Proveedores proveedores) {
-
+        Proveedores newprovedor = proveedorById(id);
+        newprovedor.setId(id);
+        newprovedor.setNombre(proveedores.getNombre());
+        newprovedor.setDireccion(proveedores.getDireccion());
+        newprovedor.setTelefono(proveedores.getTelefono());
+        newprovedor.setEmail(proveedores.getEmail());
+        newprovedor.setRazonSocial(proveedores.getRazonSocial());
+        newprovedor.setNumeroDocumento(proveedores.getNumeroDocumento());
+        newprovedor.setTipoDocumento(proveedores.getTipoDocumento());
+        save(newprovedor);
     }
 
     @Override

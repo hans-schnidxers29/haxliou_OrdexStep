@@ -2,11 +2,14 @@ package com.example.demo.entidad;
 
 
 import com.example.demo.Login.Usuario;
+import com.example.demo.ModuloVentas.DetalleVenta.DetalleVenta;
 import com.example.demo.entidad.Enum.EstadoCompra;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "compras")
@@ -16,7 +19,7 @@ public class Compras {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "numero_referencia", nullable = false)
+    @Column(name = "numero_referencia", unique = true)
     private String numeroReferencia;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -26,21 +29,35 @@ public class Compras {
     @Column(name = "fecha_compra")
     private LocalDateTime fechaCompra = LocalDateTime.now();
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "usuario_id")
-   private Usuario usuario;
+    private Usuario usuario;
 
     @Enumerated(EnumType.STRING)
-    private EstadoCompra estado ;
+    private EstadoCompra estado;
 
     @Column(name = "total", scale = 3, precision = 10)
-    private BigDecimal total;
+    private BigDecimal total = BigDecimal.ZERO;
+
+    @Column(name = "impuesto", scale = 2, precision = 10)
+    private BigDecimal Impuesto = BigDecimal.ZERO;
+
+    // mappedBy corregido a "compra" (singular)
+    @OneToMany(mappedBy = "compra", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DetalleCompra> detalles = new ArrayList<>();
+
+    // MÉTODO HELPER: Muy importante para que el cascade funcione
+    public void agregarDetalle(DetalleCompra detalle) {
+        detalles.add(detalle);
+        detalle.setCompra(this);
+    }
 
     public Compras() {
     }
 
     public Compras(Long id, String numeroReferencia, Proveedores proveedor,
-                 LocalDateTime  fechaCompra, Usuario usuario, EstadoCompra estado, BigDecimal total) {
+                   LocalDateTime fechaCompra, Usuario usuario, EstadoCompra estado, BigDecimal total,
+                   List<DetalleCompra> detalles,BigDecimal Impuesto) {
         this.id = id;
         this.numeroReferencia = numeroReferencia;
         Proveedor = proveedor;
@@ -48,6 +65,8 @@ public class Compras {
         this.usuario = usuario;
         this.estado = estado;
         this.total = total;
+        this.detalles = detalles;
+        this.Impuesto = Impuesto;
     }
 
     public Long getId() {
@@ -104,5 +123,21 @@ public class Compras {
 
     public void setTotal(BigDecimal total) {
         this.total = total;
+    }
+
+    public List<DetalleCompra> getDetalles() {
+        return detalles;
+    }
+
+    public void setDetalles(List<DetalleCompra> detalles) {
+        this.detalles = detalles;
+    }
+
+    public BigDecimal getImpuesto() {
+        return Impuesto;
+    }
+
+    public void setImpuesto(BigDecimal impuesto) {
+        Impuesto = impuesto;
     }
 }
