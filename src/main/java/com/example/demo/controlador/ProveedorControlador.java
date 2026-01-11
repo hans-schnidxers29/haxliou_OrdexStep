@@ -24,27 +24,46 @@ public class ProveedorControlador {
         return "viewProveedor/listarProveedor";
     }
 
-
     @GetMapping("/crear")
-    public String Mostrarformulario(Model model){
-        Proveedores p = new Proveedores();
-        model.addAttribute("proveedor",p);
+    public String mostrarFormulario(Model model) {
+        model.addAttribute("proveedor", new Proveedores());
         return "viewProveedor/crearProveedor";
     }
 
-    @PostMapping("crear/nuevo")
-    public String CrearProveedor(@ModelAttribute("proveedor") Proveedores proveedor,
-                                 RedirectAttributes redirectAttributes) {
-        try{
-            proveedorServicio.save(proveedor);
-            redirectAttributes.addFlashAttribute("success", "Proveedor guardado correctamente");
-            return "redirect:/proveedores/crear";
-        }
-        catch (Exception e){
-            redirectAttributes.addFlashAttribute("error", "Error al guardar el proveedor: " + e.getMessage());
-            return "redirect:/proveedores/listar";
-        }
+    @PostMapping("/crear")
+    public String guardarProveedor(
+            @ModelAttribute("proveedor") Proveedores proveedor,
+            RedirectAttributes redirect) {
+
+        proveedorServicio.save(proveedor);
+
+        redirect.addFlashAttribute("success",
+                "Proveedor creado correctamente");
+
+        return "redirect:/proveedores/listar";
     }
+
+
+//    @GetMapping("/crear")
+//    public String Mostrarformulario(Model model){
+//        Proveedores p = new Proveedores();
+//        model.addAttribute("proveedor",p);
+//        return "viewProveedor/crearProveedor";
+//    }
+//
+//    @PostMapping("crear/nuevo")
+//    public String CrearProveedor(@ModelAttribute("proveedor") Proveedores proveedor,
+//                                 RedirectAttributes redirectAttributes) {
+//        try{
+//            proveedorServicio.save(proveedor);
+//            redirectAttributes.addFlashAttribute("success", "Proveedor guardado correctamente");
+//            return "redirect:/proveedores/crear";
+//        }
+//        catch (Exception e){
+//            redirectAttributes.addFlashAttribute("error", "Error al guardar el proveedor: " + e.getMessage());
+//            return "redirect:/proveedores/listar";
+//        }
+//    }
 
     @GetMapping("/eliminar/{id}")
     public String eliminarProveedor( @PathVariable Long id, RedirectAttributes redirectAttributes){
