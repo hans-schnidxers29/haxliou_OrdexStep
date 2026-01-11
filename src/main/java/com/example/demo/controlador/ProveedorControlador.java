@@ -66,10 +66,22 @@ public class ProveedorControlador {
         return "viewProveedor/editarProveedor";
     }
 
-//    @PostMapping("/editar/proveedor/{id}")
-//    public String ActualizarProveedor(@PathVariable Long id,@Valid @ModelAttribute("proveedor") Proveedores proveedor,
-//                                      BindingResult result, Model model, RedirectAttributes redirectAttributes){
-//
-//    }
+    @PostMapping("/editar/proveedor/{id}")
+    public String ActualizarProveedor(@PathVariable Long id,@Valid @ModelAttribute("proveedor") Proveedores proveedor,
+                                      BindingResult result, Model model, RedirectAttributes redirectAttributes){
+        if(result.hasErrors()){
+            model.addAttribute("proveedor",proveedor);
+            redirectAttributes.addFlashAttribute("error", "Por favor corrija el formulario.");
+            return "viewProveedor/editarProveedor";
+        }
+        try {
+            proveedorServicio.updateProveedor(id, proveedor);
+            redirectAttributes.addFlashAttribute("success", "Proveedor actualizado correctamente");
+            return "redirect:/proveedores/listar";
+        }catch (Exception e){
+            redirectAttributes.addFlashAttribute("error", "Error al actualizar el proveedor: " + e.getMessage());
+            return "redirect:/proveedores/editar/"+id;
+        }
+    }
 
 }
