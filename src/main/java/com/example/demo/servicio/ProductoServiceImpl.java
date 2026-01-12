@@ -78,11 +78,9 @@ public class ProductoServiceImpl implements ProductoServicio{
     public void AgregarStock(Long id, BigDecimal cantidad) {
         repositorio.findById(id).orElseThrow(()-> new RuntimeException("Producto No Encontrado"));
         Productos producto = repositorio.findById(id).get();
-        BigDecimal nuevoStock = BigDecimal.ZERO;
         BigDecimal stockActual = producto.getCantidad();
-        nuevoStock = stockActual.add(cantidad);
+        BigDecimal nuevoStock = stockActual.add(cantidad);
         producto.setCantidad(nuevoStock);
-        repositorio.save(producto);
     }
 
 

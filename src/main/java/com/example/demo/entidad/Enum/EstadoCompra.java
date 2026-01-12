@@ -3,7 +3,7 @@ package com.example.demo.entidad.Enum;
 public enum EstadoCompra {
     BORRADOR("Borrador"),
     CONFIRMADA("Confirmada"),
-    ANULADAD("Anulada");
+    ANULADA("Anulada");
 
     private final String descripcion;
 

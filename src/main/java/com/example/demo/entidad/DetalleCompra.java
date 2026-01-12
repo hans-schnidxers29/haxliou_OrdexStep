@@ -13,37 +13,33 @@ public class DetalleCompra {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="compras_id")
+    @JoinColumn(name = "compras_id")
     private Compras compra;
 
-    @ManyToOne
-    @JoinColumn(name="productos_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "productos_id")
     private Productos productos;
 
-    @Column(name="cantidad",scale = 3, precision = 10)
+    @Column(name = "cantidad", scale = 3, precision = 10)
     private BigDecimal cantidad;
 
-    @Column(name="precio_unitario",scale = 3, precision = 10)
+    @Column(name = "precio_unitario", scale = 3, precision = 10)
     private BigDecimal precioUnitario;
 
-    @Column(name="subtotal",scale = 3, precision = 10)
+    @Column(name = "subtotal", scale = 3, precision = 10)
     private BigDecimal subtotal;
-
-    @Column(name="impuesto",scale = 2, precision = 10)
-    private BigDecimal impuesto;
 
     public DetalleCompra() {
     }
 
     public DetalleCompra(Long id, Compras compra, Productos productos,
-                         BigDecimal cantidad, BigDecimal precioUnitario, BigDecimal subtotal, BigDecimal impuesto) {
+                         BigDecimal cantidad, BigDecimal precioUnitario, BigDecimal subtotal) {
         this.id = id;
         this.compra = compra;
         this.productos = productos;
         this.cantidad = cantidad;
         this.precioUnitario = precioUnitario;
         this.subtotal = subtotal;
-        this.impuesto = impuesto;
     }
 
     public Long getId() {
@@ -92,13 +88,5 @@ public class DetalleCompra {
 
     public void setSubtotal(BigDecimal subtotal) {
         this.subtotal = subtotal;
-    }
-
-    public BigDecimal getImpuesto() {
-        return impuesto;
-    }
-
-    public void setImpuesto(BigDecimal impuesto) {
-        this.impuesto = impuesto;
     }
 }
