@@ -44,27 +44,6 @@ public class ProveedorControlador {
     }
 
 
-//    @GetMapping("/crear")
-//    public String Mostrarformulario(Model model){
-//        Proveedores p = new Proveedores();
-//        model.addAttribute("proveedor",p);
-//        return "viewProveedor/crearProveedor";
-//    }
-//
-//    @PostMapping("crear/nuevo")
-//    public String CrearProveedor(@ModelAttribute("proveedor") Proveedores proveedor,
-//                                 RedirectAttributes redirectAttributes) {
-//        try{
-//            proveedorServicio.save(proveedor);
-//            redirectAttributes.addFlashAttribute("success", "Proveedor guardado correctamente");
-//            return "redirect:/proveedores/crear";
-//        }
-//        catch (Exception e){
-//            redirectAttributes.addFlashAttribute("error", "Error al guardar el proveedor: " + e.getMessage());
-//            return "redirect:/proveedores/listar";
-//        }
-//    }
-
 
     @GetMapping("/eliminar/{id}")
     public String eliminarProveedor(@PathVariable Long id,
@@ -77,23 +56,6 @@ public class ProveedorControlador {
 
         return "redirect:/proveedores/listar";
     }
-
-
-
-
-
-//    @GetMapping("/eliminar/{id}")
-//    public String eliminarProveedor( @PathVariable Long id, RedirectAttributes redirectAttributes){
-//        try{
-//            proveedorServicio.VerificarProveedor(id);
-//            proveedorServicio.deleteProveedorById(id);
-//            redirectAttributes.addFlashAttribute("success", "Proveedor eliminado correctamente");
-//            return "redirect:/proveedores/listar";
-//        }catch (Exception e){
-//            redirectAttributes.addFlashAttribute("error", "Error al eliminar el proveedor: " + e.getMessage());
-//            return "redirect:/proveedores/listar";
-//        }
-//    }
 
     @GetMapping("/editar/{id}")
     public String editarProveedorForm(@PathVariable Long id, Model model){
@@ -114,11 +76,5 @@ public class ProveedorControlador {
         return "redirect:/proveedores/listar";
     }
 
-
-//    @PostMapping("/editar/proveedor/{id}")
-//    public String ActualizarProveedor(@PathVariable Long id,@Valid @ModelAttribute("proveedor") Proveedores proveedor,
-//                                      BindingResult result, Model model, RedirectAttributes redirectAttributes){
-//
-//    }
 
 }
