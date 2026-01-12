@@ -1,24 +1,40 @@
-$(document).ready(function () {
-    // 1. Obtener la ruta actual (ej: /listarclientes)
-    var url = window.location.pathname;
+$(document).ready(function() {
+    const currentPath = window.location.pathname;
 
-    // 2. Limpiar cualquier clase 'active' o 'menu-open' previa
-    $('.nav-sidebar .nav-link').removeClass('active');
-    $('.nav-sidebar .nav-item').removeClass('menu-open');
+    // Marcar enlace activo basado en la URL actual
+    $('.nav-sidebar a.nav-link').each(function() {
+        const href = $(this).attr('href');
 
-    // 3. Buscar el enlace que coincida con la URL actual
-    $('.nav-sidebar a').filter(function () {
-        // Retorna true si el href coincide exactamente con la URL
-        // o si la URL empieza con el href (para resaltar /clientes/editar cuando el href es /clientes)
-        return this.getAttribute("href") === url || (url.startsWith(this.getAttribute("href")) && this.getAttribute("href") !== "/");
-    }).addClass('active')
-        .parentsUntil(".nav-sidebar", ".nav-item")
-        .addClass('menu-open')
-        .find('> .nav-link')
-        .addClass('active');
+        if (href && href !== '#' && currentPath.includes(href)) {
+            $(this).addClass('active');
 
-    // 4. Caso especial para el Home (evitar que siempre esté activo)
-    if (url === '/Home' || url === '/') {
-        $('.nav-sidebar a[href*="Home"]').addClass('active');
-    }
+            // Si está dentro de un submenú, abrir el menú padre
+            const $parentTreeview = $(this).closest('.nav-treeview');
+            if ($parentTreeview.length) {
+                $parentTreeview.show();
+                const $parentItem = $parentTreeview.closest('.nav-item.has-treeview');
+                $parentItem.addClass('menu-open');
+            }
+        }
+    });
+
+    // Manejar clics SOLO en enlaces con href="#" (los menús padre)
+    $('.nav-item.has-treeview > a.nav-link[href="#"]').on('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const $parentItem = $(this).parent('.nav-item.has-treeview');
+        const $submenu = $(this).next('.nav-treeview');
+
+        // Toggle del submenú
+        if ($parentItem.hasClass('menu-open')) {
+            $submenu.slideUp(300);
+            $parentItem.removeClass('menu-open');
+        } else {
+            $submenu.slideDown(300);
+            $parentItem.addClass('menu-open');
+        }
+
+        return false;
+    });
 });
