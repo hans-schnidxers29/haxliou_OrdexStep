@@ -120,7 +120,8 @@ public class CompraControlador {
             }
 
             if (detallesValidos.isEmpty()) {
-                redirectAttributes.addFlashAttribute("error", "Debe agregar al menos un producto válido con cantidad mayor a cero");
+                redirectAttributes.addFlashAttribute("error",
+                        "Debe agregar al menos un producto válido con cantidad mayor a cero");
                 return "redirect:/compras/crear";
             }
 
@@ -176,7 +177,8 @@ public class CompraControlador {
             Compras compraExistente = compraServicio.compraById(id);
 
             if (compraExistente.getEstado() != EstadoCompra.BORRADOR) {
-                redirectAttributes.addFlashAttribute("error", "No se puede editar una compra que ya ha sido CONFIRMADA o ANULADA.");
+                redirectAttributes.addFlashAttribute("error",
+                        "No se puede editar una compra que ya ha sido CONFIRMADA o ANULADA.");
                 return "redirect:/compras/listar";
             }
 
