@@ -21,43 +21,40 @@ public class ProveedorControlador {
     @GetMapping("/listar")
     public String Listar(Model model){
         model.addAttribute("proveedores",proveedorServicio.listarproveedores());
-        return "viewProveedor/index";
+        return "viewProveedor/listarProveedor";
     }
 
-
     @GetMapping("/crear")
-    public String Mostrarformulario(Model model){
-        Proveedores p = new Proveedores();
-        model.addAttribute("proveedor",p);
+    public String mostrarFormulario(Model model) {
+        model.addAttribute("proveedor", new Proveedores());
         return "viewProveedor/crearProveedor";
     }
 
+    @PostMapping("/crear")
+    public String guardarProveedor(
+            @ModelAttribute("proveedor") Proveedores proveedor,
+            RedirectAttributes redirect) {
 
-    @PostMapping("crear/nuevo")
-    public String CrearProveedor(@ModelAttribute("proveedor") Proveedores proveedor,
-                                 RedirectAttributes redirectAttributes) {
-        try{
-            proveedorServicio.save(proveedor);
-            redirectAttributes.addFlashAttribute("success", "Proveedor guardado correctamente");
-            return "redirect:/proveedores/crear";
-        }
-        catch (Exception e){
-            redirectAttributes.addFlashAttribute("error", "Error al guardar el proveedor: " + e.getMessage());
-            return "redirect:/proveedores/listar";
-        }
+        proveedorServicio.save(proveedor);
+
+        redirect.addFlashAttribute("success",
+                "Proveedor creado correctamente");
+
+        return "redirect:/proveedores/listar";
     }
 
+
+
     @GetMapping("/eliminar/{id}")
-    public String eliminarProveedor( @PathVariable Long id, RedirectAttributes redirectAttributes){
-        try{
-            proveedorServicio.VerificarProveedor(id);
-            proveedorServicio.deleteProveedorById(id);
-            redirectAttributes.addFlashAttribute("success", "Proveedor eliminado correctamente");
-            return "redirect:/proveedores/listar";
-        }catch (Exception e){
-            redirectAttributes.addFlashAttribute("error", "Error al eliminar el proveedor: " + e.getMessage());
-            return "redirect:/proveedores/listar";
-        }
+    public String eliminarProveedor(@PathVariable Long id,
+                                    RedirectAttributes redirect) {
+
+        proveedorServicio.deleteProveedorById(id);
+
+        redirect.addFlashAttribute("success",
+                "Proveedor eliminado correctamente");
+
+        return "redirect:/proveedores/listar";
     }
 
     @GetMapping("/editar/{id}")
@@ -66,22 +63,18 @@ public class ProveedorControlador {
         return "viewProveedor/editarProveedor";
     }
 
-    @PostMapping("/editar/proveedor/{id}")
-    public String ActualizarProveedor(@PathVariable Long id,@Valid @ModelAttribute("proveedor") Proveedores proveedor,
-                                      BindingResult result, Model model, RedirectAttributes redirectAttributes){
-        if(result.hasErrors()){
-            model.addAttribute("proveedor",proveedor);
-            redirectAttributes.addFlashAttribute("error", "Por favor corrija el formulario.");
-            return "viewProveedor/editarProveedor";
-        }
-        try {
-            proveedorServicio.updateProveedor(id, proveedor);
-            redirectAttributes.addFlashAttribute("success", "Proveedor actualizado correctamente");
-            return "redirect:/proveedores/listar";
-        }catch (Exception e){
-            redirectAttributes.addFlashAttribute("error", "Error al actualizar el proveedor: " + e.getMessage());
-            return "redirect:/proveedores/editar/"+id;
-        }
+    @PostMapping("/editar")
+    public String actualizarProveedor(
+            @ModelAttribute("proveedor") Proveedores proveedor,
+            RedirectAttributes redirect) {
+
+        proveedorServicio.save(proveedor);
+
+        redirect.addFlashAttribute("success",
+                "Proveedor actualizado correctamente");
+
+        return "redirect:/proveedores/listar";
     }
+
 
 }
