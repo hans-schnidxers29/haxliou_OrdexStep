@@ -98,12 +98,7 @@
                                         </span>
                                     </span>
 
-                                    <a th:href="@{/producto/stock/{id}(id=${producto.id})}"
-                                       class="btn btn-xs btn-outline-success ml-1 shadow-sm"
-                                       title="Aumentar Stock">
-                                        <i class="fas fa-plus"></i>
-                                    </a>
-
+                     
                                     <small class="text-muted ml-1" th:text="${producto.getUnidadMedida()}"></small>
 
                                     <i class="fas fa-exclamation-triangle text-danger ml-1"
