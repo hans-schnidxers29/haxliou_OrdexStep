@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Cierre de Caja</title>
+</head>
+<body>
+
+<script th:inline="javascript">
+    // Abrir el ticket automáticamente
+    window.open(
+        /*[[ @{/caja/cerrar/ticket/{id}(id=${cajaId})} ]]*/,
+        '_blank'
+    );
+
+    // Volver a ventas después de imprimir
+    setTimeout(() => {
+        window.location.href = /*[[ @{/ventas/crear} ]]*/;
+    }, 1000);
+</script>
+
+</body>
+</html>

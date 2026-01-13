@@ -207,7 +207,7 @@
                                        target="_blank"
                                        class="btn btn-secondary btn-block mt-2 shadow">
 
-                                    <i class="fas fa-print mr-1"></i> Imprimir Cierre de Caja
+                                    <i class="fas fa-print mr-1"></i> Imprimir Avance De Caja
                                     </a>
 
 
@@ -328,10 +328,14 @@
                     </div>
 
 
+
                     <div class="modal-footer">
-                        <button type="submit" class="btn btn-danger btn-block">
+                        <button type="button"
+                                class="btn btn-danger btn-block"
+                                onclick="cerrarCajaConTicket()">
                             <i class="fas fa-check mr-1"></i> Confirmar Cierre
                         </button>
+
                     </div>
                 </form>
 
@@ -477,6 +481,31 @@
     }
 }
 
+function cerrarCajaConTicket() {
+
+    const idCaja = document.querySelector('input[name="id"]').value;
+    const montoRealInput = document.getElementById('montoRealInput');
+    const montoReal = montoRealInput.value;
+
+    if (!montoReal || montoReal <= 0) {
+        Swal.fire(
+            'Monto requerido',
+            'Debe ingresar el monto real en caja',
+            'warning'
+        );
+        montoRealInput.focus();
+        return;
+    }
+
+    // 🖨️ Abrir ticket en OTRA pestaña
+    window.open(
+        `/caja/cerrar/ticket/${idCaja}`,
+        '_blank'
+    );
+
+    // 🧾 Enviar el formulario para cerrar la caja
+    document.querySelector('#modalCerrarCaja form').submit();
+}
 
 
 

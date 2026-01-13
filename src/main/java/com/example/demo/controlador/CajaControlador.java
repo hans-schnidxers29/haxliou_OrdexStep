@@ -57,6 +57,7 @@ public class CajaControlador {
     /* =========================
        CERRAR CAJA
        ========================= */
+
     @PostMapping("/cerrar")
     public String cerrarCaja(@RequestParam("id") Long id,
                              @RequestParam("montoReal") BigDecimal montoReal,
@@ -64,18 +65,59 @@ public class CajaControlador {
 
         try {
             servicio.CerrarCaja(id, montoReal);
-            redirectAttributes.addFlashAttribute("success", "Caja cerrada correctamente");
-            return "redirect:/ventas/crear";
 
-        } catch (DataAccessException e) {
-            redirectAttributes.addFlashAttribute("error", "Error al cerrar la caja: " + e.getMessage());
-            return "redirect:/ventas/crear";
+            redirectAttributes.addFlashAttribute(
+                    "success",
+                    "Caja cerrada correctamente"
+            );
+
+            // 👇 usamos el MISMO id que ya tenías
+            return "redirect:/caja/cierre/exitoso/" + id;
 
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Error al cerrar la caja: " + e.getMessage());
+            redirectAttributes.addFlashAttribute(
+                    "error",
+                    "Error al cerrar la caja: " + e.getMessage()
+            );
             return "redirect:/ventas/crear";
         }
     }
+
+
+
+    //    @PostMapping("/cerrar")
+//    public String cerrarCaja(@RequestParam("id") Long id,
+//                             @RequestParam("montoReal") BigDecimal montoReal,
+//                             RedirectAttributes redirectAttributes) {
+//
+//        try {
+//            servicio.CerrarCaja(id, montoReal);
+//            redirectAttributes.addFlashAttribute("success", "Caja cerrada correctamente");
+//            return "redirect:/ventas/crear";
+//
+//        } catch (DataAccessException e) {
+//            redirectAttributes.addFlashAttribute("error", "Error al cerrar la caja: " + e.getMessage());
+//            return "redirect:/ventas/crear";
+//
+//        } catch (Exception e) {
+//            redirectAttributes.addFlashAttribute("error", "Error al cerrar la caja: " + e.getMessage());
+//            return "redirect:/ventas/crear";
+//
+//        }
+//    }
+//cierre exitoso
+    @GetMapping("/cierre/exitoso/{id}")
+    public String cierreExitoso(@PathVariable Long id,
+                                org.springframework.ui.Model model) {
+
+        model.addAttribute("cajaId", id);
+        return "caja/cierre_exitoso";
+    }
+
+
+
+
+
 
     /* =========================
        PDF CIERRE DE CAJA
