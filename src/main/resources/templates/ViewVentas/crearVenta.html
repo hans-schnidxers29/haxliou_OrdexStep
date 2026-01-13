@@ -276,22 +276,57 @@
                 <form th:action="@{/caja/cerrar}" method="POST">
                     <div class="modal-body">
 
-                        <input type="hidden" name="id"
-                               th:if="${cajaAbierta != null}"
-                               th:value="${cajaAbierta.id}"/>
+                        <input type="hidden" name="id" th:value="${cajaAbierta.id}"/>
 
+                        <!-- RESUMEN DE CAJA -->
+                        <div class="border rounded p-3 mb-3 bg-light">
 
+                            <p><strong>Base inicial:</strong>
+                                $ <span th:text="${cajaAbierta.montoInicial}"></span>
+                            </p>
+
+                            <p><strong>Total ingresos:</strong>
+                                $ <span th:text="${cajaAbierta.ingresoTotal}"></span>
+                            </p>
+
+                            <p><strong>Total egresos:</strong>
+                                $ <span th:text="${cajaAbierta.egresosTotales}"></span>
+                            </p>
+
+                            <p><strong>Total gastos:</strong>
+                                $ <span th:text="${cajaAbierta.gastosTotales}"></span>
+                            </p>
+
+                            <hr>
+
+                            <p class="font-weight-bold text-primary">
+                                Monto esperado:
+                                $ <span id="montoEsperado"
+                                        th:text="${cajaAbierta.montoEsperado}"></span>
+                            </p>
+                        </div>
+
+                        <!-- MONTO REAL -->
                         <div class="form-group">
-                            <label>Monto real en caja</label>
+                            <label class="font-weight-bold">Monto real en caja</label>
                             <input type="number"
+                                   id="montoRealInput"
                                    name="montoReal"
                                    class="form-control"
                                    step="0.01"
                                    min="0"
-                                   required>
+                                   required
+                                   oninput="calcularDiferencia()">
+                        </div>
+
+                        <!-- DIFERENCIA -->
+                        <div class="alert alert-info text-center">
+                            <strong>Diferencia:</strong>
+                            $ <span id="diferenciaCaja">0.00</span>
                         </div>
 
                     </div>
+
 
                     <div class="modal-footer">
                         <button type="submit" class="btn btn-danger btn-block">
@@ -310,6 +345,7 @@
 
 <th:block layout:fragment="scripts">
     <script th:inline="javascript">
+
         const clientesData = /*[[${clientes}]]*/ [];
         let detalleCount = 1;
 
@@ -418,6 +454,32 @@
             document.getElementById('subtotalGeneral').value = s.toFixed(3);
             document.getElementById('totalVenta').value = (s + (s * (imp/100))).toFixed(3);
         }
+
+
+        function calcularDiferencia() {
+    const montoEsperado = parseFloat(
+        document.getElementById('montoEsperado').innerText
+    ) || 0;
+
+    const montoReal = parseFloat(
+        document.getElementById('montoRealInput').value
+    ) || 0;
+
+    const diferencia = montoReal - montoEsperado;
+
+    const diffSpan = document.getElementById('diferenciaCaja');
+    diffSpan.innerText = diferencia.toFixed(2);
+
+    if (diferencia < 0) {
+        diffSpan.style.color = 'red';
+    } else {
+        diffSpan.style.color = 'green';
+    }
+}
+
+
+
+
     </script>
 </th:block>
 </body>
