@@ -34,8 +34,8 @@ public class CajaServicioImp implements CajaServicio{
 
 
     @Override
-    public Caja CajaAbierta(Usuario usuario) {
-        return cajaRepositorio.buscarCajaPorUsuarioYEstado(usuario,EstadoDeCaja.EN_PROCESO).orElse(null);
+    public Caja CajaAbierta(Usuario user) {
+    return cajaRepositorio.findByUsuarioAndEstado(user,EstadoDeCaja.EN_PROCESO).orElse(null);
     }
 
     @Transactional

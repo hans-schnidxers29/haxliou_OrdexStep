@@ -37,63 +37,47 @@ public class CajaControlador {
         this.pdfService = pdfService;
     }
 
+
     @PostMapping("/abrir")
-    public String AbrirCaja(@AuthenticationPrincipal UserDetails userDetails,
-                            @ModelAttribute("caja") Caja caja,
-                            RedirectAttributes redirectAttributes){
-        try {
-            Usuario usuario = servicioUsuario.findByEmail(userDetails.getUsername());
+    public String AbrirCaja(@AuthenticationPrincipal UserDetails userDetails, @ModelAttribute("caja") Caja caja
+    ,RedirectAttributes redirectAttributes,Model model){
 
-            // Verificar si ya tiene una caja abierta
-            Caja cajaExistente = servicio.CajaAbierta(usuario);
-            if (cajaExistente != null) {
-                redirectAttributes.addFlashAttribute("error",
-                        "Ya tienes una caja abierta. Debes cerrarla antes de abrir una nueva.");
-                return "redirect:/ventas/crear";
-            }
+        Usuario usuario = servicioUsuario.findByEmail(userDetails.getUsername());
+        model.addAttribute("cajaAbieta",servicio.CajaAbierta(usuario) == null);
 
-            BigDecimal MontoInicial = caja.getMontoInicial();
-
-            // Validar que el monto inicial sea mayor a 0
-            if (MontoInicial == null || MontoInicial.compareTo(BigDecimal.ZERO) <= 0) {
-                redirectAttributes.addFlashAttribute("error",
-                        "El monto inicial debe ser mayor a 0");
-                return "redirect:/ventas/crear";
-            }
-
-            caja.setUsuario(usuario);
-            servicio.EjecutarCaja(usuario, MontoInicial);
-            redirectAttributes.addFlashAttribute("success", "Caja abierta correctamente");
-            return "redirect:/ventas/crear";
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error",
-                    "Error al abrir la caja: " + e.getMessage());
-            return "redirect:/ventas/crear";
-        }
+       try {
+           BigDecimal MontoInicial = caja.getMontoInicial();
+           caja.setUsuario(usuario);
+           servicio.EjecutarCaja(usuario, MontoInicial);
+           redirectAttributes.addFlashAttribute("success", "Caja abierta correctamente");
+           return "redirect:/ventas/crear";
+       }catch (Exception e) {
+           redirectAttributes.addFlashAttribute("error", "Error al abrir la caja: " + e.getMessage());
+           return "redirect:/ventas/crear";
+       }
     }
+
 
     @PostMapping("/cerrar")
     public String CerrarCaja(@RequestParam("id") Long id,
                              @RequestParam("montoReal") BigDecimal montoReal,
-                             @RequestParam(value = "observaciones", required = false) String observaciones,
                              RedirectAttributes redirectAttributes){
         try{
             servicio.CerrarCaja(id, montoReal);
             redirectAttributes.addFlashAttribute("success", "Caja cerrada correctamente");
             return "redirect:/ventas/crear";
         }catch(DataAccessException e){
-            redirectAttributes.addFlashAttribute("error",
-                    "Error al cerrar la caja: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Error al cerrar la caja: " + e.getMessage());
             return "redirect:/ventas/crear";
         }catch (Exception e){
-            redirectAttributes.addFlashAttribute("error",
-                    "Error al cerrar la caja: " + e.getMessage());
-            return "redirect:/ventas/crear";
+            redirectAttributes.addFlashAttribute("error", "Error al cerrar la caja: " + e.getMessage());
+            return "redirect:/Ventas/crear";
         }
     }
 
     @GetMapping("/cerrar/ticekc/{id}")
-    public ResponseEntity<byte[]> descargarPDF(@PathVariable Long id) throws Exception{
+    public ResponseEntity<byte[]> descargarPDF(@PathVariable Long id)throws Exception{
+
         Caja caja = servicio.cajaByid(id);
         BigDecimal Base = caja.getMontoInicial();
         BigDecimal totalEgresos = caja.getEgresosTotales();
@@ -113,9 +97,7 @@ public class CajaControlador {
         data.put("totalIngresos", totalIngresos);
         data.put("diferencia", diferencia);
         data.put("montoReal", montoReal);
-
         byte[] pdf = pdfService.generarPdf("pdf/tikecteCaja", data);
-
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
                         "inline; filename=ticket_Cierre_Caja_" + id + ".pdf")
@@ -125,7 +107,9 @@ public class CajaControlador {
 
     @GetMapping("/reporte-avance/{id}")
     public ResponseEntity<byte[]> reporteAvance(@PathVariable Long id) throws Exception {
+
         Caja cajaResumen = servicio.obtenerResumenActual(id);
+
 
         Map<String, Object> data = new HashMap<>();
         data.put("caja", cajaResumen);
@@ -135,8 +119,7 @@ public class CajaControlador {
         byte[] pdf = pdfService.generarPdf("pdf/tikecteCaja", data);
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "inline; filename=avance_caja_" + id + ".pdf")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=avance_caja_" + id + ".pdf")
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(pdf);
     }

@@ -24,6 +24,29 @@
         .cliente-info.show {
             display: block;
         }
+
+        /* --- NUEVOS AJUSTES PARA LIBERAR NAVEGACIÓN Y TECLADO --- */
+
+        /* 1. Quitamos el desenfoque general que bloqueaba la vista */
+        body.modal-open .content {
+            filter: none !important;
+        }
+
+        /* 2. Hacemos que el fondo oscuro sea casi invisible para ver el Nav */
+        .modal-backdrop {
+            background-color: rgba(0,0,0,0.1) !important;
+        }
+
+        /* 3. Aseguramos que el modal no capture el foco de forma agresiva */
+        #modalAbrirCaja {
+            z-index: 1070 !important;
+        }
+
+        /* Estilo para resaltar que el modal es importante */
+        #modalAbrirCaja .modal-content {
+            border: 3px solid #007bff;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
 <body>
@@ -60,10 +83,8 @@
 
         <div class="container-fluid">
             <form th:action="@{/ventas/crear/nueva}" th:object="${venta}" method="POST" id="formVenta">
-
                 <div class="row">
                     <div class="col-md-8">
-                        <!-- Card de búsqueda de cliente -->
                         <div class="card card-outline card-primary shadow">
                             <div class="card-header">
                                 <h3 class="card-title font-weight-bold">
@@ -79,20 +100,11 @@
                                                 <span class="text-danger">*</span>
                                             </label>
                                             <div class="input-group">
-                                                <input type="text"
-                                                       id="buscarNumeroId"
-                                                       class="form-control form-control-lg"
-                                                       placeholder="Ingrese cédula o NIT..."
-                                                       autocomplete="off">
+                                                <input type="text" id="buscarNumeroId" class="form-control form-control-lg" placeholder="Ingrese cédula o NIT..." autocomplete="off">
                                                 <div class="input-group-append">
-                                                    <button type="button"
-                                                            class="btn btn-primary btn-lg"
-                                                            onclick="buscarCliente()">
-                                                        <i class="fas fa-search"></i>
-                                                    </button>
+                                                    <button type="button" class="btn btn-primary btn-lg" onclick="buscarCliente()"><i class="fas fa-search"></i></button>
                                                 </div>
                                             </div>
-                                            <small class="text-muted">Presione Enter o clic en Buscar</small>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -103,28 +115,18 @@
                                                 <p class="mb-0">Sin cliente seleccionado</p>
                                             </div>
                                             <div class="cliente-info" id="clienteInfo">
-                                                <h5 class="text-success mb-2">
-                                                    <i class="fas fa-check-circle mr-1"></i> Cliente Encontrado
-                                                </h5>
-                                                <p class="mb-1">
-                                                    <strong>Nombre:</strong> <span id="clienteNombre"></span>
-                                                </p>
-                                                <p class="mb-1">
-                                                    <strong>Email:</strong> <span id="clienteEmail"></span>
-                                                </p>
-                                                <p class="mb-0">
-                                                    <strong>Teléfono:</strong> <span id="clienteTelefono"></span>
-                                                </p>
+                                                <h5 class="text-success mb-2"><i class="fas fa-check-circle mr-1"></i> Cliente Encontrado</h5>
+                                                <p class="mb-1"><strong>Nombre:</strong> <span id="clienteNombre"></span></p>
+                                                <p class="mb-1"><strong>Email:</strong> <span id="clienteEmail"></span></p>
+                                                <p class="mb-0"><strong>Teléfono:</strong> <span id="clienteTelefono"></span></p>
                                             </div>
                                         </div>
-                                        <!-- Campo oculto con el ID del cliente -->
-                                        <input type="hidden" name="cliente.id" id="clienteIdHidden">
+                                        <input type="hidden" th:field="*{cliente.id}" id="clienteIdHidden">
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Card de productos -->
                         <div class="card card-outline card-info shadow">
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <h3 class="card-title font-weight-bold">Detalle de Productos</h3>
@@ -148,25 +150,13 @@
                                         <td>
                                             <select name="detalles[0].producto.id" class="form-control producto-select" onchange="actualizarPrecio(0)" required>
                                                 <option value="" disabled selected>-- Seleccione --</option>
-                                                <option th:each="p : ${productos}"
-                                                        th:value="${p.id}"
-                                                        th:text="${p.nombre}"
-                                                        th:data-precio="${p.precio}"
-                                                        th:data-tipo="${p.tipoVenta.name()}"></option>
+                                                <option th:each="p : ${productos}" th:value="${p.id}" th:text="${p.nombre}" th:data-precio="${p.precio}" th:data-tipo="${p.tipoVenta.name()}"></option>
                                             </select>
                                         </td>
-                                        <td>
-                                            <input type="number" name="detalles[0].cantidad" class="form-control" value="1" min="1" step="0.001" onchange="calcularSubtotal(0)" required>
-                                        </td>
-                                        <td>
-                                            <input type="number" name="detalles[0].precioUnitario" class="form-control precio-unitario" readonly step="0.001" value="0.000">
-                                        </td>
-                                        <td>
-                                            <input type="number" name="detalles[0].subtotal" class="form-control subtotal-item" readonly step="0.001" value="0.000">
-                                        </td>
-                                        <td class="text-center">
-                                            <button type="button" class="btn btn-link text-danger p-0" onclick="eliminarFila(this)"><i class="fas fa-times-circle"></i></button>
-                                        </td>
+                                        <td><input type="number" name="detalles[0].cantidad" class="form-control" value="1" min="1" step="0.001" onchange="calcularSubtotal(0)" required></td>
+                                        <td><input type="number" name="detalles[0].precioUnitario" class="form-control precio-unitario" readonly step="0.001" value="0.000"></td>
+                                        <td><input type="number" name="detalles[0].subtotal" class="form-control subtotal-item" readonly step="0.001" value="0.000"></td>
+                                        <td class="text-center"><button type="button" class="btn btn-link text-danger p-0" onclick="eliminarFila(this)"><i class="fas fa-times-circle"></i></button></td>
                                     </tr>
                                     </tbody>
                                 </table>
@@ -202,16 +192,12 @@
                                     </div>
                                     <div class="d-flex justify-content-between text-lg text-primary font-weight-bold mt-3">
                                         <span>TOTAL:</span>
-                                        <div>
-                                            $ <input type="number" id="totalVenta" th:field="*{total}" class="d-inline text-right border-0 bg-transparent font-weight-bold text-primary" readonly style="width: 120px;">
-                                        </div>
+                                        <div>$ <input type="number" id="totalVenta" th:field="*{total}" class="d-inline text-right border-0 bg-transparent font-weight-bold text-primary" readonly style="width: 120px;"></div>
                                     </div>
                                 </div>
                             </div>
                             <div class="card-footer">
-                                <button type="button" onclick="validarYProcesar()" class="btn btn-success btn-block shadow">
-                                    <i class="fas fa-save mr-1"></i> Finalizar Venta
-                                </button>
+                                <button type="button" onclick="validarYProcesar()" class="btn btn-success btn-block shadow"><i class="fas fa-save mr-1"></i> Finalizar Venta</button>
                                 <a href="/ventas/listar" class="btn btn-default btn-block mt-2">Cancelar</a>
                             </div>
                         </div>
@@ -220,114 +206,123 @@
             </form>
         </div>
     </section>
+
+    <div th:if="${necesitaAbrirCaja}" class="modal fade" id="modalAbrirCaja"
+         role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white text-center d-block">
+                    <h5 class="modal-title font-weight-bold"><i class="fas fa-cash-register mr-2"></i> APERTURA DE CAJA</h5>
+                    <button type="button" class="close text-white" onclick="window.location.href='/ventas/listar'" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form th:action="@{/caja/abrir}" method="POST">
+                    <div class="modal-body text-center py-4">
+                        <p class="text-dark">Para registrar ventas, ingrese el <strong>monto base</strong>.</p>
+                        <div class="form-group mb-0">
+                            <label for="montoInicialInput" class="text-primary font-weight-bold">Efectivo Inicial:</label>
+                            <div class="input-group input-group-lg shadow-sm">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-white font-weight-bold text-success">$</span>
+                                </div>
+                                <input type="number" name="montoInicial" id="montoInicialInput"
+                                       class="form-control text-center font-weight-bold"
+                                       placeholder="0.00" step="0.01" min="0" required autofocus>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light border-0">
+                        <button type="submit" class="btn btn-primary btn-block btn-lg shadow-sm">
+                            <i class="fas fa-check-circle mr-1"></i> ABRIR CAJA AHORA
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 
 <th:block layout:fragment="scripts">
     <script th:inline="javascript">
-        // Lista de clientes desde el servidor
         const clientesData = /*[[${clientes}]]*/ [];
         let detalleCount = 1;
 
-        // ===== FUNCIONES DE BÚSQUEDA DE CLIENTE =====
-        function buscarCliente() {
-            const numeroId = document.getElementById('buscarNumeroId').value.trim();
+        $(document).ready(function () {
 
-            if (!numeroId) {
-                Swal.fire('Atención', 'Ingrese un número de identificación', 'warning');
-                return;
-            }
+            const s = /*[[${success}]]*/ null;
+            const e = /*[[${error}]]*/ null;
+            const i = /*[[${info}]]*/ null;
+            const w = /*[[${warning}]]*/ null;
+            checkNotifications(s, e, i, w);
 
-            // Buscar en la lista de clientes
-            const clienteEncontrado = clientesData.find(c => c.numeroIdentificacion === numeroId);
-
-            if (clienteEncontrado) {
-                mostrarClienteEncontrado(clienteEncontrado);
-            } else {
-                Swal.fire({
-                    title: 'Cliente no encontrado',
-                    text: '¿Desea registrar un nuevo cliente?',
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonText: 'Sí, registrar',
-                    cancelButtonText: 'Cancelar'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.open('/crearcliente/nuevo', '_blank');
-                    }
+            const necesitaAbrir = /*[[${necesitaAbrirCaja}]]*/ false;
+            if (necesitaAbrir) {
+                $('#modalAbrirCaja').modal({
+                    backdrop: 'static',
+                    keyboard: true,
+                    show: true
                 });
-                limpiarCliente();
-            }
-        }
 
-        function mostrarClienteEncontrado(cliente) {
-            // Actualizar el campo oculto con el ID
-            document.getElementById('clienteIdHidden').value = cliente.id;
+                $('body').removeClass('modal-open');
+                $('.modal-backdrop').css('pointer-events', 'none');
 
-            // Mostrar información del cliente
-            document.getElementById('clienteNombre').textContent = cliente.nombre + ' ' + (cliente.apellido || '');
-            document.getElementById('clienteEmail').textContent = cliente.email || 'N/A';
-            document.getElementById('clienteTelefono').textContent = cliente.telefono || 'N/A';
-
-            // Cambiar estilos
-            document.getElementById('clienteNoSeleccionado').style.display = 'none';
-            document.getElementById('clienteInfo').classList.add('show');
-            document.getElementById('clienteCard').classList.add('encontrado');
-
-            // Mensaje de éxito
-            Swal.fire({
-                icon: 'success',
-                title: 'Cliente encontrado',
-                text: cliente.nombre,
-                timer: 1500,
-                showConfirmButton: false
-            });
-        }
-
-        function limpiarCliente() {
-            document.getElementById('clienteIdHidden').value = '';
-            document.getElementById('clienteNoSeleccionado').style.display = 'block';
-            document.getElementById('clienteInfo').classList.remove('show');
-            document.getElementById('clienteCard').classList.remove('encontrado');
-        }
-
-        // Permitir buscar con Enter
-        document.getElementById('buscarNumeroId').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                buscarCliente();
+                setTimeout(function() {
+                    $('#montoInicialInput').focus();
+                }, 800);
             }
         });
 
-        // ===== FUNCIONES DE PRODUCTOS =====
+        async function validarYProcesar() {
+            const necesitaAbrir = /*[[${necesitaAbrirCaja}]]*/ false;
+
+            if (necesitaAbrir) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Caja cerrada',
+                    text: 'Debe abrir la caja primero ingresando el monto inicial en el formulario azul.'
+                });
+                $('#modalAbrirCaja').modal('show');
+                return;
+            }
+
+            const clienteId = document.getElementById('clienteIdHidden').value;
+            if (!clienteId) {
+                Swal.fire({ icon: 'warning', title: 'Cliente requerido', text: 'Debe seleccionar un cliente' });
+                return;
+            }
+            document.getElementById('formVenta').submit();
+        }
+
+        function buscarCliente() {
+            const numeroId = document.getElementById('buscarNumeroId').value.trim();
+            if (!numeroId) { Swal.fire('Atención', 'Ingrese un ID', 'warning'); return; }
+            const clienteEncontrado = clientesData.find(c => c.numeroIdentificacion === numeroId);
+            if (clienteEncontrado) { mostrarClienteEncontrado(clienteEncontrado); }
+            else { Swal.fire({ title: 'No encontrado', text: '¿Registrar?', icon: 'question', showCancelButton: true }).then((r) => { if (r.isConfirmed) window.open('/crearcliente/nuevo', '_blank'); }); }
+        }
+        function mostrarClienteEncontrado(c) {
+            document.getElementById('clienteIdHidden').value = c.id;
+            document.getElementById('clienteNombre').textContent = c.nombre + ' ' + (c.apellido || '');
+            document.getElementById('clienteEmail').textContent = c.email || 'N/A';
+            document.getElementById('clienteTelefono').textContent = c.telefono || 'N/A';
+            document.getElementById('clienteNoSeleccionado').style.display = 'none';
+            document.getElementById('clienteInfo').classList.add('show');
+            document.getElementById('clienteCard').classList.add('encontrado');
+        }
         function agregarDetalle() {
             const container = document.getElementById('detallesContainer');
             const opciones = document.querySelector('.producto-select').innerHTML;
-
             const tr = document.createElement('tr');
             tr.className = "detalle-item";
-            tr.innerHTML = `
-                <td>
-                    <select name="detalles[\${detalleCount}].producto.id" class="form-control producto-select" onchange="actualizarPrecio(\${detalleCount})" required>
-                        \${opciones}
-                    </select>
-                </td>
-                <td>
-                    <input type="number" name="detalles[\${detalleCount}].cantidad" class="form-control" value="1" min="1" step="0.001" onchange="calcularSubtotal(\${detalleCount})" required>
-                </td>
-                <td>
-                    <input type="number" name="detalles[\${detalleCount}].precioUnitario" class="form-control precio-unitario" readonly step="0.001">
-                </td>
-                <td>
-                    <input type="number" name="detalles[\${detalleCount}].subtotal" class="form-control subtotal-item" readonly step="0.001">
-                </td>
-                <td class="text-center">
-                    <button type="button" class="btn btn-link text-danger p-0" onclick="eliminarFila(this)"><i class="fas fa-times-circle"></i></button>
-                </td>
-            `;
+            tr.innerHTML = `<td><select name="detalles[\${detalleCount}].producto.id" class="form-control producto-select" onchange="actualizarPrecio(\${detalleCount})" required>\${opciones}</select></td>
+                <td><input type="number" name="detalles[\${detalleCount}].cantidad" class="form-control" value="1" min="1" step="0.001" onchange="calcularSubtotal(\${detalleCount})" required></td>
+                <td><input type="number" name="detalles[\${detalleCount}].precioUnitario" class="form-control precio-unitario" readonly step="0.001"></td>
+                <td><input type="number" name="detalles[\${detalleCount}].subtotal" class="form-control subtotal-item" readonly step="0.001"></td>
+                <td class="text-center"><button type="button" class="btn btn-link text-danger p-0" onclick="eliminarFila(this)"><i class="fas fa-times-circle"></i></button></td>`;
             container.appendChild(tr);
             detalleCount++;
         }
-
         function eliminarFila(btn) {
             const filas = document.querySelectorAll('.detalle-item');
             if(filas.length > 1) {
@@ -337,107 +332,29 @@
                 Swal.fire('Atención', 'La venta debe tener al menos un producto', 'info');
             }
         }
-
         function actualizarPrecio(i) {
             const select = document.querySelector(`select[name="detalles[${i}].producto.id"]`);
             const precio = select.options[select.selectedIndex].getAttribute("data-precio");
-            document.querySelector(`input[name="detalles[${i}].precioUnitario"]`).value = parseFloat(precio).toFixed(3) || 0;
+            document.querySelector(`input[name="detalles[${i}].precioUnitario"]`).value = parseFloat(precio).toFixed(3);
             calcularSubtotal(i);
         }
-
         function calcularSubtotal(i) {
             const select = document.querySelector(`select[name="detalles[${i}].producto.id"]`);
             const tipoVenta = select.options[select.selectedIndex].getAttribute("data-tipo");
-
             let cant = parseFloat(document.querySelector(`input[name="detalles[${i}].cantidad"]`).value) || 0;
             const precio = parseFloat(document.querySelector(`input[name="detalles[${i}].precioUnitario"]`).value) || 0;
-
-            if (tipoVenta === 'PESO') {
-                cant = cant / 1000;
-            }
-
-            const subtotal = cant * precio;
-            document.querySelector(`input[name="detalles[${i}].subtotal"]`).value = subtotal.toFixed(3);
+            if (tipoVenta === 'PESO') cant = cant / 1000;
+            document.querySelector(`input[name="detalles[${i}].subtotal"]`).value = (cant * precio).toFixed(3);
             calcularTotal();
         }
-
         function calcularTotal() {
-            let subtotalGral = 0;
-            document.querySelectorAll('.subtotal-item').forEach(input => {
-                subtotalGral += parseFloat(input.value) || 0;
-            });
-
-            const impuestoPorcentaje = parseFloat(document.getElementById('impuesto').value) || 0;
-            const totalFinal = subtotalGral + (subtotalGral * (impuestoPorcentaje / 100));
-
-            document.getElementById('subtotalGeneral').value = subtotalGral.toFixed(3);
-            document.getElementById('totalVenta').value = totalFinal.toFixed(3);
+            let s = 0;
+            document.querySelectorAll('.subtotal-item').forEach(i => s += parseFloat(i.value) || 0);
+            const imp = parseFloat(document.getElementById('impuesto').value) || 0;
+            document.getElementById('subtotalGeneral').value = s.toFixed(3);
+            document.getElementById('totalVenta').value = (s + (s * (imp/100))).toFixed(3);
         }
-
-        // ===== VALIDACIÓN Y ENVÍO =====
-        async function validarYProcesar() {
-            // Validar que hay cliente seleccionado
-            const clienteId = document.getElementById('clienteIdHidden').value;
-            if (!clienteId) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Cliente requerido',
-                    text: 'Debe buscar y seleccionar un cliente antes de continuar',
-                    confirmButtonText: 'Entendido'
-                });
-                document.getElementById('buscarNumeroId').focus();
-                return;
-            }
-
-            const total = parseFloat(document.getElementById('totalVenta').value) || 0;
-            const metodo = document.getElementById('metodoPagoSelect').value;
-
-            if (total <= 0) {
-                Swal.fire('Atención', 'No puede realizar una venta con total 0', 'warning');
-                return;
-            }
-
-            if (metodo === 'EFECTIVO') {
-                const { value: montoPagado } = await Swal.fire({
-                    title: 'Calculadora de Cambio',
-                    text: `Total a cobrar: $${total.toFixed(3)}`,
-                    input: 'number',
-                    inputLabel: '¿Con cuánto paga el cliente?',
-                    inputAttributes: { step: '0.001' },
-                    showCancelButton: true,
-                    confirmButtonText: 'Ver Cambio',
-                    inputValidator: (value) => {
-                        if (!value || parseFloat(value) < total) {
-                            return `El monto debe ser mayor o igual a $${total.toFixed(3)}`;
-                        }
-                    }
-                });
-
-                if (montoPagado) {
-                    const cambio = parseFloat(montoPagado) - total;
-                    await Swal.fire({
-                        title: 'Cambio para el cliente:',
-                        html: `<h1 class="text-success font-weight-bold">$ ${cambio.toFixed(3)}</h1>`,
-                        confirmButtonText: 'LISTO',
-                        icon: 'success'
-                    });
-                    document.getElementById('formVenta').submit();
-                }
-            } else {
-                // Si no es efectivo (Tarjeta, Transferencia, etc) envía directo
-                document.getElementById('formVenta').submit();
-            }
-        }
-
-        $(document).ready(function () {
-            const s = /*[[${success}]]*/ null;
-            const e = /*[[${error}]]*/ null;
-            const i = /*[[${info}]]*/ null;
-            const w = /*[[${warning}]]*/ null;
-            checkNotifications(s, e, i, w);
-        });
     </script>
 </th:block>
-
 </body>
 </html>

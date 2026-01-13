@@ -17,7 +17,6 @@ public interface Cajarepositorio extends JpaRepository<Caja,Long> {
       boolean existsByUsuarioAndEstado(@Param("usuario") Usuario usuario, @Param("estado") EstadoDeCaja estado);
 
       @Query("SELECT c FROM Caja c WHERE c.usuario = :usuario AND c.Estado = :estado")
-      Optional<Caja> buscarCajaPorUsuarioYEstado(@Param("usuario") Usuario usuario,
-                                                 @Param("estado") EstadoDeCaja estado);
-
+      Optional<Caja> findByUsuarioAndEstado(@Param("usuario") Usuario usuario,
+                                            @Param("estado") EstadoDeCaja estado);
 }

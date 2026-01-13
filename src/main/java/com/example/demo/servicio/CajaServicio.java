@@ -6,7 +6,7 @@ import com.example.demo.entidad.Caja;
 import java.math.BigDecimal;
 
 public interface CajaServicio {
-    Caja CajaAbierta(Usuario usuario);
+    Caja CajaAbierta(Usuario user);
     void CerrarCaja(Long id,BigDecimal MontoEnCaja);
     void EjecutarCaja(Usuario user, BigDecimal MontoInicial);
     Caja obtenerResumenActual(Long cajaId);
