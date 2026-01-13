@@ -1,9 +1,9 @@
 package com.example.demo.entidad;
 
 import com.example.demo.Login.Usuario;
+import com.example.demo.entidad.Enum.EstadoDeCaja;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -38,8 +38,11 @@ public class Caja {
     @Column(name = "diferencia", scale = 3, precision = 10)
     private BigDecimal diferencia = BigDecimal.ZERO;
 
-    @Column(name = "Estado_caja")
-    private boolean Estado = false;
+    @Enumerated(EnumType.STRING)
+    private EstadoDeCaja Estado;
+
+    @Column(name="fecha_apertura")
+    private LocalDateTime fechaApertura = LocalDateTime.now();
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
@@ -61,7 +64,7 @@ public class Caja {
 
     public Caja(Long id, LocalDateTime fechaCierre, BigDecimal montoInicial, BigDecimal ingresoTotal,
                 BigDecimal egresosTotales, BigDecimal gastosTotales, BigDecimal montoReal,
-                BigDecimal diferencia, Usuario usuario, String observaciones, boolean Estado) {
+                BigDecimal diferencia, Usuario usuario, String observaciones, EstadoDeCaja Estado,LocalDateTime fechaApertura) {
         this.id = id;
         this.fechaCierre = fechaCierre;
         this.montoInicial = montoInicial;
@@ -73,6 +76,7 @@ public class Caja {
         this.usuario = usuario;
         this.observaciones = observaciones;
         this.Estado = Estado;
+        this.fechaApertura = fechaApertura;
     }
 
     public Long getId() {
@@ -153,5 +157,21 @@ public class Caja {
 
     public void setObservaciones(String observaciones) {
         this.observaciones = observaciones;
+    }
+
+    public EstadoDeCaja getEstado() {
+        return Estado;
+    }
+
+    public void setEstado(EstadoDeCaja estado) {
+        Estado = estado;
+    }
+
+    public LocalDateTime getFechaApertura() {
+        return fechaApertura;
+    }
+
+    public void setFechaApertura(LocalDateTime fechaApertura) {
+        this.fechaApertura = fechaApertura;
     }
 }
