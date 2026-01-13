@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Optional;
 
 @Service
 public class CajaServicioImp implements CajaServicio{
@@ -40,40 +41,46 @@ public class CajaServicioImp implements CajaServicio{
 
     @Transactional
     @Override
-    public void CerrarCaja(Long id, BigDecimal MontoEncaja) {
-       try {
-           Caja cerrarCaja = cajaRepositorio.findById(id).orElseThrow(
-                   () -> new RuntimeException("Caja no encontrada"));
+    public void CerrarCaja(Long id, BigDecimal montoEnCaja) {
 
-           if (cerrarCaja.getEstado() == EstadoDeCaja.CERRADA) {
-               throw new IllegalStateException("Caja ya fue Cerrada");
-           }
-           LocalDateTime inicio = cerrarCaja.getFechaApertura();
-           LocalDateTime fin = LocalDate.now().atTime(LocalTime.MAX);
+        Caja cerrarCaja = cajaRepositorio.findById(id)
+                .orElseThrow(() -> new RuntimeException("Caja no encontrada"));
 
-           BigDecimal TotalEgresos = egresoRepositorio.sumarEgresosPorDia(inicio, fin);
-           BigDecimal Totalcomras = comprasRepositorio.sumaEgresosHoy(inicio, fin);
-           BigDecimal TotalVentas = ventarepositorio.sumaVentasRango(inicio, fin);
+        if (cerrarCaja.getEstado() == EstadoDeCaja.CERRADA) {
+            throw new IllegalStateException("Caja ya fue cerrada");
+        }
 
-           BigDecimal SaldoTeorico = cerrarCaja.getMontoInicial()
-                   .add(TotalVentas)
-                   .subtract(TotalEgresos)
-                   .subtract(Totalcomras);
-           cerrarCaja.setMontoReal(MontoEncaja);
-           cerrarCaja.setDiferencia(MontoEncaja.subtract(SaldoTeorico));
+        LocalDateTime inicio = cerrarCaja.getFechaApertura();
+        LocalDateTime fin = LocalDateTime.now();
 
-           cerrarCaja.setEgresosTotales(TotalEgresos);
-           cerrarCaja.setGastosTotales(Totalcomras);
-           cerrarCaja.setIngresoTotal(TotalVentas);
-           cerrarCaja.setFechaCierre(LocalDateTime.now());
-           cerrarCaja.setEstado(EstadoDeCaja.CERRADA);
-       }catch (DataAccessException e){
-           throw new RuntimeException("Error al cerrar caja en la nube" + e.getMessage());
-       }catch (Exception e){
-           throw new RuntimeException("Error al cerrar caja" + e.getMessage());
-       }
+        BigDecimal totalEgresos = Optional.ofNullable(
+                egresoRepositorio.sumarEgresosPorDia(inicio, fin)
+        ).orElse(BigDecimal.ZERO);
 
+        BigDecimal totalCompras = Optional.ofNullable(
+                comprasRepositorio.sumaEgresosHoy(inicio, fin)
+        ).orElse(BigDecimal.ZERO);
+
+        BigDecimal totalVentas = Optional.ofNullable(
+                ventarepositorio.sumaVentasRango(inicio, fin)
+        ).orElse(BigDecimal.ZERO);
+
+        BigDecimal saldoTeorico = cerrarCaja.getMontoInicial()
+                .add(totalVentas)
+                .subtract(totalEgresos)
+                .subtract(totalCompras);
+
+        cerrarCaja.setIngresoTotal(totalVentas);
+        cerrarCaja.setEgresosTotales(totalEgresos);
+        cerrarCaja.setGastosTotales(totalCompras);
+        cerrarCaja.setMontoReal(montoEnCaja);
+        cerrarCaja.setDiferencia(montoEnCaja.subtract(saldoTeorico));
+        cerrarCaja.setFechaCierre(LocalDateTime.now());
+        cerrarCaja.setEstado(EstadoDeCaja.CERRADA);
+
+        cajaRepositorio.save(cerrarCaja);
     }
+
 
     @Override
     public void EjecutarCaja(Usuario user, BigDecimal MontoInicial) {

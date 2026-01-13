@@ -45,9 +45,13 @@ public class Caja {
     private LocalDateTime fechaApertura = LocalDateTime.now();
 
     @NotNull
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "usuario_id")
     private Usuario usuario;
+
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "usuario_id")
+//    private Usuario usuario;
 
     @Column(length = 500)
     private String observaciones;
