@@ -38,13 +38,15 @@ public class CajaControlador {
     }
 
 
-
     @PostMapping("/abrir")
     public String AbrirCaja(@AuthenticationPrincipal UserDetails userDetails, @ModelAttribute("caja") Caja caja
-    ,RedirectAttributes redirectAttributes){
+    ,RedirectAttributes redirectAttributes,Model model){
+
+        Usuario usuario = servicioUsuario.findByEmail(userDetails.getUsername());
+        model.addAttribute("cajaAbieta",servicio.CajaAbierta(usuario) == null);
+
        try {
            BigDecimal MontoInicial = caja.getMontoInicial();
-           Usuario usuario = servicioUsuario.findByEmail(userDetails.getUsername());
            caja.setUsuario(usuario);
            servicio.EjecutarCaja(usuario, MontoInicial);
            redirectAttributes.addFlashAttribute("success", "Caja abierta correctamente");

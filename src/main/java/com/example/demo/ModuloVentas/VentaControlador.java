@@ -2,12 +2,14 @@ package com.example.demo.ModuloVentas;
 
 import com.example.demo.Login.Servicio.ServicioUsuario;
 import com.example.demo.Login.Usuario;
+import com.example.demo.entidad.Caja;
 import com.example.demo.entidad.Empresa;
 import com.example.demo.Login.Servicio.ServicioEmpresa;
 import com.example.demo.ModuloVentas.DetalleVenta.DetalleVenta;
 import com.example.demo.entidad.Cliente;
 import com.example.demo.entidad.Productos;
 import com.example.demo.pdf.PdfServicio;
+import com.example.demo.servicio.CajaServicio;
 import com.example.demo.servicio.ClienteService;
 import com.example.demo.servicio.ProductoServicio;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +47,9 @@ public class VentaControlador {
 
     @Autowired
     private ServicioUsuario servicioUsuario;
+
+    @Autowired
+    private CajaServicio cajaServicio;
 
 
     // Inyectar el servicio
@@ -84,7 +89,10 @@ public class VentaControlador {
     // FORMULARIO CREAR VENTA
     // ============================
     @GetMapping("/crear")
-    public String crearVentaMostrarForm(Model model) {
+    public String crearVentaMostrarForm(Model model,@AuthenticationPrincipal UserDetails userDetails) {
+        Usuario usuario = servicioUsuario.findByEmail(userDetails.getUsername());
+        Caja cajaActiva = cajaServicio.CajaAbierta(usuario);
+        model.addAttribute("necesitaAbrirCaja", cajaActiva == null);
 
         Venta venta = new Venta();
         // Cliente vacío
