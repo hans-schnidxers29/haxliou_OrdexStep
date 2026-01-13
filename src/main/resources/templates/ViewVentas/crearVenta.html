@@ -40,6 +40,24 @@
     </section>
 
     <section class="content">
+
+
+        <div class="card-body">
+
+            <!-- CAJA CERRADA-->
+            <div th:if="${}"
+                 class="text-center p-5">
+                <i class="fas fa-truck-loading fa-3x text-muted mb-3"></i>
+                <p class="text-muted">Abrir caja</p>
+            </div>
+        </div>
+
+
+        <form th:action="@{/caja/abrir}" method="post">
+            <input type="number" name="montoInicial" step="0.01" required>
+            <button type="submit" class="btn btn-primary">Abrir Caja</button>
+        </form>
+
         <div class="container-fluid">
             <form th:action="@{/ventas/crear/nueva}" th:object="${venta}" method="POST" id="formVenta">
 

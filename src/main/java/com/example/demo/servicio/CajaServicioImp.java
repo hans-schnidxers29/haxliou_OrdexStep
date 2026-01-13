@@ -33,6 +33,11 @@ public class CajaServicioImp implements CajaServicio{
     private VentaRepositorio ventarepositorio;
 
 
+    @Override
+    public Caja CajaAbierta(Usuario usuario) {
+        return cajaRepositorio.buscarCajaPorUsuarioYEstado(usuario,EstadoDeCaja.EN_PROCESO).orElse(null);
+    }
+
     @Transactional
     @Override
     public void CerrarCaja(Long id, BigDecimal MontoEncaja) {
