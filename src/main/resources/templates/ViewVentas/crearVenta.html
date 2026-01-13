@@ -62,6 +62,9 @@
         </div>
     </section>
 
+
+
+
     <section class="content">
         <div class="container-fluid">
             <form th:action="@{/ventas/crear/nueva}" th:object="${venta}" method="POST" id="formVenta">
@@ -179,9 +182,38 @@
                                 </div>
                             </div>
                             <div class="card-footer">
-                                <button type="button" onclick="validarYProcesar()" class="btn btn-success btn-block shadow"><i class="fas fa-save mr-1"></i> Finalizar Venta</button>
-                                <a href="/ventas/listar" class="btn btn-default btn-block mt-2">Cancelar</a>
+
+                                <button type="button"
+                                        onclick="validarYProcesar()"
+                                        class="btn btn-success btn-block shadow">
+                                    <i class="fas fa-save mr-1"></i> Finalizar Venta
+                                </button>
+
+                                <a href="/ventas/listar" class="btn btn-default btn-block mt-2">
+                                    Cancelar
+                                </a>
+
+                                <!-- BOTONES DE CAJA -->
+                                <div th:if="${cajaAbierta != null}" class="mt-4">
+
+                                    <button class="btn btn-danger btn-block shadow"
+                                            data-toggle="modal"
+                                            data-target="#modalCerrarCaja">
+                                        <i class="fas fa-lock mr-1"></i> Cerrar Caja
+                                    </button>
+
+                                    <a th:if="${cajaAbierta != null}"
+                                       th:href="@{/caja/cerrar/ticket/{id}(id=${cajaAbierta.id})}"
+                                       target="_blank"
+                                       class="btn btn-secondary btn-block mt-2 shadow">
+
+                                    <i class="fas fa-print mr-1"></i> Imprimir Cierre de Caja
+                                    </a>
+
+
+                                </div>
                             </div>
+
                         </div>
                     </div>
                 </div>
@@ -223,6 +255,57 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade"
+         id="modalCerrarCaja"
+         tabindex="-1"
+         th:if="${cajaAbierta != null}">
+
+    <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-cash-register mr-1"></i> Cierre de Caja
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+
+                <form th:action="@{/caja/cerrar}" method="POST">
+                    <div class="modal-body">
+
+                        <input type="hidden" name="id"
+                               th:if="${cajaAbierta != null}"
+                               th:value="${cajaAbierta.id}"/>
+
+
+                        <div class="form-group">
+                            <label>Monto real en caja</label>
+                            <input type="number"
+                                   name="montoReal"
+                                   class="form-control"
+                                   step="0.01"
+                                   min="0"
+                                   required>
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-danger btn-block">
+                            <i class="fas fa-check mr-1"></i> Confirmar Cierre
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+
+
 </div>
 
 <th:block layout:fragment="scripts">
@@ -246,8 +329,7 @@
                     show: true
                 });
 
-                $('body').removeClass('modal-open');
-                $('.modal-backdrop').css('pointer-events', 'none');
+
 
                 setTimeout(function() {
                     $('#montoInicialInput').focus();

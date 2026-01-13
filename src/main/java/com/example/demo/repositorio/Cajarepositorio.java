@@ -11,12 +11,23 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface Cajarepositorio extends JpaRepository<Caja,Long> {
+public interface Cajarepositorio extends JpaRepository<Caja, Long> {
 
-      @Query("SELECT (COUNT(c) > 0) FROM Caja c WHERE c.usuario = :usuario AND c.Estado = :estado")
-      boolean existsByUsuarioAndEstado(@Param("usuario") Usuario usuario, @Param("estado") EstadoDeCaja estado);
+      @Query("""
+    SELECT (COUNT(c) > 0)
+    FROM Caja c
+    WHERE c.usuario = :usuario AND c.Estado = :estado
+    """)
+      boolean existsByUsuarioAndEstado(@Param("usuario") Usuario usuario,
+                                       @Param("estado") EstadoDeCaja estado);
 
-      @Query("SELECT c FROM Caja c WHERE c.usuario = :usuario AND c.Estado = :estado")
+      @Query("""
+    SELECT c
+    FROM Caja c
+    WHERE c.usuario = :usuario AND c.Estado = :estado
+    """)
       Optional<Caja> findByUsuarioAndEstado(@Param("usuario") Usuario usuario,
                                             @Param("estado") EstadoDeCaja estado);
 }
+
+
