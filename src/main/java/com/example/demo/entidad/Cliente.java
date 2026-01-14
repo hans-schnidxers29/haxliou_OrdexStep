@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.proxy.HibernateProxy;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -46,6 +48,9 @@ public class Cliente {
     @Column(name="codigo_postal", nullable = false)
     private int codigoPostal;
 
+    @Column(name="fecha_registro")
+    private String fechaRegistro;
+
     @OneToMany(mappedBy = "cliente", fetch=FetchType.LAZY, cascade= CascadeType.ALL )
     private List<Pedidos> pedidos = new ArrayList<>();
 
@@ -59,7 +64,8 @@ public class Cliente {
 
 
     public Cliente(Long id, String tipoidentificacion, String numeroIdentificacion, String nombre, String email, String apellido,
-                   String telefono, String ciudad, String pais, int codigoPostal, List<Pedidos> pedidos, String direccion) {
+                   String telefono, String ciudad, String pais, int codigoPostal, List<Pedidos> pedidos, String direccion
+                    , LocalDateTime fechaRegistro) {
         this.id = id;
         this.tipoidentificacion = tipoidentificacion;
         this.numeroIdentificacion = numeroIdentificacion;
@@ -72,9 +78,11 @@ public class Cliente {
         this.codigoPostal = codigoPostal;
         this.pedidos = pedidos;
         this.direccion = direccion;
+        this.fechaRegistro = fechaRegistro.toString();
     }
 
-    public Cliente(String nombre, String email, String apellido, String telefono, String ciudad, String pais, int codigoPostal) {
+    public Cliente(String nombre, String email, String apellido, String telefono, String ciudad, String pais,
+                   int codigoPostal, LocalDate fechaRegistro) {
         this.nombre = nombre;
         this.email = email;
         this.apellido = apellido;
@@ -82,6 +90,7 @@ public class Cliente {
         this.ciudad = ciudad;
         this.pais = pais;
         this.codigoPostal = codigoPostal;
+        this.fechaRegistro = fechaRegistro.toString();
     }
 
     public List<Pedidos> getPedidos() {
@@ -183,6 +192,14 @@ public class Cliente {
     @Override
     public final int hashCode() {
         return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
+    }
+
+    public String getFechaRegistro() {
+        return fechaRegistro;
+    }
+
+    public void setFechaRegistro(String fechaRegistro) {
+        this.fechaRegistro = fechaRegistro;
     }
 
     @Override

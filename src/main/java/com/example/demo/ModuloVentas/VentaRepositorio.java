@@ -20,8 +20,12 @@ public interface VentaRepositorio extends JpaRepository<Venta, Long> {
             nativeQuery = true)
     BigDecimal sumaVentasRango(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin);
 
-    @Query("SELECT SUM(v.total) FROM Venta v WHERE EXTRACT( MONTH from v.fechaVenta) = :mes AND EXTRACT (YEAR from v.fechaVenta) = :anio")
-    BigDecimal sumaPorMes(@Param("mes") int mes, @Param("anio") int anio);
+    @Query("SELECT COALESCE(SUM(v.total), 0) FROM Venta v WHERE v.fechaVenta BETWEEN :inicio AND :fin")
+    BigDecimal sumaPorMes(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin);
+
+    // Query adicional para los impuestos del mes
+    @Query("SELECT COALESCE(SUM(v.total - (v.total / (1 + v.impuesto/100))), 0) FROM Venta v WHERE v.fechaVenta BETWEEN :inicio AND :fin")
+    BigDecimal sumaImpuestosMes(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin);
 
     @Query(value = "SELECT MIN(v.fechaVenta) FROM Venta v GROUP BY EXTRACT(MONTH FROM v.fechaVenta), " +
             "EXTRACT(YEAR FROM v.fechaVenta) ORDER BY MIN(v.fechaVenta) ASC")
@@ -59,7 +63,6 @@ public interface VentaRepositorio extends JpaRepository<Venta, Long> {
             "GROUP BY metodos\n" +
             "ORDER BY totalpor_metodo  ASC", nativeQuery = true)
     List<Object[]>ListaMetodosPago();
-
 
 
 

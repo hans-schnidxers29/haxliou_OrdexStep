@@ -58,7 +58,7 @@ public class CajaServicioImp implements CajaServicio{
         ).orElse(BigDecimal.ZERO);
 
         BigDecimal totalCompras = Optional.ofNullable(
-                comprasRepositorio.sumaEgresosHoy(inicio, fin)
+                comprasRepositorio.sumTotalCompras(inicio, fin)
         ).orElse(BigDecimal.ZERO);
 
         BigDecimal totalVentas = Optional.ofNullable(
@@ -112,7 +112,7 @@ public class CajaServicioImp implements CajaServicio{
 
 
         BigDecimal egresos = egresoRepositorio.sumarEgresosPorDia(inicio, fin);
-        BigDecimal compras = comprasRepositorio.sumaEgresosHoy(inicio, fin);
+        BigDecimal compras = comprasRepositorio.sumTotalCompras(inicio, fin);
         BigDecimal ventas = ventarepositorio.sumaVentasRango(inicio, fin);
 
 

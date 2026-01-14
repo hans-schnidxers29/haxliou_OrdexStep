@@ -18,11 +18,7 @@ public interface EgresoRepositorio extends JpaRepository <Egresos, Long>{
 //                                        @Param("fin") LocalDateTime fin);
 
 
-    @Query("""
-                SELECT COALESCE(SUM(e.monto), 0)
-                FROM Egresos e
-                WHERE e.fechaRegistro BETWEEN :inicio AND :fin
-            """)
+    @Query(" SELECT COALESCE(SUM(e.monto), 0) FROM Egresos e WHERE e.fechaRegistro BETWEEN :inicio AND :fin")
     BigDecimal sumarEgresosPorDia(@Param("inicio") LocalDateTime inicio,
                                   @Param("fin") LocalDateTime fin);
 
