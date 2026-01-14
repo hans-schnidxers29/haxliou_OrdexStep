@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/adminlte}">
+
+<head>
+    <title>Listado de Compras</title>
+</head>
+
+<body>
+
+<section layout:fragment="content">
+
+    <!-- HEADER -->
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1>
+                        <i class="fas fa-shopping-cart mr-2"></i>
+                        Listado de Compras
+                    </h1>
+                </div>
+                <div class="col-sm-6 text-right">
+                    <a th:href="@{/crear}" class="btn btn-primary shadow-sm">
+                        <i class="fas fa-plus mr-1"></i>
+                        Nueva Compra
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CONTENIDO -->
+    <section class="content">
+        <div class="container-fluid">
+            <div class="card card-outline card-primary shadow">
+
+                <div class="card-header">
+                    <h3 class="card-title">Gestión de Compras</h3>
+                    <div class="card-tools">
+                        <span class="badge badge-info" th:text="${Compras.size()} + ' Compras'"></span>
+                    </div>
+                </div>
+
+                <div class="card-body">
+
+                    <!-- SIN COMPRAS -->
+                    <div th:if="${#lists.isEmpty(Compras)}" class="text-center p-5">
+                        <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No hay compras registradas.</p>
+                    </div>
+
+                    <!-- TABLA -->
+                    <div th:unless="${#lists.isEmpty(Compras)}" class="table-responsive">
+                        <table id="tablaCompras"
+                               class="table table-bordered table-striped table-hover">
+
+                            <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Proveedor</th>
+                                <th>Total</th>
+                                <th>Fecha</th>
+                                <th>Referencia</th>
+                                <th>Estado</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                            </thead>
+
+                            <tbody>
+                            <tr th:each="compra : ${Compras}" th:if="${compra != null}">
+                                <td th:text="${compra.id}"></td>
+                                <td th:text="${compra.proveedor.nombre}"></td>
+                                <td th:text="${compra.total}"></td>
+                                <td th:text="${#dates.format(compra.fechaCompra, 'dd/MM/yyyy')}"></td>
+                                <td th:text="${compra.numeroReferencia}"></td>
+                                <td>
+                  <span class="badge shadow-sm"
+                        th:classappend="
+                          ${compra.estado.name() == 'BORRADOR'} ? 'badge-warning' :
+                          ${compra.estado.name() == 'CONFIRMADA'} ? 'badge-success' :
+                          'badge-danger'"
+                        th:text="${compra.estado.name()}">
+                  </span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group">
+
+                                        <!-- Solo BORRADOR: editar, confirmar, anular -->
+                                        <a th:if="${compra.estado.name() == 'BORRADOR'}"
+                                           th:href="@{/editar/{id}(id=${compra.id})}"
+                                           class="btn btn-primary btn-sm" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+
+                                        <a th:if="${compra.estado.name() == 'BORRADOR'}"
+                                           th:href="@{/confirmar/{id}(id=${compra.id})}"
+                                           class="btn btn-success btn-sm" title="Confirmar">
+                                            <i class="fas fa-check"></i>
+                                        </a>
+
+                                        <a th:if="${compra.estado.name() == 'BORRADOR'}"
+                                           th:href="@{/anular/{id}(id=${compra.id})}"
+                                           class="btn btn-danger btn-sm" title="Anular">
+                                            <i class="fas fa-ban"></i>
+                                        </a>
+
+                                        <!-- Solo CONFIRMADA: ver -->
+                                        <a th:if="${compra.estado.name() == 'CONFIRMADA'}"
+                                           th:href="@{/ver/{id}(id=${compra.id})}"
+                                           class="btn btn-info btn-sm" title="Ver">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+
+                                        <!-- Solo ANULADA: ver -->
+                                        <a th:if="${compra.estado.name() == 'ANULADA'}"
+                                           th:href="@{/ver/{id}(id=${compra.id})}"
+                                           class="btn btn-secondary btn-sm" title="Ver">
+                                            <i class="fas fa-eye-slash"></i>
+                                        </a>
+
+                                    </div>
+                                </td>
+                            </tr>
+                            </tbody>
+
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+</section>
+
+<!-- SCRIPTS PERSONALIZADOS -->
+<th:block layout:fragment="scripts">
+
+    <script th:inline="javascript">
+        $(document).ready(function () {
+          var success = /*[[${success}]]*/ null;
+          var error = /*[[${error}]]*/ null;
+
+          if (success) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Éxito',
+              text: success,
+              timer: 3000,
+              showConfirmButton: false
+            });
+          }
+
+          if (error) {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: error,
+              timer: 3000,
+              showConfirmButton: false
+            });
+          }
+        });
+    </script>
+
+</th:block>
+
+</body>
+</html>
