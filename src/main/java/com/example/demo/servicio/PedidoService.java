@@ -18,4 +18,5 @@ public interface PedidoService {
     Long estadoCEntregado(EstadoPedido estadoPedido);
     void EntregarPedido (Long id);
     void CancelarPedido (Long id);
+    void RestaurarStock(Pedidos pedidos);
 }

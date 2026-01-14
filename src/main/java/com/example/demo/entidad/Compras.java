@@ -36,7 +36,7 @@ public class Compras {
     @Enumerated(EnumType.STRING)
     private EstadoCompra estado;
 
-    @Column(name = "total", scale = 3, precision = 10)
+    @Column(name = "total", scale = 2, precision = 10)
     private BigDecimal total = BigDecimal.ZERO;
 
     @Column(name = "impuesto", scale = 2, precision = 10)
