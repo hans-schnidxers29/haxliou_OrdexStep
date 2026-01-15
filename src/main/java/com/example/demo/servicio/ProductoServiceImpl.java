@@ -45,12 +45,12 @@ public class ProductoServiceImpl implements ProductoServicio{
         p1.setDescripcion(producto.getDescripcion());
         p1.setPrecio(producto.getPrecio());
         p1.setCantidad(producto.getCantidad());
+        p1.setImpuesto(producto.getImpuesto());
+        p1.setProveedor(producto.getProveedor());
 
         if (producto.getCategoria() != null) {
             p1.setCategoria(producto.getCategoria());
         }
-
-        repositorio.save(p1);
     }
 
     @Override
@@ -78,11 +78,9 @@ public class ProductoServiceImpl implements ProductoServicio{
     public void AgregarStock(Long id, BigDecimal cantidad) {
         repositorio.findById(id).orElseThrow(()-> new RuntimeException("Producto No Encontrado"));
         Productos producto = repositorio.findById(id).get();
-        BigDecimal nuevoStock = BigDecimal.ZERO;
         BigDecimal stockActual = producto.getCantidad();
-        nuevoStock = stockActual.add(cantidad);
+        BigDecimal nuevoStock = stockActual.add(cantidad);
         producto.setCantidad(nuevoStock);
-        repositorio.save(producto);
     }
 
 

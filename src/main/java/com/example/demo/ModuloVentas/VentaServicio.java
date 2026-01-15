@@ -1,6 +1,7 @@
 package com.example.demo.ModuloVentas;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface VentaServicio {
@@ -12,7 +13,7 @@ public interface VentaServicio {
     void DescontarStock(Venta venta);
     void descontarStock(Venta venta);
     BigDecimal totalVentas();
-    BigDecimal sumapormes(int mes, int anio);
+    BigDecimal sumapormes(LocalDateTime mes, LocalDateTime anio);
     BigDecimal sumaproductos();
     List<Object[]>  sumaproductosPordia();
     List<String> ListaMeses();

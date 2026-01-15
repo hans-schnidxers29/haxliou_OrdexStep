@@ -1,13 +1,12 @@
 package com.example.demo.entidad.Enum;
 
-public enum EstadoCompra {
-    BORRADOR("Borrador"),
-    CONFIRMADA("Confirmada"),
-    ANULADA("Anulada");
+public enum EstadoDeCaja {
+    CERRADA("Cerrada"),
+    EN_PROCESO("ABIERTA");
 
     private final String descripcion;
 
-    EstadoCompra(String descripcion) {
+    EstadoDeCaja(String descripcion) {
         this.descripcion = descripcion;
     }
 

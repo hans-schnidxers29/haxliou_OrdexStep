@@ -19,7 +19,7 @@ public class Egresos {
     @Enumerated(EnumType.STRING)
     private TipoEgreso tipoEgreso;
 
-    @Column(name = "monto",scale = 3, precision = 10)
+    @Column(name = "monto",scale = 2, precision = 10)
     private BigDecimal monto;
 
     @Column(name = "fecha_registro")

@@ -2,8 +2,24 @@ package com.example.demo.repositorio;
 
 import com.example.demo.entidad.Egresos;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Repository
 public interface EgresoRepositorio extends JpaRepository <Egresos, Long>{
+
+//    @Query(value = "SELECT COALESCE(SUM(e.monto), 0) FROM Egreso e " +
+//            "WHERE e.fechaRegistro >= :inicio AND e.fechaRegistro <= :fin",nativeQuery = true)
+//    BigDecimal sumarEgresosPorDia(@Param("inicio") LocalDateTime inicio,
+//                                        @Param("fin") LocalDateTime fin);
+
+
+    @Query(" SELECT COALESCE(SUM(e.monto), 0) FROM Egresos e WHERE e.fechaRegistro BETWEEN :inicio AND :fin")
+    BigDecimal sumarEgresosPorDia(@Param("inicio") LocalDateTime inicio,
+                                  @Param("fin") LocalDateTime fin);
+
 }

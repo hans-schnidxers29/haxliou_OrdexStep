@@ -29,7 +29,7 @@ public class ServicioUsuarioImp implements ServicioUsuario {
     @Override
     public Usuario saveUser(Usuario usuario) {
         // Asignamos el rol por defecto (ROLE_ADMIN o ROLE_USER según prefieras)
-        usuario.setRoles(Arrays.asList(new Rol("ROLE_ADMIN")));
+        usuario.setRoles(Arrays.asList(new Rol("ROLE_USER")));
 
         // Encriptamos la contraseña que viene del objeto
         usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));

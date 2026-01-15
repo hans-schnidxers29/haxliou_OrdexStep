@@ -1,0 +1,63 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <style type="text/css">
+        @page { size: 226pt 842pt; margin: 0; }
+
+        body {
+            font-family: Courier, monospace;
+            font-size: 11px;
+            width: 210px;
+            padding: 10px;
+        }
+
+        .center { text-align: center; }
+        .line { border-top: 1px dashed #000; margin: 6px 0; }
+        .right { text-align: right; }
+        .bold { font-weight: bold; }
+    </style>
+</head>
+
+<body>
+
+<div class="center bold">
+    CIERRE DE CAJA
+</div>
+
+<div class="line"></div>
+
+<div>
+    Usuario: <span th:text="${usuario.nombre}">Usuario</span><br/>
+    Fecha apertura:
+    <span th:text="${#temporals.format(caja.fechaApertura,'dd/MM/yyyy HH:mm')}"></span><br/>
+    Fecha cierre:
+    <span th:text="${#temporals.format(caja.fechaCierre,'dd/MM/yyyy HH:mm')}"></span>
+</div>
+
+<div class="line"></div>
+
+<div>
+    Base inicial: <span class="right" th:text="${Base}"></span><br/>
+    Total ingresos: <span class="right" th:text="${totalIngresos}"></span><br/>
+    Total egresos: <span class="right" th:text="${totalEgresos}"></span><br/>
+    Total gastos: <span class="right" th:text="${totalGastos}"></span>
+</div>
+
+<div class="line"></div>
+
+<div class="bold">
+    Monto real: <span th:text="${montoReal}"></span><br/>
+    Diferencia: <span th:text="${diferencia}"></span>
+</div>
+
+<div class="line"></div>
+
+<div class="center">
+    Gracias por usar el sistema
+</div>
+
+</body>
+</html>

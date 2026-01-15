@@ -1,0 +1,259 @@
+package com.example.demo.controlador;
+
+import com.example.demo.Login.Servicio.ServicioUsuario;
+import com.example.demo.Login.Usuario;
+import com.example.demo.entidad.Compras;
+import com.example.demo.entidad.DetalleCompra;
+import com.example.demo.entidad.Enum.EstadoCompra;
+import com.example.demo.entidad.Productos;
+import com.example.demo.entidad.Proveedores;
+import com.example.demo.servicio.CompraServicio;
+import com.example.demo.servicio.ProductoServicio;
+import com.example.demo.servicio.ProveedorServicio;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+
+@Controller
+@SuppressWarnings("/Compras")
+public class CompraControlador {
+
+    @Autowired
+    private CompraServicio compraServicio;
+
+    @Autowired
+    private ServicioUsuario servicioUsuario;
+
+    @Autowired
+    private ProveedorServicio proveedorServicio;
+
+    @Autowired
+    private ProductoServicio productoServicio;
+
+    @GetMapping("/listar")
+    public String listar(Model model){
+        model.addAttribute("Compras", compraServicio.listarCompra());
+        return "viewCompra/index";
+    }
+
+    @GetMapping("/crear")
+    public String Mostrarformulario(Model model){
+        Compras compras = new Compras();
+        model.addAttribute("compras",compras);
+        model.addAttribute("proveedores",proveedorServicio.listarproveedores());
+        model.addAttribute("productos",productoServicio.listarProductos());
+        return "viewCompra/crearCompra";
+    }
+
+    @PostMapping("/crear/compra")
+    public String crearCompra(@Valid @ModelAttribute("compras") Compras compras,
+                              BindingResult result,
+                              RedirectAttributes redirectAttributes,
+                              Model model,
+                              @AuthenticationPrincipal UserDetails userDetails) {
+
+        // 1. Validación de anotaciones @NotNull, @Min, etc.
+        if (result.hasErrors()) {
+            model.addAttribute("compras", compras);
+            // Cargamos nuevamente los proveedores y productos para la vista
+            model.addAttribute("proveedores", proveedorServicio.listarproveedores());
+            model.addAttribute("productos", productoServicio.listarProductos());
+            return "viewCompra/crearCompra";
+        }
+
+        try {
+            // 2. Asignar Usuario autenticado
+            Usuario user = servicioUsuario.findByEmail(userDetails.getUsername());
+            compras.setUsuario(user);
+
+            // 3. Validar Proveedor
+            Proveedores proveedor = proveedorServicio.proveedorById(compras.getProveedor().getId());
+            if (proveedor == null) {
+                redirectAttributes.addFlashAttribute("error", "Proveedor no encontrado");
+                return "redirect:/compras/crear";
+            }
+            compras.setProveedor(proveedor);
+
+            // 4. Procesar Detalles de Compra
+            if (compras.getDetalles() == null || compras.getDetalles().isEmpty()) {
+                redirectAttributes.addFlashAttribute("info", "La lista de productos no puede estar vacía");
+                return "redirect:/compras/crear";
+            }
+
+            List<DetalleCompra> detallesValidos = new ArrayList<>();
+            BigDecimal acumuladorSubtotales = BigDecimal.ZERO;
+
+            for (DetalleCompra detalle : compras.getDetalles()) {
+                // Saltamos filas vacías o mal diligenciadas
+                if (detalle.getProductos() == null || detalle.getProductos().getId() == null ||
+                        detalle.getCantidad() == null || detalle.getCantidad().compareTo(BigDecimal.ZERO) <= 0 ||
+                        detalle.getPrecioUnitario() == null) {
+                    continue;
+                }
+
+                // Validar existencia del producto
+                Productos productoCompleto = productoServicio.productoById(detalle.getProductos().getId());
+                if (productoCompleto == null) {
+                    continue;
+                }
+
+                // Configurar el detalle
+                detalle.setProductos(productoCompleto);
+                detalle.setCompra(compras); // Relación bidireccional importante
+
+                // Calcular subtotal del detalle
+                BigDecimal subtotal = detalle.getPrecioUnitario().multiply(detalle.getCantidad());
+                detalle.setSubtotal(subtotal);
+
+                acumuladorSubtotales = acumuladorSubtotales.add(subtotal);
+                detallesValidos.add(detalle);
+            }
+
+            if (detallesValidos.isEmpty()) {
+                redirectAttributes.addFlashAttribute("error",
+                        "Debe agregar al menos un producto válido con cantidad mayor a cero");
+                return "redirect:/compras/crear";
+            }
+
+            // 5. Finalizar cálculos de la Compra
+            compras.setDetalles(detallesValidos);
+
+            // Manejo de Impuestos
+            if (compras.getImpuesto() == null) {
+                compras.setImpuesto(BigDecimal.ZERO);
+            }
+
+            // Total = Suma de subtotales + Impuesto (asumiendo que el impuesto es un valor fijo)
+            BigDecimal totalFinal = acumuladorSubtotales.add(compras.getImpuesto());
+            compras.setTotal(totalFinal);
+
+            // 6. Estado inicial y Guardado
+            compras.setEstado(EstadoCompra.BORRADOR);
+            compraServicio.saveCompra(compras);
+
+            redirectAttributes.addFlashAttribute("success", "Compra creada con éxito en estado BORRADOR");
+            return "redirect:/compras/listar";
+
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error al procesar la compra: " + e.getMessage());
+            return "redirect:/compras/crear";
+        }
+    }
+
+    @GetMapping("/editar/{id}")
+    public String MostrarformularioEditar(@PathVariable Long id, Model model){
+        Compras compras = compraServicio.compraById(id);
+        model.addAttribute("compras",compras);
+        model.addAttribute("proveedores",proveedorServicio.listarproveedores());
+        model.addAttribute("productos",productoServicio.listarProductos());
+        return "viewCompra/editarCompra";
+
+    }
+
+
+    @PostMapping("/editar/compra/{id}")
+    public String editarCompra(@PathVariable Long id,
+                               @Valid @ModelAttribute("compras") Compras compras, BindingResult result, RedirectAttributes redirectAttributes,
+                               @AuthenticationPrincipal UserDetails userDetails) {
+
+        if (result.hasErrors()) {
+            return "viewCompra/editarCompra";
+        }
+
+        Usuario user = servicioUsuario.findByEmail(userDetails.getUsername());
+        compras.setUsuario(user);
+        try {
+            // 1. Verificar que la compra existe y que aún se puede editar (Solo si está en BORRADOR)
+            Compras compraExistente = compraServicio.compraById(id);
+
+            if (compraExistente.getEstado() != EstadoCompra.BORRADOR) {
+                redirectAttributes.addFlashAttribute("error",
+                        "No se puede editar una compra que ya ha sido CONFIRMADA o ANULADA.");
+                return "redirect:/compras/listar";
+            }
+
+            // 2. Actualizar datos básicos
+            compraExistente.setProveedor(proveedorServicio.proveedorById(compras.getProveedor().getId()));
+            compraExistente.setImpuesto(compras.getImpuesto() != null ? compras.getImpuesto() : BigDecimal.ZERO);
+
+            // 3. Gestionar los Detalles: Limpiamos los anteriores y agregamos los nuevos
+            // (Esto funciona gracias al orphanRemoval = true en la entidad Compras)
+            compraExistente.getDetalles().clear();
+
+            BigDecimal acumuladorSubtotales = BigDecimal.ZERO;
+
+            for (DetalleCompra nuevoDetalle : compras.getDetalles()) {
+                if (nuevoDetalle.getProductos() != null && nuevoDetalle.getProductos().getId() != null
+                        && nuevoDetalle.getCantidad() != null && nuevoDetalle.getCantidad().compareTo(BigDecimal.ZERO) > 0) {
+
+                    Productos prod = productoServicio.productoById(nuevoDetalle.getProductos().getId());
+                    nuevoDetalle.setProductos(prod);
+                    nuevoDetalle.setCompra(compraExistente); // Vinculamos al padre
+
+                    BigDecimal subtotal = nuevoDetalle.getPrecioUnitario().multiply(nuevoDetalle.getCantidad());
+                    nuevoDetalle.setSubtotal(subtotal);
+
+                    acumuladorSubtotales = acumuladorSubtotales.add(subtotal);
+                    compraExistente.getDetalles().add(nuevoDetalle);
+                }
+            }
+
+            // 4. Recalcular Total Final
+            compraExistente.setTotal(acumuladorSubtotales.add(compraExistente.getImpuesto()));
+            // 5. Guardar cambios en Neon
+            compraServicio.updateCompra(id,compraExistente);
+
+            redirectAttributes.addFlashAttribute("success", "Compra actualizada correctamente");
+            return "redirect:/compras/listar";
+
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error al editar: " + e.getMessage());
+            return "redirect:/compras/listar";
+        }
+    }
+
+    @GetMapping("/compra/delete/{id}")
+    public String deleteCompra(@PathVariable Long id,RedirectAttributes redirectAttributes){
+        compraServicio.deleteCompraById(id);
+        redirectAttributes.addFlashAttribute("success", "Compra eliminada correctamente");
+        return "redirect:/compras/listar";
+    }
+
+    @GetMapping("/confirmar/{id}")
+    public String confirmCompra(@PathVariable Long id,RedirectAttributes redirectAttributes){
+        try {
+            compraServicio.compraById(id);
+            compraServicio.ConfirmarCompra(id);
+            redirectAttributes.addFlashAttribute("success", "Compra confirmada correctamente");
+            return "redirect:/compras/listar";
+        }catch (Exception e){
+            redirectAttributes.addFlashAttribute("error", "Error al confirmar la compra: " + e.getMessage());
+            return "redirect:/compras/listar";
+        }
+    }
+
+    @GetMapping("/anular/{id}")
+    public String AnularCompra(@PathVariable Long id,RedirectAttributes redirectAttributes){
+        try{
+            compraServicio.compraById(id);
+            compraServicio.AnularCompra(id);
+            redirectAttributes.addFlashAttribute("success", "Compra anulada correctamente");
+            return "redirect:/compras/listar";
+        }catch (Exception e){
+            redirectAttributes.addFlashAttribute("error", "Error al anular la compra: " + e.getMessage());
+            return "redirect:/compras/listar";
+        }
+    }
+
+}

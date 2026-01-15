@@ -12,4 +12,7 @@ public interface CompraServicio {
     void deleteCompraById(Long id);
     void updateCompra(Long id,Compras compras);
     boolean verifcarCompra(Long id);
+    String GenerarReferenciasDeCompras();
+    void ConfirmarCompra(Long id);
+    void AnularCompra(Long id);
 }
