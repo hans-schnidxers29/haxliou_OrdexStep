@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layouts/adminlte}"> <head>
+      layout:decorate="~{layouts/adminlte}">
+<head>
     <title>Resumen Ejecutivo - Tu Mes</title>
 </head>
 
@@ -14,9 +15,9 @@
                     <h1 class="m-0">Panel de Control: <span th:text="${mes} + '/' + ${anio}"></span></h1>
                 </div>
                 <div class="col-sm-6 text-right">
-                    <a th:href="@{/cierres/exportar-excel(mes=${mes}, anio=${anio})}" class="btn btn-success shadow">
+                    <button type="button" onclick="confirmarYDescargar()" class="btn btn-success shadow">
                         <i class="fas fa-file-excel"></i> Finalizar y Cerrar Mes
-                    </a>
+                    </button>
                 </div>
             </div>
         </div>
@@ -24,14 +25,50 @@
 
     <section class="content">
         <div class="container-fluid">
+
+            <div class="card card-outline card-primary mb-4 shadow-sm">
+                <div class="card-body py-2">
+                    <div class="row align-items-center">
+                        <div class="col-md-4">
+                            <div class="input-group input-group-sm">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-primary text-white">Periodo</span>
+                                </div>
+                                <select id="selectMes" class="form-control">
+                                    <option th:each="m : ${#numbers.sequence(1,12)}"
+                                            th:value="${m}"
+                                            th:text="${#dates.monthName(#dates.create(2000,m,1))}"
+                                            th:selected="${m == mes}"></option>
+                                </select>
+                                <input type="number" id="selectAnio" class="form-control" th:value="${anio}">
+                                <div class="input-group-append">
+                                    <button type="button" onclick="actualizarVista()" class="btn btn-primary">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="row">
                 <div class="col-lg-3 col-6">
                     <div class="small-box bg-info">
                         <div class="inner">
-                            <h3 th:text="${datos.stock}">0</h3>
-                            <p>Productos en Stock</p>
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h3 th:text="${datos.stockUnidades}">0</h3>
+                                    <p class="mb-0 small text-uppercase">Unidades</p>
+                                </div>
+                                <div class="text-right border-left pl-2">
+                                    <h3><span th:text="${#numbers.formatDecimal(datos.stockPesable, 1, 2)}">0.00</span> <small>kg</small></h3>
+                                    <p class="mb-0 small text-uppercase">Granel</p>
+                                </div>
+                            </div>
                         </div>
-                        <div class="icon"><i class="fas fa-cubes"></i></div>
+                        <div class="icon"><i class="fas fa-boxes"></i></div>
+                        <div class="small-box-footer">Distribución de Inventario</div>
                     </div>
                 </div>
 
@@ -42,6 +79,7 @@
                             <p>Inversión en Stock</p>
                         </div>
                         <div class="icon"><i class="fas fa-warehouse"></i></div>
+                        <div class="small-box-footer">Capital Inmovilizado</div>
                     </div>
                 </div>
 
@@ -49,9 +87,18 @@
                     <div class="small-box bg-success">
                         <div class="inner">
                             <h3 th:text="'$' + ${#numbers.formatDecimal(datos.utilidad, 1, 'COMMA', 2, 'POINT')}">0</h3>
-                            <p>Utilidad Proyectada</p>
+                            <p>
+                                Utilidad Proyectada
+                                <span th:if="${datos.utilidadSubio}" class="badge badge-light ml-1">
+                                    <i class="fas fa-arrow-up text-success"></i> <span th:text="${datos.porcentajeUtilidad} + '%'"></span>
+                                </span>
+                                <span th:if="${!datos.utilidadSubio}" class="badge badge-light ml-1">
+                                    <i class="fas fa-arrow-down text-danger"></i> <span th:text="${datos.porcentajeUtilidad} + '%'"></span>
+                                </span>
+                            </p>
                         </div>
                         <div class="icon"><i class="fas fa-hand-holding-usd"></i></div>
+                        <div class="small-box-footer">Vs. Mes Anterior</div>
                     </div>
                 </div>
 
@@ -62,11 +109,41 @@
                             <p>Gastos del Mes</p>
                         </div>
                         <div class="icon"><i class="fas fa-receipt"></i></div>
+                        <div class="small-box-footer">Egresos Operativos</div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 </div>
+
+<th:block layout:fragment="script">
+    <script th:inline="javascript">
+        function actualizarVista() {
+            const mes = document.getElementById('selectMes').value;
+            const anio = document.getElementById('selectAnio').value;
+            window.location.href = `/cierres/resumen?mes=${mes}&anio=${anio}`;
+        }
+
+        function confirmarYDescargar() {
+            const m = /*[[${mes}]]*/ 1;
+            const a = /*[[${anio}]]*/ 2026;
+
+            Swal.fire({
+                title: '¿Confirmar Cierre de Mes?',
+                text: `Estás por exportar el reporte excel de ${m}/${a}`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                confirmButtonText: 'Sí, Exportar y Cerrar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = `/cierres/exportar-excel?mes=${m}&anio=${a}`;
+                }
+            });
+        }
+    </script>
+</th:block>
 </body>
 </html>

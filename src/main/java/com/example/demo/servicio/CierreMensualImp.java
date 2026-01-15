@@ -10,12 +10,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Service
@@ -104,14 +104,33 @@ public class CierreMensualImp implements CierreMensualServicio{
         return value != null ? value : BigDecimal.ZERO;
     }
 
+    @Override
     public Map<String, Object> obtenerResumenProyectado(int mes, int anio) {
         Map<String, Object> resumen = new HashMap<>();
         LocalDateTime fechaInicio = LocalDateTime.of(anio, mes, 1, 0, 0);
         LocalDateTime fechaFin = fechaInicio.with(TemporalAdjusters.lastDayOfMonth()).withHour(23).withMinute(59).withSecond(59);
 
+        BigDecimal utilidadActual = calcularUtilidad(mes, anio);
+        int mesAnt= (mes  == 1) ? 12 : mes-1;
+        int anioAnt = (mes == 1 ) ? anio - 1: anio;
+        BigDecimal utilidadAnterior = calcularUtilidad(mesAnt, anioAnt);
+
+        boolean utilidadSubio = utilidadActual.compareTo(utilidadAnterior) > 0;
+        double porcentaje = 0.0;
+
+        if (utilidadAnterior.compareTo(BigDecimal.ZERO) != 0) {
+            // (Actual - Anterior) / Anterior * 100
+            porcentaje = utilidadActual.subtract(utilidadAnterior)
+                    .divide(utilidadAnterior.abs(), 4, RoundingMode.HALF_UP)
+                    .multiply(new BigDecimal("100")).doubleValue();
+        }
         // 1. Productos en Stock (Total unidades)
-        long stockTotal = productoRepo.findAll().stream()
+        long stockTotalUnd = productoRepo.findAll().stream().filter(p->p.getUnidadMedida()
+                        .equalsIgnoreCase("unidad"))
                 .mapToLong(p -> p.getCantidad().longValue()).sum();
+
+        BigDecimal stockTotalkg = productoRepo.findAll().stream().filter(p->p.getUnidadMedida()
+                .equalsIgnoreCase("kg")).map(Productos::getCantidad).reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal valorInventario = productoRepo.findAll().stream().map(p -> {
                     BigDecimal ultimoCosto = detalleRepo.findTopByProductosOrderByCompra_FechaCompraDesc(p)
@@ -125,12 +144,44 @@ public class CierreMensualImp implements CierreMensualServicio{
         BigDecimal egresos = egresoRepo.sumarEgresosPorDia(fechaInicio, fechaFin); // Implementar en repo
         BigDecimal utilidad = ventas.subtract(valorInventario).subtract(egresos);
 
-        resumen.put("stock", stockTotal);
+        resumen.put("stockUnidades", stockTotalUnd);
+        resumen.put("stockPesable", stockTotalkg);
         resumen.put("inversion", valorInventario);
-        resumen.put("utilidad", utilidad);
         resumen.put("gastos", egresos);
+        resumen.put("utilidad", utilidadActual);
+        resumen.put("utilidadSubio", utilidadSubio);
+        resumen.put("porcentajeUtilidad", Math.abs(porcentaje));
 
         return resumen;
+    }
+
+    @Override
+    public BigDecimal calcularUtilidad(int mes, int anio) {
+        // 1. Definir rango de fechas para el mes solicitado
+        LocalDateTime inicio = LocalDateTime.of(anio, mes, 1, 0, 0);
+        LocalDateTime fin = inicio.with(TemporalAdjusters.lastDayOfMonth()).withHour(23).withMinute(59);
+
+        // 2. Obtener Ventas Totales
+        BigDecimal ventas = ventaRepo.sumaVentasRango(inicio, fin);
+        if (ventas == null) ventas = BigDecimal.ZERO;
+
+        // 3. Obtener Costo de lo Vendido (CPV)
+        // Esto es lo que evita que la utilidad salga negativa por stock estancado
+        BigDecimal costoVentas = productoRepo.findAll().stream().map(p -> {
+            BigDecimal ultimoCosto = detalleRepo.findTopByProductosOrderByCompra_FechaCompraDesc(p)
+                    .map(DetalleCompra::getPrecioUnitario)
+                    .orElse(p.getPrecio());
+            return ultimoCosto.multiply(p.getCantidad());
+        }).reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        if (costoVentas == null) costoVentas = BigDecimal.ZERO;
+
+        // 4. Obtener Gastos (Egresos)
+        BigDecimal gastos = egresoRepo.sumarEgresosPorDia(inicio, fin);
+        if (gastos == null) gastos = BigDecimal.ZERO;
+
+        // Formula: Ventas - Costo de productos vendidos - Gastos operativos
+        return ventas.subtract(costoVentas).subtract(gastos);
     }
 }
 
