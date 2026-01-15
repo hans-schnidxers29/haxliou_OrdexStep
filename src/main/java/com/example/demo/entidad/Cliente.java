@@ -49,7 +49,7 @@ public class Cliente {
     private int codigoPostal;
 
     @Column(name="fecha_registro")
-    private String fechaRegistro;
+    private LocalDateTime fechaRegistro;
 
     @OneToMany(mappedBy = "cliente", fetch=FetchType.LAZY, cascade= CascadeType.ALL )
     private List<Pedidos> pedidos = new ArrayList<>();
@@ -78,11 +78,11 @@ public class Cliente {
         this.codigoPostal = codigoPostal;
         this.pedidos = pedidos;
         this.direccion = direccion;
-        this.fechaRegistro = fechaRegistro.toString();
+        this.fechaRegistro = fechaRegistro;
     }
 
     public Cliente(String nombre, String email, String apellido, String telefono, String ciudad, String pais,
-                   int codigoPostal, LocalDate fechaRegistro) {
+                   int codigoPostal, LocalDateTime fechaRegistro) {
         this.nombre = nombre;
         this.email = email;
         this.apellido = apellido;
@@ -90,7 +90,7 @@ public class Cliente {
         this.ciudad = ciudad;
         this.pais = pais;
         this.codigoPostal = codigoPostal;
-        this.fechaRegistro = fechaRegistro.toString();
+        this.fechaRegistro = fechaRegistro;
     }
 
     public List<Pedidos> getPedidos() {
@@ -194,11 +194,11 @@ public class Cliente {
         return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
     }
 
-    public String getFechaRegistro() {
+    public LocalDateTime getFechaRegistro() {
         return fechaRegistro;
     }
 
-    public void setFechaRegistro(String fechaRegistro) {
+    public void setFechaRegistro(LocalDateTime fechaRegistro) {
         this.fechaRegistro = fechaRegistro;
     }
 

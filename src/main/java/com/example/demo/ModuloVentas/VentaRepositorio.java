@@ -64,6 +64,14 @@ public interface VentaRepositorio extends JpaRepository<Venta, Long> {
             "ORDER BY totalpor_metodo  ASC", nativeQuery = true)
     List<Object[]>ListaMetodosPago();
 
+    @Query("SELECT COALESCE(SUM(v.total), 0) FROM Venta v " +
+            "WHERE v.fechaVenta BETWEEN :inicio AND :fin " +
+            "AND v.metodoPago = :metodoPago")
+    BigDecimal sumaPorMetodoPago(
+            @Param("inicio") LocalDateTime inicio,
+            @Param("fin") LocalDateTime fin,
+            @Param("metodoPago") String metodoPago
+    );
 
 
 

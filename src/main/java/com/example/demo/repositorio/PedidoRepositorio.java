@@ -45,7 +45,7 @@ public interface PedidoRepositorio extends JpaRepository<Pedidos,Long> {
 
     @Query("SELECT COUNT(p) FROM Pedidos p " +
             "WHERE p.fechaPedido BETWEEN :inicio AND :fin")
-    Integer cantidadPedidosPorRango(
+    Long cantidadPedidosPorRango(
             @Param("inicio") LocalDateTime inicio,
             @Param("fin") LocalDateTime fin);
 

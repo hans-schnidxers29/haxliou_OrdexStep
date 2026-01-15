@@ -52,7 +52,7 @@ public class CierreMensual {
 
     // ==================== COSTOS Y GASTOS ====================
     @Column(precision = 19, scale = 4)
-    private BigDecimal costoVentas = BigDecimal.ZERO; // NUEVO: Costo real de productos vendidos
+    private BigDecimal costoVentas = BigDecimal.ZERO; //  Costo real de productos vendidos
 
     @Column(precision = 19, scale = 4)
     private BigDecimal totalCompras = BigDecimal.ZERO; // Inversión en nueva mercancía
