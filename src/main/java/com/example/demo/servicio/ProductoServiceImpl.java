@@ -45,12 +45,12 @@ public class ProductoServiceImpl implements ProductoServicio{
         p1.setDescripcion(producto.getDescripcion());
         p1.setPrecio(producto.getPrecio());
         p1.setCantidad(producto.getCantidad());
+        p1.setImpuesto(producto.getImpuesto());
+        p1.setProveedor(producto.getProveedor());
 
         if (producto.getCategoria() != null) {
             p1.setCategoria(producto.getCategoria());
         }
-
-        repositorio.save(p1);
     }
 
     @Override

@@ -16,9 +16,6 @@ public interface ComprasRepositorio extends JpaRepository<Compras,Long> {
     Long obtenerNumeroSigReferencia();
 
 
-    @Query(value = "select coalesce(sum(e.total),0) as total_Compras_hoy \n" +
-            "from compras e\n" +
-            "where fecha_Compra >= :inicio \n" +
-            "and  fecha_Compra <= :fin",nativeQuery = true)
-    BigDecimal sumaEgresosHoy(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin);
+    @Query("SELECT COALESCE(SUM(c.total), 0) FROM Compras c WHERE c.fechaCompra BETWEEN :inicio AND :fin")
+    BigDecimal sumTotalCompras(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin);
 }

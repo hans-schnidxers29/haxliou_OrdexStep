@@ -5,6 +5,7 @@ import com.example.demo.Login.Servicio.ServicioEmpresa;
 import com.example.demo.entidad.*;
 import com.example.demo.entidad.Enum.EstadoPedido;
 import com.example.demo.pdf.PdfServicio;
+import com.example.demo.servicio.CategoriaService;
 import com.example.demo.servicio.ClienteService;
 import com.example.demo.servicio.PedidoService;
 import com.example.demo.servicio.ProductoServicio;
@@ -46,6 +47,9 @@ public class PedidosControlador {
         this.pdfService = pdfService;
     }
 
+    @Autowired
+    private CategoriaService categoriaService;
+
     /**
      * Listar todos los pedidos
      */
@@ -67,6 +71,7 @@ public class PedidosControlador {
     public String mostrarFormularioNuevo(Model model) {
         model.addAttribute("productos", productoService.listarProductos());
         model.addAttribute("clientes", clienteService.clienteSimple());
+        model.addAttribute("categoria",categoriaService.Listarcategoria());
 
         Pedidos pedido = new Pedidos();
         pedido.setCliente(new Cliente()); // Inicializar cliente vacío
@@ -118,6 +123,7 @@ public class PedidosControlador {
 
             // ✅ BUSCAR PRODUCTOS COMPLETOS Y CALCULAR TOTALES
             BigDecimal subtotalPedido = BigDecimal.ZERO;
+            BigDecimal montoTotalImpuestos = BigDecimal.ZERO; // Nueva variable acumuladora
             List<DetallePedido> detallesValidos = new ArrayList<>();
 
             for (DetallePedido detalle : pedido.getDetalles()) {
@@ -143,7 +149,7 @@ public class PedidosControlador {
 
                     // Si el producto se vende por PESO, convertimos los gramos recibidos a KG
                     if ("PESO".equals(productoCompleto.getTipoVenta().name())) {
-                        cantidadProcesada = cantidadOriginal.divide(new BigDecimal("1000"));
+                        cantidadProcesada = cantidadOriginal.divide(new BigDecimal("1000"), 3, RoundingMode.HALF_UP);
                         // Seteamos la cantidad convertida al detalle para que el stock se descuente correctamente
                         detalle.setCantidad(cantidadProcesada);
                     }
@@ -178,12 +184,20 @@ public class PedidosControlador {
                         detalle.setPrecioUnitario(productoCompleto.getPrecio());
                     }
 
+                    // --- NUEVA LOGICA IMPUESTO INDIVIDUAL ---
+                    BigDecimal tasaImpuesto = (productoCompleto.getImpuesto() != null) ? productoCompleto.getImpuesto() : BigDecimal.ZERO;
+                    detalle.setPorcentajeImpuesto(tasaImpuesto);
 
                     // Calcular subtotal del detalle
                     BigDecimal cantidad = detalle.getCantidad();
-                    detalle.setSubtotal(detalle.getPrecioUnitario().multiply(cantidad));
+                    BigDecimal subtotalItem = detalle.getPrecioUnitario().multiply(cantidad);
+                    detalle.setSubtotal(subtotalItem.setScale(3, RoundingMode.HALF_UP));
 
-                    subtotalPedido = subtotalPedido.add(detalle.getSubtotal());
+                    // Calcular monto de impuesto de este item: (subtotal * tasa) / 100
+                    BigDecimal impuestoItem = subtotalItem.multiply(tasaImpuesto).divide(new BigDecimal("100"), 3, RoundingMode.HALF_UP);
+
+                    subtotalPedido = subtotalPedido.add(subtotalItem);
+                    montoTotalImpuestos = montoTotalImpuestos.add(impuestoItem);
                     detallesValidos.add(detalle);
                 }
             }
@@ -205,14 +219,16 @@ public class PedidosControlador {
             pedido.setDetalles(detallesValidos);
             // Calcular total del pedido
             pedido.setSubtotal(subtotalPedido);
-            if (pedido.getImpuesto() == null) {
-                pedido.setImpuesto(BigDecimal.ZERO);
-            }
 
-            BigDecimal total = subtotalPedido.add(pedido.getImpuesto());
-            pedido.setTotal(total);
+            // ✅ ASIGNAR MONTO TOTAL DE IMPUESTOS CALCULADO
+            pedido.setImpuesto(montoTotalImpuestos);
 
+            BigDecimal total = subtotalPedido.add(montoTotalImpuestos).add(pedido.getFlete());
+            pedido.setTotal(total.setScale(3, RoundingMode.HALF_UP));
+
+            pedidoService.DescantorStock(pedido);
             pedido.setEstado(EstadoPedido.PENDIENTE);
+
 
             // Guardar el pedido
             Pedidos pedidoGuardado = pedidoService.guardarpedidos(pedido);
@@ -247,6 +263,7 @@ public class PedidosControlador {
 
             model.addAttribute("productos", productoService.listarProductos());
             model.addAttribute("clientes", clienteService.listarcliente());
+            model.addAttribute("categoria",categoriaService.Listarcategoria());
             model.addAttribute("pedido", pedido);
             return "viewPedidos/actualizarPedido";
 
@@ -269,6 +286,7 @@ public class PedidosControlador {
 
             EstadoPedido estadoAnterior = pedidoExistente.getEstado();
             BigDecimal subtotalProductos = BigDecimal.ZERO;
+            BigDecimal montoTotalImpuestos = BigDecimal.ZERO; // Nueva variable acumuladora
             List<DetallePedido> detallesValidos = new ArrayList<>();
 
             if (pedido.getDetalles() != null) {
@@ -298,10 +316,18 @@ public class PedidosControlador {
                                 cantTransformada = cantidadOriginal;
                             }
 
+                            // --- NUEVA LOGICA IMPUESTO INDIVIDUAL ---
+                            BigDecimal tasaImpuesto = (prod.getImpuesto() != null) ? prod.getImpuesto() : BigDecimal.ZERO;
+                            detalle.setPorcentajeImpuesto(tasaImpuesto);
+
                             BigDecimal subtotalItem = detalle.getPrecioUnitario().multiply(cantTransformada);
                             detalle.setSubtotal(subtotalItem.setScale(3, RoundingMode.HALF_UP));
 
+                            // Calcular monto de impuesto de este item
+                            BigDecimal impuestoItem = subtotalItem.multiply(tasaImpuesto).divide(new BigDecimal("100"), 3, RoundingMode.HALF_UP);
+
                             subtotalProductos = subtotalProductos.add(detalle.getSubtotal());
+                            montoTotalImpuestos = montoTotalImpuestos.add(impuestoItem);
                             detallesValidos.add(detalle);
                         }
                     }
@@ -310,23 +336,16 @@ public class PedidosControlador {
 
             // 2. Lógica Financiera
             BigDecimal flete = (pedido.getFlete() != null) ? pedido.getFlete() : BigDecimal.ZERO;
-            BigDecimal PorcentajeImpuesto = (pedido.getImpuesto() != null) ? pedido.getImpuesto() : BigDecimal.ZERO;
 
-            BigDecimal baseImponible = subtotalProductos.add(flete);
-            BigDecimal montoImpuesto = baseImponible.multiply(PorcentajeImpuesto);
-            BigDecimal totalFinal = baseImponible.add(montoImpuesto);
+            // ✅ ELIMINAMOS EL CALCULO BASADO EN PorcentajeImpuesto GLOBAL Y USAMOS EL ACUMULADO
+            BigDecimal totalFinal = subtotalProductos.add(flete).add(montoTotalImpuestos);
 
             // 3. Asignar valores
             pedido.setDetalles(detallesValidos);
             pedido.setSubtotal(subtotalProductos);
             pedido.setFlete(flete);
-            pedido.setImpuesto(PorcentajeImpuesto);
+            pedido.setImpuesto(montoTotalImpuestos); // Asignamos el acumulado de cada producto
             pedido.setTotal(totalFinal.setScale(3, RoundingMode.HALF_UP));
-
-            // 4. Manejo de Stock
-            if(pedido.getEstado() == EstadoPedido.ENTREGADO && estadoAnterior != EstadoPedido.ENTREGADO){
-                pedidoService.DescantorStock(pedido);
-            }
 
             pedidoService.Updatepedido(id, pedido);
 
@@ -376,7 +395,7 @@ public class PedidosControlador {
                 return "redirect:/pedidos/listarpedidos";
             }
 
-           pedidoService.EntregarPedido(id);
+            pedidoService.EntregarPedido(id);
 
             System.out.println("Pedido " + id + " marcado como ENTREGADO");
             redirectAttributes.addFlashAttribute("success",
@@ -417,6 +436,7 @@ public class PedidosControlador {
                 return "redirect:/pedidos/listarpedidos";
             }
 
+            pedidoService.RestaurarStock(pedidoExistente);
             // Cambiar el estado a CANCELADO
             pedidoExistente.setEstado(EstadoPedido.CANCELADO);
 
@@ -446,7 +466,7 @@ public class PedidosControlador {
         Empresa empresa = empresaService.DatosEmpresa(1L);
 
         BigDecimal Subtotal = pedido.getSubtotal();
-        BigDecimal Impuesto = pedido.getTotal().subtract(pedido.getSubtotal());
+        BigDecimal Impuesto = pedido.getImpuesto(); // Ahora simplemente usamos el campo impuesto del pedido
         BigDecimal Total = pedido.getTotal();
         BigDecimal flete = (pedido.getFlete() != null) ? pedido.getFlete() : BigDecimal.ZERO;
 
