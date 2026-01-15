@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/adminlte}"> <head>
+    <title>Resumen Ejecutivo - Tu Mes</title>
+</head>
+
+<body>
+<div layout:fragment="content">
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Panel de Control: <span th:text="${mes} + '/' + ${anio}"></span></h1>
+                </div>
+                <div class="col-sm-6 text-right">
+                    <a th:href="@{/cierres/exportar-excel(mes=${mes}, anio=${anio})}" class="btn btn-success shadow">
+                        <i class="fas fa-file-excel"></i> Finalizar y Cerrar Mes
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-info">
+                        <div class="inner">
+                            <h3 th:text="${datos.stock}">0</h3>
+                            <p>Productos en Stock</p>
+                        </div>
+                        <div class="icon"><i class="fas fa-cubes"></i></div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-warning text-white">
+                        <div class="inner">
+                            <h3 th:text="'$' + ${#numbers.formatDecimal(datos.inversion, 1, 'COMMA', 2, 'POINT')}">0</h3>
+                            <p>Inversión en Stock</p>
+                        </div>
+                        <div class="icon"><i class="fas fa-warehouse"></i></div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-success">
+                        <div class="inner">
+                            <h3 th:text="'$' + ${#numbers.formatDecimal(datos.utilidad, 1, 'COMMA', 2, 'POINT')}">0</h3>
+                            <p>Utilidad Proyectada</p>
+                        </div>
+                        <div class="icon"><i class="fas fa-hand-holding-usd"></i></div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-danger">
+                        <div class="inner">
+                            <h3 th:text="'$' + ${#numbers.formatDecimal(datos.gastos, 1, 'COMMA', 2, 'POINT')}">0</h3>
+                            <p>Gastos del Mes</p>
+                        </div>
+                        <div class="icon"><i class="fas fa-receipt"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+</body>
+</html>

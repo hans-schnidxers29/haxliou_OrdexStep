@@ -20,13 +20,13 @@ public class DetalleCompra {
     @JoinColumn(name = "productos_id")
     private Productos productos;
 
-    @Column(name = "cantidad", scale = 3, precision = 10)
+    @Column(name = "cantidad", scale = 2, precision = 10)
     private BigDecimal cantidad;
 
-    @Column(name = "precio_unitario", scale = 3, precision = 10)
+    @Column(name = "precio_unitario", scale = 2, precision = 10)
     private BigDecimal precioUnitario;
 
-    @Column(name = "subtotal", scale = 3, precision = 10)
+    @Column(name = "subtotal", scale = 2, precision = 10)
     private BigDecimal subtotal;
 
     public DetalleCompra() {

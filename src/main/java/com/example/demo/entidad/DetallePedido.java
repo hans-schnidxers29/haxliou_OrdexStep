@@ -17,6 +17,9 @@ public class DetallePedido {
     @Column(name = "precio_unitario", precision = 10, scale = 3, nullable = false)
     private BigDecimal precioUnitario;
 
+    @Column(precision = 19, scale = 2)
+    private BigDecimal porcentajeImpuesto;
+
     @Column(name = "subtotal", precision = 10, scale = 3, nullable = false)
     private BigDecimal subtotal = BigDecimal.ZERO;
 
@@ -83,5 +86,13 @@ public class DetallePedido {
 
     public void setProducto(Productos producto) {
         this.producto = producto;
+    }
+
+    public BigDecimal getPorcentajeImpuesto() {
+        return porcentajeImpuesto;
+    }
+
+    public void setPorcentajeImpuesto(BigDecimal porcentajeImpuesto) {
+        this.porcentajeImpuesto = porcentajeImpuesto;
     }
 }

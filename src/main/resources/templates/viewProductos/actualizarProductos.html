@@ -37,35 +37,50 @@
                             <input type="hidden" th:field="*{id}">
 
                             <div class="card-body">
-                                <div class="form-group">
-                                    <label>Nombre del Producto <span class="text-danger">*</span></label>
-                                    <input type="text" th:field="*{nombre}" class="form-control" required>
-                                </div>
-
-                                <div class="form-group">
-                                    <label>Descripción <span class="text-danger">*</span></label>
-                                    <textarea th:field="*{descripcion}" class="form-control" rows="3" required></textarea>
-                                </div>
-
                                 <div class="row">
                                     <div class="col-md-12">
                                         <div class="form-group">
-                                            <label>Categoría <span class="text-danger">*</span></label>
-                                            <div class="input-group">
-                                                <select th:field="*{categoria}" class="form-control select2" required>
-                                                    <option th:each="categ : ${categoria}"
-                                                            th:value="${categ.id}"
-                                                            th:text="${categ.nombrecategoria}"></option>
-                                                </select>
-                                            </div>
+                                            <label>Nombre del Producto <span class="text-danger">*</span></label>
+                                            <input type="text" th:field="*{nombre}" class="form-control" placeholder="Ej: Arroz Diana 1kg" required>
                                         </div>
                                     </div>
 
-                                    <div class="col-md-12 mb-3">
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label>Descripción <span class="text-danger">*</span></label>
+                                            <textarea th:field="*{descripcion}" class="form-control" rows="2" required></textarea>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Proveedor <span class="text-danger">*</span></label>
+                                            <select th:field="*{proveedor}" class="form-control select2" required>
+                                                <option value="" disabled selected>-- Seleccione Proveedor --</option>
+                                                <option th:each="prov : ${proveedores}"
+                                                        th:value="${prov.id}"
+                                                        th:text="${prov.nombre}"></option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Categoría <span class="text-danger">*</span></label>
+                                            <select th:field="*{categoria}" class="form-control select2" required>
+                                                <option value="" disabled selected>-- Seleccione Categoría --</option>
+                                                <option th:each="categ : ${categoria}"
+                                                        th:value="${categ.id}"
+                                                        th:text="${categ.nombrecategoria}"></option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Tipo de Venta <span class="text-danger">*</span></label>
                                             <select th:field="*{tipoVenta}" id="selectTipoVenta" class="form-control" required>
-                                                <option th:each="tipo : ${T(com.example.demo.entidad.TipoVenta).values()}"
+                                                <option th:each="tipo : ${tiposVenta}"
                                                         th:value="${tipo}"
                                                         th:text="${tipo.descripcion}">
                                                 </option>
@@ -75,10 +90,20 @@
 
                                     <div class="col-md-6">
                                         <div class="form-group">
+                                            <label>Impuesto (IVA %) <span class="text-danger">*</span></label>
+                                            <div class="input-group">
+                                                <input type="number" th:field="*{impuesto}" class="form-control" step="0.01" min="0" placeholder="Ej: 19" required>
+                                                <div class="input-group-append"><span class="input-group-text">%</span></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
                                             <label>Precio <span id="labelPrecio">Unitario</span> <span class="text-danger">*</span></label>
                                             <div class="input-group">
                                                 <div class="input-group-prepend"><span class="input-group-text">$</span></div>
-                                                <input type="number" th:field="*{precio}" step="0.001" min="0" class="form-control" required>
+                                                <input type="number" th:field="*{precio}" step="0.01" min="0" class="form-control" required>
                                             </div>
                                         </div>
                                     </div>
@@ -96,13 +121,13 @@
                                     </div>
 
                                     <div class="col-md-12" id="contenedorCamposAdicionales" style="display: none;">
-                                        <div class="card bg-light border">
-                                            <div class="card-body">
+                                        <div class="card bg-light border shadow-none">
+                                            <div class="card-body py-2">
                                                 <div class="row">
                                                     <div class="col-md-4">
                                                         <div class="form-group">
-                                                            <label>Cantidad Mínima</label>
-                                                            <div class="input-group">
+                                                            <label class="small">Cantidad Mínima Venta</label>
+                                                            <div class="input-group input-group-sm">
                                                                 <input type="number" th:field="*{cantidadMinima}" step="0.001" class="form-control">
                                                                 <div class="input-group-append"><span class="input-group-text addonUnidad">kg</span></div>
                                                             </div>
@@ -110,8 +135,8 @@
                                                     </div>
                                                     <div class="col-md-4">
                                                         <div class="form-group">
-                                                            <label>Incremento</label>
-                                                            <div class="input-group">
+                                                            <label class="small">Incremento Venta</label>
+                                                            <div class="input-group input-group-sm">
                                                                 <input type="number" th:field="*{incremento}" step="0.001" class="form-control">
                                                                 <div class="input-group-append"><span class="input-group-text addonUnidad">kg</span></div>
                                                             </div>
@@ -119,8 +144,8 @@
                                                     </div>
                                                     <div class="col-md-4">
                                                         <div class="form-group">
-                                                            <label>Stock Alerta</label>
-                                                            <div class="input-group">
+                                                            <label class="small">Stock Alerta (Mínimo)</label>
+                                                            <div class="input-group input-group-sm">
                                                                 <input type="number" th:field="*{stockMinimo}" step="0.001" class="form-control">
                                                                 <div class="input-group-append"><span class="input-group-text addonUnidad">kg</span></div>
                                                             </div>
@@ -135,7 +160,7 @@
 
                             <div class="card-footer bg-white text-center">
                                 <button type="submit" class="btn btn-info btn-lg shadow-sm px-5">
-                                    <i class="fas fa-sync-alt mr-2"></i> Actualizar Producto
+                                    <i class="fas fa-sync-alt mr-2"></i> Guardar Cambios
                                 </button>
                                 <a href="/listarproductos" class="btn btn-default btn-lg px-5 ml-2">Cancelar</a>
                             </div>
@@ -171,12 +196,12 @@
                 const unidad = obtenerUnidadMedida(tipoVenta);
 
                 if (tipoVenta === 'UNIDAD') {
-                    $contenedorAdicionales.fadeOut();
+                    $contenedorAdicionales.hide();
                     $inputStock.attr('step', '1');
                     $addonStock.text('unidad');
                     $labelPrecio.text('Unitario');
                 } else {
-                    $contenedorAdicionales.fadeIn();
+                    $contenedorAdicionales.show();
                     $inputStock.attr('step', '0.001');
                     $addonStock.text(unidad);
                     $addonUnidad.text(unidad);
@@ -185,9 +210,15 @@
             }
 
             $selectTipoVenta.on('change', actualizarInterfaz);
+            actualizarInterfaz(); // Carga inicial
 
-            // Ejecución inicial para cargar el estado guardado del producto
-            actualizarInterfaz();
+            // Inicializar select2 si está disponible
+            if($.fn.select2) {
+                $('.select2').select2({
+                    theme: 'bootstrap4',
+                    width: '100%'
+                });
+            }
         });
     </script>
 </th:block>

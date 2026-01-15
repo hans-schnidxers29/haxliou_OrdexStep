@@ -141,11 +141,6 @@ public class PedidosServiceImp implements PedidoService{
         }
 
         EstadoPedido estadoAnterior = pedido.getEstado();
-
-        // Descontar stock si es necesario
-        if (estadoAnterior != EstadoPedido.ENTREGADO) {
-            DescantorStock(pedido);
-        }
         // Cambiar el estado
         pedido.setEstado(EstadoPedido.ENTREGADO);
     }
@@ -164,6 +159,41 @@ public class PedidosServiceImp implements PedidoService{
         }
 
         pedido.setEstado(EstadoPedido.CANCELADO);
+    }
+
+    @Transactional
+    @Override
+    public void RestaurarStock(Pedidos pedidos) {
+        for (DetallePedido detalle : pedidos.getDetalles()) {
+
+            // 1. Validaciones de seguridad (mismo patrón que Descontar)
+            if (detalle.getProducto() == null || detalle.getProducto().getId() == null) {
+                continue;
+            }
+
+            if (detalle.getCantidad() == null || detalle.getCantidad().compareTo(BigDecimal.ZERO) <= 0) {
+                continue;
+            }
+
+            // 2. Buscar el producto completo desde la BD
+            Productos productoBD = productoServicio.productoById(detalle.getProducto().getId());
+
+            // 3. Guardar cantidad original para el registro
+            BigDecimal cantidadAnterior = productoBD.getCantidad();
+
+            // 4. Sumar stock: productoBD.getCantidad() + detalle.getCantidad()
+            // Aquí no validamos stock insuficiente porque estamos devolviendo
+            BigDecimal nuevaCantidad = productoBD.getCantidad().add(detalle.getCantidad());
+            productoBD.setCantidad(nuevaCantidad);
+
+            // 5. Sincronizar y Persistir
+            detalle.setProducto(productoBD);
+            productoServicio.save(productoBD);
+
+            System.out.println("Stock RESTAURADO (Cancelación) - Producto: " + productoBD.getNombre() +
+                    " - Cantidad anterior: " + cantidadAnterior +
+                    " - Cantidad nueva: " + productoBD.getCantidad());
+        }
     }
 
 }

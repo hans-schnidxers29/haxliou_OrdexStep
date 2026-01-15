@@ -30,19 +30,19 @@ public class Pedidos {
     @Column(nullable = false)
     private EstadoPedido estado = EstadoPedido.PENDIENTE;
 
-    @Column(name = "subtotal", precision = 10, scale = 3, nullable = false)
+    @Column(name = "subtotal", precision = 10, scale = 2, nullable = false)
     private BigDecimal subtotal = BigDecimal.ZERO;
 
     @Column(name = "impuesto", precision = 10, scale = 2, nullable = false)
     private BigDecimal impuesto = BigDecimal.ZERO;
 
-    @Column(name = "total", precision = 10, scale = 3, nullable = false)
+    @Column(name = "total", precision = 10, scale = 2, nullable = false)
     private BigDecimal total = BigDecimal.ZERO;
 
     @Column(columnDefinition = "TEXT")
     private String observaciones;
 
-    @Column(name = "Flete", precision = 10, scale = 3)
+    @Column(name = "Flete", precision = 10, scale = 2)
     private BigDecimal Flete;
 
     @ManyToOne(fetch = FetchType.LAZY)

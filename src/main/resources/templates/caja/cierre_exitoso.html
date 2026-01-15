@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Cierre de Caja</title>
+</head>
+<body>
+
+<p>Cerrando caja, por favor espere...</p>
+
+<script th:inline="javascript">
+  /* Abrir ticket de cierre en una nueva pestaña */
+  window.open(
+      /*[[ @{/caja/cerrar/ticket/{id}(id=${cajaId})} ]]*/,
+      '_blank'
+  );
+
+  /* Volver a la pantalla de ventas */
+  setTimeout(function () {
+      window.location.href = /*[[ @{/ventas/crear} ]]*/;
+  }, 800);
+</script>
+
+</body>
+</html>

@@ -112,7 +112,7 @@ public class VentaServicioImp implements VentaServicio {
     }
 
     @Override
-    public BigDecimal sumapormes(int mes, int anio) {
+    public BigDecimal sumapormes(LocalDateTime mes, LocalDateTime anio) {
         BigDecimal totalmess= repositorioVenta.sumaPorMes(mes, anio);
         return totalmess != null ? totalmess : BigDecimal.ZERO;
     }
