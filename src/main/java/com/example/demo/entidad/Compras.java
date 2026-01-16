@@ -4,6 +4,7 @@ package com.example.demo.entidad;
 import com.example.demo.Login.Usuario;
 import com.example.demo.ModuloVentas.DetalleVenta.DetalleVenta;
 import com.example.demo.entidad.Enum.EstadoCompra;
+import com.example.demo.entidad.Enum.MetodoPago;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
@@ -19,7 +20,7 @@ public class Compras {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "numero_referencia", unique = true)
+    @Column(name = "numero_referencia")
     private String numeroReferencia;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -39,12 +40,15 @@ public class Compras {
     @Column(name = "total", scale = 2, precision = 10)
     private BigDecimal total = BigDecimal.ZERO;
 
-    @Column(name = "impuesto", scale = 2, precision = 10)
-    private BigDecimal Impuesto = BigDecimal.ZERO;
-
     // mappedBy corregido a "compra" (singular)
     @OneToMany(mappedBy = "compra", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DetalleCompra> detalles = new ArrayList<>();
+
+    @Column(name = "observaciones", length = 255)
+    private String observaciones;
+
+    @Enumerated(EnumType.STRING)
+    private MetodoPago metodoPago;
 
     // MÉTODO HELPER: Muy importante para que el cascade funcione
     public void agregarDetalle(DetalleCompra detalle) {
@@ -57,7 +61,7 @@ public class Compras {
 
     public Compras(Long id, String numeroReferencia, Proveedores proveedor,
                    LocalDateTime fechaCompra, Usuario usuario, EstadoCompra estado, BigDecimal total,
-                   List<DetalleCompra> detalles,BigDecimal Impuesto) {
+                   List<DetalleCompra> detalles,String observaciones,MetodoPago metodoPago) {
         this.id = id;
         this.numeroReferencia = numeroReferencia;
         Proveedor = proveedor;
@@ -66,7 +70,8 @@ public class Compras {
         this.estado = estado;
         this.total = total;
         this.detalles = detalles;
-        this.Impuesto = Impuesto;
+        this.observaciones=observaciones;
+        this.metodoPago=metodoPago;
     }
 
     public Long getId() {
@@ -133,11 +138,19 @@ public class Compras {
         this.detalles = detalles;
     }
 
-    public BigDecimal getImpuesto() {
-        return Impuesto;
+    public String getObservaciones() {
+        return observaciones;
     }
 
-    public void setImpuesto(BigDecimal impuesto) {
-        Impuesto = impuesto;
+    public void setObservaciones(String observaciones) {
+        this.observaciones = observaciones;
+    }
+
+    public MetodoPago getMetodoPago() {
+        return metodoPago;
+    }
+
+    public void setMetodoPago(MetodoPago metodoPago) {
+        this.metodoPago = metodoPago;
     }
 }

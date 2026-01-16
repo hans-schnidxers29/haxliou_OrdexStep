@@ -139,10 +139,15 @@ public class CierreMensualImp implements CierreMensualServicio{
                     return ultimoCosto.multiply(p.getCantidad());
                 }).reduce(BigDecimal.ZERO, BigDecimal::add);
 
+        // 2. Ventas por método de pago (CON VALIDACIÓN NULL)
+        BigDecimal efectivo = nvl(ventaRepo.sumaPorMetodoPago(fechaInicio, fechaFin, "EFECTIVO"));
+        BigDecimal tarjeta = nvl(ventaRepo.sumaPorMetodoPago(fechaInicio, fechaFin, "TARJETA"));
+        BigDecimal transferencia = nvl(ventaRepo.sumaPorMetodoPago(fechaInicio, fechaFin, "TRANSFERENCIA"));
+        BigDecimal mixto = nvl(ventaRepo.sumaPorMetodoPago(fechaInicio, fechaFin, "MIXTO"));
+        BigDecimal totalVentas = efectivo.add(tarjeta).add(transferencia).add(mixto);
+
         // 3. Utilidad Proyectada (Ventas - Costos - Egresos del mes actual)
-        BigDecimal ventas = ventaRepo.sumaPorMes(fechaInicio, fechaFin); // Implementar en repo
         BigDecimal egresos = egresoRepo.sumarEgresosPorDia(fechaInicio, fechaFin); // Implementar en repo
-        BigDecimal utilidad = ventas.subtract(valorInventario).subtract(egresos);
 
         resumen.put("stockUnidades", stockTotalUnd);
         resumen.put("stockPesable", stockTotalkg);
@@ -151,6 +156,7 @@ public class CierreMensualImp implements CierreMensualServicio{
         resumen.put("utilidad", utilidadActual);
         resumen.put("utilidadSubio", utilidadSubio);
         resumen.put("porcentajeUtilidad", Math.abs(porcentaje));
+        resumen.put("ingresosTotales",totalVentas);
 
         return resumen;
     }

@@ -5,6 +5,7 @@ import com.example.demo.Login.Usuario;
 import com.example.demo.entidad.Compras;
 import com.example.demo.entidad.DetalleCompra;
 import com.example.demo.entidad.Enum.EstadoCompra;
+import com.example.demo.entidad.Enum.MetodoPago;
 import com.example.demo.entidad.Productos;
 import com.example.demo.entidad.Proveedores;
 import com.example.demo.servicio.CompraServicio;
@@ -26,7 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Controller
-@SuppressWarnings("/Compras")
+@RequestMapping("/compras")
 public class CompraControlador {
 
     @Autowired
@@ -53,11 +54,12 @@ public class CompraControlador {
         model.addAttribute("compras",compras);
         model.addAttribute("proveedores",proveedorServicio.listarproveedores());
         model.addAttribute("productos",productoServicio.listarProductos());
+        model.addAttribute("MetodoPago", MetodoPago.values());
         return "viewCompras/crearCompras";
     }
 
 
-    @PostMapping("/crear/compra")
+    @PostMapping("/crear")
     public String crearCompra(@Valid @ModelAttribute("compras") Compras compras,
                               BindingResult result,
                               RedirectAttributes redirectAttributes,
@@ -126,11 +128,8 @@ public class CompraControlador {
 
             compras.setDetalles(detallesValidos);
 
-            if (compras.getImpuesto() == null) {
-                compras.setImpuesto(BigDecimal.ZERO);
-            }
 
-            BigDecimal totalFinal = acumuladorSubtotales.add(compras.getImpuesto());
+            BigDecimal totalFinal = acumuladorSubtotales;
             compras.setTotal(totalFinal);
 
             compras.setEstado(EstadoCompra.BORRADOR);
@@ -279,7 +278,7 @@ public class CompraControlador {
 
             // 2. Actualizar datos básicos
             compraExistente.setProveedor(proveedorServicio.proveedorById(compras.getProveedor().getId()));
-            compraExistente.setImpuesto(compras.getImpuesto() != null ? compras.getImpuesto() : BigDecimal.ZERO);
+
 
             // 3. Gestionar los Detalles: Limpiamos los anteriores y agregamos los nuevos
             // (Esto funciona gracias al orphanRemoval = true en la entidad Compras)
@@ -304,7 +303,7 @@ public class CompraControlador {
             }
 
             // 4. Recalcular Total Final
-            compraExistente.setTotal(acumuladorSubtotales.add(compraExistente.getImpuesto()));
+            compraExistente.setTotal(acumuladorSubtotales);
             // 5. Guardar cambios en Neon
             compraServicio.updateCompra(id,compraExistente);
 
@@ -327,8 +326,10 @@ public class CompraControlador {
     @GetMapping("/confirmar/{id}")
     public String confirmCompra(@PathVariable Long id,RedirectAttributes redirectAttributes){
         try {
-            compraServicio.compraById(id);
-            compraServicio.ConfirmarCompra(id);
+            Compras compra = compraServicio.compraById(id);
+            String referencia = compraServicio.GenerarReferenciasDeCompras();
+            compra.setNumeroReferencia(referencia);
+            compraServicio.ConfirmarCompra(compra.getId());
             redirectAttributes.addFlashAttribute("success", "Compra confirmada correctamente");
             return "redirect:/compras/listar";
         }catch (Exception e){
@@ -340,8 +341,11 @@ public class CompraControlador {
     @GetMapping("/anular/{id}")
     public String AnularCompra(@PathVariable Long id,RedirectAttributes redirectAttributes){
         try{
-            compraServicio.compraById(id);
-            compraServicio.AnularCompra(id);
+
+            Compras compra = compraServicio.compraById(id);
+            String referencia = compraServicio.GenerarReferenciasDeCompras();
+            compra.setNumeroReferencia(referencia);
+            compraServicio.AnularCompra(compra.getId());
             redirectAttributes.addFlashAttribute("success", "Compra anulada correctamente");
             return "redirect:/compras/listar";
         }catch (Exception e){

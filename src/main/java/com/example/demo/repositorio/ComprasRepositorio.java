@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Repository
 public interface ComprasRepositorio extends JpaRepository<Compras,Long> {
 
-    @Query(value = "SELECT nextval(referencia_compra_seq)",nativeQuery = true)
+    @Query(value = "SELECT nextval('referencia_compra_seq')",nativeQuery = true)
     Long obtenerNumeroSigReferencia();
 
 

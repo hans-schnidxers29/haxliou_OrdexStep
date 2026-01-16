@@ -106,6 +106,7 @@ public class VentaControlador {
         // 🔑 ENVIAR AMBAS COSAS
         model.addAttribute("cajaAbierta", cajaActiva);
         model.addAttribute("necesitaAbrirCaja", cajaActiva == null);
+        model.addAttribute("caja",cajaActiva);
 
         Venta venta = new Venta();
         venta.setCliente(new Cliente());
@@ -124,26 +125,6 @@ public class VentaControlador {
     }
 
 
-//    @GetMapping("/crear")
-//    public String crearVentaMostrarForm(Model model,@AuthenticationPrincipal UserDetails userDetails) {
-//        Usuario usuario = servicioUsuario.findByEmail(userDetails.getUsername());
-//        Caja cajaActiva = cajaServicio.CajaAbierta(usuario);
-//        model.addAttribute("necesitaAbrirCaja", cajaActiva == null);
-//
-//        Venta venta = new Venta();
-//        // Cliente vacío
-//        venta.setCliente(new Cliente());
-//        // Lista inicializada
-//        venta.setDetalles(new ArrayList<>());
-//        // Agregar un detalle vacío
-//        DetalleVenta det = new DetalleVenta();
-//        det.setProducto(new Productos());
-//        det.setVenta(venta);
-//        model.addAttribute("clientes", clienteService.clienteSimple());
-//        model.addAttribute("productos", productoServicio.listarProductos());
-//        model.addAttribute("venta", venta);
-//        return "ViewVentas/crearVenta";
-//    }
 
     // ============================
     // GUARDAR NUEVA VENTA
