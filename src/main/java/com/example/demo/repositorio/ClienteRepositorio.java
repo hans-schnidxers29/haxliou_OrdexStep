@@ -17,11 +17,14 @@ public interface ClienteRepositorio  extends JpaRepository<Cliente,Long> {
     boolean existsByNumeroIdentificacion(String numeroIdentificacion);
     Cliente findByNumeroIdentificacion(String numeroIdentificacion);
 
-    @Query(value = "SELECT c.nombre , \n" +
-            "  COUNT(p.id_cliente) as cantidad_pedidos\n" +
-            "  from pedidos as p , cliente as c\n" +
-            "  where p.estado = 'ENTREGADO' and p.id_cliente = c.id\n" +
-            "GROUP by c.nombre ORDER by cantidad_pedidos DESC", nativeQuery = true)
+    @Query(value = "SELECT c.nombre, " +
+            "COUNT(p.id) as cantidad_pedidos, " +
+            "SUM(p.total) as total_ventas " + // Sumamos el monto de los pedidos
+            "FROM pedidos p " +
+            "JOIN cliente c ON p.id_cliente = c.id " +
+            "WHERE p.estado = 'ENTREGADO' " +
+            "GROUP BY c.id, c.nombre " + // Agrupar por ID es más seguro si hay nombres duplicados
+            "ORDER BY total_ventas DESC", nativeQuery = true)
     List<Object []>CantidadPorPedidos();
 
     @Query("SELECT COUNT(c) FROM Cliente c WHERE c.fechaRegistro BETWEEN :inicio AND :fin")

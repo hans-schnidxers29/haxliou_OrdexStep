@@ -6,166 +6,178 @@
 
 <head>
     <title>Listado de Compras</title>
+    <link rel="stylesheet" th:href="@{/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css}">
 </head>
 
 <body>
 
 <section layout:fragment="content">
 
-    <!-- HEADER -->
     <section class="content-header">
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
-                    <h1>
-                        <i class="fas fa-shopping-cart mr-2"></i>
-                        Listado de Compras
-                    </h1>
+                    <h1><i class="fas fa-shopping-cart mr-2 text-primary"></i>Gestión de Compras</h1>
                 </div>
                 <div class="col-sm-6 text-right">
-                    <a th:href="@{/crear}" class="btn btn-primary shadow-sm">
-                        <i class="fas fa-plus mr-1"></i>
-                        Nueva Compra
+                    <a th:href="@{/compras/crear}" class="btn btn-primary shadow-sm">
+                        <i class="fas fa-plus-circle mr-1"></i> Nueva Compra
                     </a>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- CONTENIDO -->
     <section class="content">
         <div class="container-fluid">
-            <div class="card card-outline card-primary shadow">
 
-                <div class="card-header">
-                    <h3 class="card-title">Gestión de Compras</h3>
-                    <div class="card-tools">
-                        <span class="badge badge-info" th:text="${Compras.size()} + ' Compras'"></span>
+            <div class="row">
+                <div class="col-lg-4 col-6">
+                    <div class="small-box bg-gradient-danger shadow">
+                        <div class="inner">
+                            <h3 th:text="${'$ ' + #numbers.formatDecimal(gastoTotalMes , 1, 'POINT', 2, 'COMMA')}">$ 0,00</h3>
+                            <p>Gasto Total del Mes</p>
+                        </div>
+                        <div class="icon"><i class="fas fa-money-check-alt"></i></div>
                     </div>
+                </div>
+                <div class="col-lg-4 col-6">
+                    <div class="small-box bg-gradient-info shadow">
+                        <div class="inner">
+                            <h3 th:text="${(unidadesEntrantes ?: 0) + ' Und'}">0 Und</h3>
+                            <p>Entradas en Unidades</p>
+                        </div>
+                        <div class="icon"><i class="fas fa-box-open"></i></div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-6">
+                    <div class="small-box bg-gradient-warning shadow">
+                        <div class="inner">
+                            <h3 th:text="${#numbers.formatDecimal(kgEntrantes , 1, 'POINT', 2, 'COMMA') + ' Kg'}">0,00 Kg</h3>
+                            <p>Entradas en Peso</p>
+                        </div>
+                        <div class="icon"><i class="fas fa-weight-hanging"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card card-outline card-primary shadow">
+                <div class="card-header border-0">
+                    <h3 class="card-title font-weight-bold">Historial de Transacciones</h3>
                 </div>
 
                 <div class="card-body">
-
-                    <!-- SIN COMPRAS -->
-                    <div th:if="${#lists.isEmpty(Compras)}" class="text-center p-5">
-                        <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
-                        <p class="text-muted">No hay compras registradas.</p>
-                    </div>
-
-                    <!-- TABLA -->
-                    <div th:unless="${#lists.isEmpty(Compras)}" class="table-responsive">
-                        <table id="tablaCompras"
-                               class="table table-bordered table-striped table-hover">
-
-                            <thead>
+                    <div class="table-responsive">
+                        <table id="tablaCompras" class="table table-hover table-striped w-100">
+                            <thead class="bg-light">
                             <tr>
-                                <th>ID</th>
-                                <th>Proveedor</th>
-                                <th>Total</th>
-                                <th>Fecha</th>
                                 <th>Referencia</th>
+                                <th>Proveedor</th>
+                                <th>Items</th> <th>Total Pago</th>
+                                <th>Fecha</th>
                                 <th>Estado</th>
                                 <th class="text-center">Acciones</th>
                             </tr>
                             </thead>
-
                             <tbody>
-                            <tr th:each="compra : ${Compras}" th:if="${compra != null}">
-                                <td th:text="${compra.id}"></td>
+                            <tr th:each="compra : ${Compras}">
+                                <td class="font-weight-bold text-primary"
+                                    th:text="${compra.numeroReferencia != null ? compra.numeroReferencia : 'PEND-' + compra.id}">
+                                </td>
                                 <td th:text="${compra.proveedor.nombre}"></td>
-                                <td th:text="${compra.total}"></td>
-                                <td th:text="${#dates.format(compra.fechaCompra, 'dd/MM/yyyy')}"></td>
-                                <td th:text="${compra.numeroReferencia}"></td>
                                 <td>
-                  <span class="badge shadow-sm"
-                        th:classappend="
-                          ${compra.estado.name() == 'BORRADOR'} ? 'badge-warning' :
-                          ${compra.estado.name() == 'CONFIRMADA'} ? 'badge-success' :
-                          'badge-danger'"
-                        th:text="${compra.estado.name()}">
-                  </span>
+                                    <span class="badge badge-info shadow-sm" th:text="${compra.detalles.size()} + ' Items'"></span>
+                                    <small class="text-muted d-block mt-1" style="max-width: 250px; line-height: 1.2;">
+                                        <span th:each="detalle, iterStat : ${compra.detalles}">
+                                            <span th:text="${detalle.cantidad}"></span>x
+                                            <span th:text="${detalle.productos.nombre}"></span><span th:if="${!iterStat.last}">, </span>
+                                        </span>
+                                    </small>
+                                </td>
+                                <td th:text="${#numbers.formatCurrency(compra.total)}"></td>
+                                <td th:text="${#temporals.format(compra.fechaCompra, 'dd/MM/yyyy')}"></td>
+                                <td>
+                                    <span th:class="'badge shadow-sm ' +
+                                          (${compra.estado.name() == 'BORRADOR'} ? 'badge-warning' :
+                                          (${compra.estado.name() == 'CONFIRMADA'} ? 'badge-success' : 'badge-danger'))"
+                                          th:text="${compra.estado.name()}">
+                                    </span>
                                 </td>
                                 <td class="text-center">
                                     <div class="btn-group">
+                                        <th:block th:if="${compra.estado.name() == 'BORRADOR'}">
+                                            <a th:href="@{/compras/editar/{id}(id=${compra.id})}" class="btn btn-default btn-sm text-primary" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button th:onclick="'confirmarAccion(\'/compras/confirmar/' + ${compra.id} + '\', \'¿Confirmar compra?\')'"
+                                                    class="btn btn-default btn-sm text-success" title="Confirmar">
+                                                <i class="fas fa-check-circle"></i>
+                                            </button>
+                                            <button th:onclick="'confirmarAccion(\'/compras/anular/' + ${compra.id} + '\', \'¿Anular esta compra?\')'"
+                                                    class="btn btn-default btn-sm text-danger" title="Anular">
+                                                <i class="fas fa-ban"></i>
+                                            </button>
+                                        </th:block>
 
-                                        <!-- Solo BORRADOR: editar, confirmar, anular -->
-                                        <a th:if="${compra.estado.name() == 'BORRADOR'}"
-                                           th:href="@{/editar/{id}(id=${compra.id})}"
-                                           class="btn btn-primary btn-sm" title="Editar">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-
-                                        <a th:if="${compra.estado.name() == 'BORRADOR'}"
-                                           th:href="@{/confirmar/{id}(id=${compra.id})}"
-                                           class="btn btn-success btn-sm" title="Confirmar">
-                                            <i class="fas fa-check"></i>
-                                        </a>
-
-                                        <a th:if="${compra.estado.name() == 'BORRADOR'}"
-                                           th:href="@{/anular/{id}(id=${compra.id})}"
-                                           class="btn btn-danger btn-sm" title="Anular">
-                                            <i class="fas fa-ban"></i>
-                                        </a>
-
-                                        <!-- Solo CONFIRMADA: ver -->
-                                        <a th:if="${compra.estado.name() == 'CONFIRMADA'}"
-                                           th:href="@{/ver/{id}(id=${compra.id})}"
-                                           class="btn btn-info btn-sm" title="Ver">
+                                        <a th:if="${compra.estado.name() != 'BORRADOR'}"
+                                           th:href="@{/compras/ver/{id}(id=${compra.id})}"
+                                           class="btn btn-default btn-sm text-info" title="Ver Detalles">
                                             <i class="fas fa-eye"></i>
                                         </a>
-
-                                        <!-- Solo ANULADA: ver -->
-                                        <a th:if="${compra.estado.name() == 'ANULADA'}"
-                                           th:href="@{/ver/{id}(id=${compra.id})}"
-                                           class="btn btn-secondary btn-sm" title="Ver">
-                                            <i class="fas fa-eye-slash"></i>
-                                        </a>
-
                                     </div>
                                 </td>
                             </tr>
                             </tbody>
-
                         </table>
                     </div>
-
                 </div>
             </div>
         </div>
     </section>
-
 </section>
 
-<!-- SCRIPTS PERSONALIZADOS -->
 <th:block layout:fragment="scripts">
+    <script th:src="@{/plugins/datatables/jquery.dataTables.min.js}"></script>
+    <script th:src="@{/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js}"></script>
 
     <script th:inline="javascript">
         $(document).ready(function () {
-          var success = /*[[${success}]]*/ null;
-          var error = /*[[${error}]]*/ null;
-
-          if (success) {
-            Swal.fire({
-              icon: 'success',
-              title: 'Éxito',
-              text: success,
-              timer: 3000,
-              showConfirmButton: false
+            /*<![CDATA[*/
+            $('#tablaCompras').DataTable({
+                "responsive": true,
+                "lengthChange": true,
+                "autoWidth": false,
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json"
+                },
+                "order": [ [4, "desc"] ] // Ordenar por Fecha (columna 4)
             });
-          }
 
-          if (error) {
-            Swal.fire({
-              icon: 'error',
-              title: 'Error',
-              text: error,
-              timer: 3000,
-              showConfirmButton: false
-            });
-          }
+            const success = /*[[${success}]]*/ null;
+            const error = /*[[${error}]]*/ null;
+
+            if (success) Swal.fire({ icon: 'success', title: '¡Hecho!', text: success, timer: 3000 });
+            if (error) Swal.fire({ icon: 'error', title: 'Error', text: error });
+            /*]]>*/
         });
-    </script>
 
+        function confirmarAccion(url, mensaje) {
+            Swal.fire({
+                title: mensaje,
+                text: "Esta acción no se puede deshacer",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, continuar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = url;
+                }
+            });
+        }
+    </script>
 </th:block>
 
 </body>

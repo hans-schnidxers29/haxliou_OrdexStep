@@ -54,43 +54,14 @@ public class CajaControlador {
         }
     }
 
-    /* =========================
-       CERRAR CAJA
-       ========================= */
-//
-//    @PostMapping("/cerrar")
-//    public String cerrarCaja(@RequestParam("id") Long id,
-//                             @RequestParam("montoReal") BigDecimal montoReal,
-//                             RedirectAttributes redirectAttributes) {
-//
-//        try {
-//            servicio.CerrarCaja(id, montoReal);
-//
-//            redirectAttributes.addFlashAttribute(
-//                    "success",
-//                    "Caja cerrada correctamente"
-//            );
-//
-//            // 👇 usamos el MISMO id que ya tenías
-//            return "redirect:/caja/cierre/exitoso/" + id;
-//
-//        } catch (Exception e) {
-//            redirectAttributes.addFlashAttribute(
-//                    "error",
-//                    "Error al cerrar la caja: " + e.getMessage()
-//            );
-//            return "redirect:/ventas/crear";
-//        }
-//    }
-//
-//
 
-    @PostMapping("/cerrar")
-    public String cerrarCaja(@RequestParam("id") Long id,
-                             @RequestParam("montoReal") BigDecimal montoReal,
-                             RedirectAttributes redirectAttributes) {
+    @PostMapping("/cerrar/{id}")
+    public String cerrarCaja(@PathVariable Long id, RedirectAttributes redirectAttributes) {
 
         try {
+            Caja caja = servicio.cajaByid(id);
+            BigDecimal montoReal = caja.getMontoReal();
+
             servicio.CerrarCaja(id, montoReal);
             redirectAttributes.addFlashAttribute("success", "Caja cerrada correctamente");
             return "redirect:/ventas/crear";
@@ -104,11 +75,6 @@ public class CajaControlador {
             return "redirect:/ventas/crear";
         }
     }
-
-
-
-
-
 
     /* =========================
        PDF CIERRE DE CAJA

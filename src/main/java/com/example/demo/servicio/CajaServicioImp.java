@@ -113,7 +113,7 @@ public class CajaServicioImp implements CajaServicio{
 
         BigDecimal egresos = egresoRepositorio.sumarEgresosPorDia(inicio, fin);
         BigDecimal compras = comprasRepositorio.sumTotalCompras(inicio, fin);
-        BigDecimal ventas = ventarepositorio.sumaVentasRango(inicio, fin);
+        BigDecimal ventas = ventarepositorio.sumaPorMetodoPago(inicio, fin,"EFECTIVO");
 
 
         caja.setEgresosTotales(egresos);
@@ -128,7 +128,6 @@ public class CajaServicioImp implements CajaServicio{
 
 
         caja.setMontoReal(saldoActual);
-
         return caja;
     }
 

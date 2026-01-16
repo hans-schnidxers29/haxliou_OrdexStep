@@ -155,20 +155,6 @@
                     </table>
                 </div>
             </div>
-
-            <div class="row justify-content-center mt-4">
-                <div class="col-md-7">
-                    <div class="card card-outline card-info shadow">
-                        <div class="card-header">
-                            <h3 class="card-title font-weight-bold"><i class="fas fa-chart-bar mr-1"></i> Ranking: Clientes Frecuentes</h3>
-                        </div>
-                        <div class="card-body">
-                            <canvas id="chartClientes" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
         </div>
     </section>
 </div>
@@ -201,33 +187,6 @@
             const i = /*[[${info}]]*/ null;
             const w = /*[[${warning}]]*/ null;
             checkNotifications(s, e, i, w);
-
-            // 3. Gráfica de Barras
-            const ctx = document.getElementById('chartClientes').getContext('2d');
-            const labelsClientes = /*[[${nombresClientes}]]*/ [];
-            const dataPedidos = /*[[${conteoPedidos}]]*/ [];
-
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labelsClientes,
-                    datasets: [{
-                        label: 'Número de Pedidos',
-                        data: dataPedidos,
-                        backgroundColor: 'rgba(23, 162, 184, 0.8)',
-                        borderColor: 'rgba(23, 162, 184, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    maintainAspectRatio: false,
-                    scales: {
-                        yAxes: [{ ticks: { beginAtZero: true, stepSize: 1 } }],
-                        xAxes: [{ gridLines: { display: false } }]
-                    },
-                    legend: { display: false }
-                }
-            });
         });
 
         // FUNCIÓN FUERA DEL READY PARA QUE SEA ACCESIBLE

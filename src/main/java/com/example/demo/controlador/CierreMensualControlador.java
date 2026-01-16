@@ -2,6 +2,7 @@ package com.example.demo.controlador;
 
 import com.example.demo.entidad.CierreMensual;
 import com.example.demo.servicio.CierreMensualServicio;
+import com.example.demo.servicio.ClienteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -18,6 +19,9 @@ public class CierreMensualControlador {
     @Autowired
     private CierreMensualServicio servicio;
 
+    @Autowired
+    private ClienteService clienteService;
+
     @GetMapping("/resumen")
     public String tuMes(@RequestParam(required = false) Integer mes,
                         @RequestParam(required = false) Integer anio,
@@ -29,6 +33,8 @@ public class CierreMensualControlador {
         model.addAttribute("datos", datos);
         model.addAttribute("mes", mes);
         model.addAttribute("anio", anio);
+        model.addAttribute("montosClientes",clienteService.ListaCLientePedidos());
+        model.addAttribute("nombresClientes",clienteService.NombreListPedidos());
         return "viewCierre/resumenDeMes";
     }
 }

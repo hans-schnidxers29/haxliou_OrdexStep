@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
-public class CompraServicoImp implements CompraServicio{
+public class CompraServicioImp implements CompraServicio{
 
     @Autowired
     private ComprasRepositorio repositorio;
@@ -49,7 +49,6 @@ public class CompraServicoImp implements CompraServicio{
             throw new RuntimeException("No se puede editar una compra que ya ha sido confirmada.");
         }
         compraExistente.setProveedor(comprasNuevas.getProveedor());
-        compraExistente.setImpuesto(comprasNuevas.getImpuesto());
         compraExistente.setTotal(comprasNuevas.getTotal());
 
         compraExistente.getDetalles().clear();
@@ -84,8 +83,8 @@ public class CompraServicoImp implements CompraServicio{
         for (DetalleCompra detalleCompra : compra.getDetalles()) {
             productoServicio.AgregarStock(detalleCompra.getProductos().getId(), detalleCompra.getCantidad());
         }
-        String NuevaReferencia = GenerarReferenciasDeCompras();
-        compra.setNumeroReferencia(NuevaReferencia);
+        String referencia = compra.getNumeroReferencia();
+        compra.setNumeroReferencia(referencia);
         compra.setEstado(EstadoCompra.CONFIRMADA);
     }
 
@@ -96,8 +95,8 @@ public class CompraServicoImp implements CompraServicio{
         if(compra.getEstado() != EstadoCompra.BORRADOR){
             throw new IllegalStateException("La compra ya fue confirmada o anulada");
         }
-        String NuevaReferencia = GenerarReferenciasDeCompras();
-        compra.setNumeroReferencia(NuevaReferencia);
+        String referencia = compra.getNumeroReferencia();
+        compra.setNumeroReferencia(referencia);
         compra.setEstado(EstadoCompra.ANULADA);
     }
 
