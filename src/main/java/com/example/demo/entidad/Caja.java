@@ -19,23 +19,23 @@ public class Caja {
     private LocalDateTime fechaCierre = LocalDateTime.now();
 
     @NotNull
-    @Column(name="monto_inicial", scale = 3, precision = 10)
+    @Column(name="monto_inicial", scale = 2, precision = 10)
     private BigDecimal montoInicial = BigDecimal.ZERO;
 
     @NotNull
-    @Column(name = "ingreso_total", scale = 3, precision = 10)
+    @Column(name = "ingreso_total", scale = 2, precision = 10)
     private BigDecimal ingresoTotal = BigDecimal.ZERO;
 
-    @Column(name = "egresos_totales", scale = 3, precision = 10)
+    @Column(name = "egresos_totales", scale = 2, precision = 10)
     private BigDecimal egresosTotales = BigDecimal.ZERO;
 
-    @Column(name = "gastos_totales", scale = 3, precision = 10)
+    @Column(name = "gastos_totales", scale = 2, precision = 10)
     private BigDecimal gastosTotales = BigDecimal.ZERO;
 
-    @Column(name = "monto_real", scale = 3, precision = 10)
+    @Column(name = "monto_real", scale = 2, precision = 10)
     private BigDecimal montoReal = BigDecimal.ZERO;
 
-    @Column(name = "diferencia", scale = 3, precision = 10)
+    @Column(name = "diferencia", scale = 2, precision = 10)
     private BigDecimal diferencia = BigDecimal.ZERO;
 
     @Enumerated(EnumType.STRING)
