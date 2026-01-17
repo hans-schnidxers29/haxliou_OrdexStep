@@ -204,7 +204,7 @@
                                 <div class="bg-light p-3 rounded">
                                     <div class="d-flex justify-content-between mb-2">
                                         <span>Subtotal:</span>
-                                        <input type="number" id="subtotalGeneral" class="form-control form-control-sm text-right border-0 bg-transparent font-weight-bold" readonly value="0.000">
+                                        <input type="number" id="subtotalGeneral" class="form-control form-control-sm text-right border-0 bg-transparent font-weight-bold" readonly value="0.00">
                                     </div>
                                     <div class="form-group mb-2">
                                         <label class="small">Impuesto Total ($)</label>
@@ -255,7 +255,7 @@
                         <button type="submit" class="btn btn-primary btn-block btn-lg font-weight-bold">
                             <i class="fas fa-key mr-2"></i> ABRIR CAJA Y CONTINUAR
                         </button>
-                        <a href="/" class="btn btn-link btn-sm text-muted">Volver al Menú Principal</a>
+                        <a th:href="@{/Home}" class="btn btn-link btn-sm text-muted">Volver al Menú Principal</a>
                     </div>
                 </form>
             </div>
@@ -286,7 +286,7 @@
                                     <p class="mb-1"><strong>Monto Inicial:</strong> $<span th:text="${#numbers.formatDecimal(cajaAbierta.montoInicial, 1, 'COMMA', 2, 'POINT')}"></span></p>
                                 </div>
                                 <div class="col-md-6">
-                                    <p class="mb-1"><strong>Ingresos:</strong> $<span th:text="${#numbers.formatDecimal(resumen.ingresoTotal, 1, 'COMMA', 2, 'POINT')}"></span></p>
+                                    <p class="mb-1"><strong>Ingresos:</strong> $<span th:text="${#numbers.formatDecimal(resumen.ingresosEfectivo, 1, 'COMMA', 2, 'POINT')}"></span></p>
                                     <p class="mb-1"><strong>Egresos:</strong> $<span th:text="${#numbers.formatDecimal(resumen.egresosTotales, 1, 'COMMA', 2, 'POINT')}"></span></p>
                                 </div>
                             </div>
@@ -303,7 +303,7 @@
                                     </div>
                                     <div class="col-md-6 text-right">
                                         <h3 class="mb-0 font-weight-bold text-success" id="montoEsperado">
-                                            $<span th:text="${#numbers.formatDecimal(resumen.montoEsperado, 1, 'COMMA', 2, 'POINT')}"></span>
+                                            $<span th:text="${#numbers.formatDecimal(resumen.saldoActual, 1, 'COMMA', 2, 'POINT')}"></span>
                                         </h3>
                                         <input type="hidden" id="montoEsperadoValue" th:value="${cajaAbierta.montoEsperado}">
                                     </div>
@@ -559,6 +559,56 @@
         // Vincular el primer elemento manualmente (ya que no se crea por JS)
         document.querySelector('.producto-select').setAttribute('onchange', 'actualizarPrecioFila(this)');
         document.querySelector('.cantidad-input').setAttribute('onchange', 'calcularSubtotalFila(this)');
+
+
+        function calcularDiferenciaCierre() {
+    // Obtenemos los valores. Asegúrate de que estos IDs existan en tu HTML
+    const montoEsperado = parseFloat(document.getElementById('montoEsperadoValue').value) || 0;
+    const montoReal = parseFloat(document.getElementById('montoRealInput').value) || 0;
+
+    const alertDiv = document.getElementById('alertDiferencia');
+    const textoDif = document.getElementById('textoDiferencia');
+    const mensajeDif = document.getElementById('mensajeDiferencia');
+    const requiereObs = document.getElementById('requiereObservacion');
+
+    // Si el usuario ingresó un monto real (aunque sea 0)
+    if (document.getElementById('montoRealInput').value !== "") {
+        const diferencia = montoReal - montoEsperado;
+        const diferenciaAbsoluta = Math.abs(diferencia).toFixed(2);
+
+        // Mostrar el contenedor principal
+        alertDiv.style.display = 'block';
+
+        // Lógica de comparación
+        if (diferencia === 0) {
+            alertDiv.className = 'alert alert-success';
+            textoDif.className = 'mb-0 font-weight-bold text-success';
+            textoDif.textContent = "$ 0.00";
+            mensajeDif.textContent = '✓ Cuadre perfecto - No hay diferencia';
+            if(requiereObs) requiereObs.style.display = 'none';
+
+        } else if (diferencia > 0) {
+            alertDiv.className = 'alert alert-warning';
+            textoDif.className = 'mb-0 font-weight-bold text-warning';
+            textoDif.textContent = "+ $ " + diferenciaAbsoluta;
+            mensajeDif.textContent = '⚠️ Sobrante en caja (Ingresó más de lo esperado)';
+            if(requiereObs) requiereObs.style.display = 'block';
+
+        } else {
+            alertDiv.className = 'alert alert-danger';
+            textoDif.className = 'mb-0 font-weight-bold text-danger';
+            textoDif.textContent = "- $ " + diferenciaAbsoluta;
+            mensajeDif.textContent = '⚠️ Faltante en caja (Falta dinero según sistema)';
+            if(requiereObs) requiereObs.style.display = 'block';
+        }
+    } else {
+        // Si el campo está vacío, ocultamos los avisos
+        alertDiv.style.display = 'none';
+        if(requiereObs) requiereObs.style.display = 'none';
+    }
+}
+
+
     </script>
 </th:block>
 </body>

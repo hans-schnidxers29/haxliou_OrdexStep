@@ -108,6 +108,7 @@ public class VentaControlador {
         model.addAttribute("necesitaAbrirCaja", cajaActiva == null);
         model.addAttribute("caja",cajaActiva);
 
+
         Venta venta = new Venta();
         venta.setCliente(new Cliente());
         venta.setDetalles(new ArrayList<>());
@@ -115,6 +116,10 @@ public class VentaControlador {
         DetalleVenta det = new DetalleVenta();
         det.setProducto(new Productos());
         det.setVenta(venta);
+        if (cajaActiva != null) {
+            Map<String, Object> resumen = cajaServicio.obtenerResumenActual(cajaActiva.getId());
+            model.addAttribute("resumen", resumen);
+        }
 
         model.addAttribute("clientes", clienteService.clienteSimple());
         model.addAttribute("productos", productoServicio.listarProductos());
@@ -123,8 +128,6 @@ public class VentaControlador {
 
         return "ViewVentas/crearVenta";
     }
-
-
 
     // ============================
     // GUARDAR NUEVA VENTA

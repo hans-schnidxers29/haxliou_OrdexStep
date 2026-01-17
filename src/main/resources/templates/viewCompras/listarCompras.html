@@ -94,7 +94,7 @@
                                         </span>
                                     </small>
                                 </td>
-                                <td th:text="${#numbers.formatCurrency(compra.total)}"></td>
+                                <td  th:text="${'$ ' + #numbers.formatDecimal(compra.total, 1, 'POINT', 2, 'COMMA')}"></td>
                                 <td th:text="${#temporals.format(compra.fechaCompra, 'dd/MM/yyyy')}"></td>
                                 <td>
                                     <span th:class="'badge shadow-sm ' +

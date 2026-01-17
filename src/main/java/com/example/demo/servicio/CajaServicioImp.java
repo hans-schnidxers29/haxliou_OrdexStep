@@ -16,6 +16,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -99,36 +101,42 @@ public class CajaServicioImp implements CajaServicio{
     }
 
     @Override
-    public Caja obtenerResumenActual(Long cajaId) {
+    public Map<String, Object> obtenerResumenActual(Long cajaId) {
+
         Caja caja = cajaRepositorio.findById(cajaId)
                 .orElseThrow(() -> new RuntimeException("Caja no encontrada"));
 
-        if(caja.getEstado()== EstadoDeCaja.CERRADA){
-            throw new IllegalStateException("Caja ya fue cerrada");
+        if (caja.getEstado() == EstadoDeCaja.CERRADA) {
+            throw new IllegalStateException("La caja seleccionada ya está cerrada.");
         }
 
         LocalDateTime inicio = caja.getFechaApertura();
         LocalDateTime fin = LocalDateTime.now();
 
+        // Protección contra nulos (Null Safe)
+        BigDecimal egresos = Optional.ofNullable(egresoRepositorio.sumarEgresosPorDia(inicio, fin))
+                .orElse(BigDecimal.ZERO);
 
-        BigDecimal egresos = egresoRepositorio.sumarEgresosPorDia(inicio, fin);
-        BigDecimal compras = comprasRepositorio.sumTotalCompras(inicio, fin);
-        BigDecimal ventas = ventarepositorio.sumaPorMetodoPago(inicio, fin,"EFECTIVO");
+        BigDecimal compras = Optional.ofNullable(comprasRepositorio.sumTotalCompras(inicio, fin))
+                .orElse(BigDecimal.ZERO);
 
+        BigDecimal ventasEfectivo = Optional.ofNullable(ventarepositorio.sumaPorMetodoPago(inicio, fin, "EFECTIVO"))
+                .orElse(BigDecimal.ZERO);
 
-        caja.setEgresosTotales(egresos);
-        caja.setGastosTotales(compras);
-        caja.setIngresoTotal(ventas);
-
-
+        // Cálculo del saldo esperado en caja física
         BigDecimal saldoActual = caja.getMontoInicial()
-                .add(ventas)
+                .add(ventasEfectivo)
                 .subtract(egresos)
                 .subtract(compras);
 
+        Map<String, Object> resumenCaja = new HashMap<>();
+        resumenCaja.put("montoInicial", caja.getMontoInicial());
+        resumenCaja.put("ingresosEfectivo", ventasEfectivo);
+        resumenCaja.put("egresosTotales", egresos.add(compras)); // Suma de gastos y compras
+        resumenCaja.put("saldoActual", saldoActual);
+        resumenCaja.put("fechaConsulta", fin);
 
-        caja.setMontoReal(saldoActual);
-        return caja;
+        return resumenCaja;
     }
 
     @Override

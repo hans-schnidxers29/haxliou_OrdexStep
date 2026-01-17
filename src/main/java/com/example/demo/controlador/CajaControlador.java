@@ -103,10 +103,10 @@ public class CajaControlador {
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(pdf);
     }
-
-    /* =========================
+/*
+    *//* =========================
        PDF REPORTE DE AVANCE
-       ========================= */
+       ========================= *//*
     @GetMapping("/reporte-avance/{id}")
     public ResponseEntity<byte[]> reporteAvance(@PathVariable Long id) throws Exception {
 
@@ -124,5 +124,5 @@ public class CajaControlador {
                         "inline; filename=avance_caja_" + id + ".pdf")
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(pdf);
-    }
+    }*/
 }

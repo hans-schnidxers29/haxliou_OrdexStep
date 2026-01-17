@@ -25,13 +25,13 @@ public class DetalleVenta {
     @Column(nullable = false)
     private BigDecimal cantidad;
 
-    @Column(nullable = false,precision = 10, scale = 3)
+    @Column(nullable = false,precision = 10, scale = 2)
     private BigDecimal precioUnitario;
 
     @Column()
     private BigDecimal descuento;
 
-    @Column(nullable = false, precision = 10, scale = 3)
+    @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal subtotal;
 
     public DetalleVenta(Long id, Venta venta, Productos producto, BigDecimal cantidad, BigDecimal precioUnitario, BigDecimal descuento, BigDecimal subtotal) {
