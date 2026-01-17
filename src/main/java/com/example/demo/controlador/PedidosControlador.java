@@ -149,7 +149,7 @@ public class PedidosControlador {
 
                     // Si el producto se vende por PESO, convertimos los gramos recibidos a KG
                     if ("PESO".equals(productoCompleto.getTipoVenta().name())) {
-                        cantidadProcesada = cantidadOriginal.divide(new BigDecimal("1000"), 3, RoundingMode.HALF_UP);
+                        cantidadProcesada = cantidadOriginal.divide(new BigDecimal("1000"), 2, RoundingMode.HALF_UP);
                         // Seteamos la cantidad convertida al detalle para que el stock se descuente correctamente
                         detalle.setCantidad(cantidadProcesada);
                     }
@@ -191,10 +191,10 @@ public class PedidosControlador {
                     // Calcular subtotal del detalle
                     BigDecimal cantidad = detalle.getCantidad();
                     BigDecimal subtotalItem = detalle.getPrecioUnitario().multiply(cantidad);
-                    detalle.setSubtotal(subtotalItem.setScale(3, RoundingMode.HALF_UP));
+                    detalle.setSubtotal(subtotalItem.setScale(2, RoundingMode.HALF_UP));
 
                     // Calcular monto de impuesto de este item: (subtotal * tasa) / 100
-                    BigDecimal impuestoItem = subtotalItem.multiply(tasaImpuesto).divide(new BigDecimal("100"), 3, RoundingMode.HALF_UP);
+                    BigDecimal impuestoItem = subtotalItem.multiply(tasaImpuesto).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
 
                     subtotalPedido = subtotalPedido.add(subtotalItem);
                     montoTotalImpuestos = montoTotalImpuestos.add(impuestoItem);
@@ -224,7 +224,7 @@ public class PedidosControlador {
             pedido.setImpuesto(montoTotalImpuestos);
 
             BigDecimal total = subtotalPedido.add(montoTotalImpuestos).add(pedido.getFlete());
-            pedido.setTotal(total.setScale(3, RoundingMode.HALF_UP));
+            pedido.setTotal(total.setScale(2, RoundingMode.HALF_UP));
 
             pedidoService.DescantorStock(pedido);
             pedido.setEstado(EstadoPedido.PENDIENTE);
@@ -309,7 +309,7 @@ public class PedidosControlador {
 
                             if ("PESO".equals(prod.getTipoVenta().name())) {
                                 // Convertimos gramos a kilos
-                                cantTransformada = cantidadOriginal.divide(new BigDecimal("1000"), 3, RoundingMode.HALF_UP);
+                                cantTransformada = cantidadOriginal.divide(new BigDecimal("1000"), 2, RoundingMode.HALF_UP);
                                 // IMPORTANTE: Seteamos la nueva cantidad en kilos al detalle para que se guarde así en la BD
                                 detalle.setCantidad(cantTransformada);
                             } else {
@@ -321,10 +321,10 @@ public class PedidosControlador {
                             detalle.setPorcentajeImpuesto(tasaImpuesto);
 
                             BigDecimal subtotalItem = detalle.getPrecioUnitario().multiply(cantTransformada);
-                            detalle.setSubtotal(subtotalItem.setScale(3, RoundingMode.HALF_UP));
+                            detalle.setSubtotal(subtotalItem.setScale(2, RoundingMode.HALF_UP));
 
                             // Calcular monto de impuesto de este item
-                            BigDecimal impuestoItem = subtotalItem.multiply(tasaImpuesto).divide(new BigDecimal("100"), 3, RoundingMode.HALF_UP);
+                            BigDecimal impuestoItem = subtotalItem.multiply(tasaImpuesto).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
 
                             subtotalProductos = subtotalProductos.add(detalle.getSubtotal());
                             montoTotalImpuestos = montoTotalImpuestos.add(impuestoItem);
@@ -345,7 +345,7 @@ public class PedidosControlador {
             pedido.setSubtotal(subtotalProductos);
             pedido.setFlete(flete);
             pedido.setImpuesto(montoTotalImpuestos); // Asignamos el acumulado de cada producto
-            pedido.setTotal(totalFinal.setScale(3, RoundingMode.HALF_UP));
+            pedido.setTotal(totalFinal.setScale(2, RoundingMode.HALF_UP));
 
             pedidoService.Updatepedido(id, pedido);
 

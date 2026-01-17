@@ -43,44 +43,35 @@ public class CajaServicioImp implements CajaServicio{
 
     @Transactional
     @Override
-    public void CerrarCaja(Long id, BigDecimal montoEnCaja) {
+    public Caja CerrarCaja(Long id, BigDecimal montoEnCaja) {
 
-        Caja cerrarCaja = cajaRepositorio.findById(id)
+        Caja caja = cajaRepositorio.findById(id)
                 .orElseThrow(() -> new RuntimeException("Caja no encontrada"));
 
-        if (cerrarCaja.getEstado() == EstadoDeCaja.CERRADA) {
-            throw new IllegalStateException("Caja ya fue cerrada");
+        if (caja.getEstado() == EstadoDeCaja.CERRADA) {
+            return caja; // Si ya está cerrada, solo la devolvemos para el PDF
         }
 
-        LocalDateTime inicio = cerrarCaja.getFechaApertura();
+        LocalDateTime inicio = caja.getFechaApertura();
         LocalDateTime fin = LocalDateTime.now();
 
-        BigDecimal totalEgresos = Optional.ofNullable(
-                egresoRepositorio.sumarEgresosPorDia(inicio, fin)
-        ).orElse(BigDecimal.ZERO);
+        // Cálculos (Tus consultas actuales)
+        BigDecimal totalEgresos = nvl(egresoRepositorio.sumarEgresosPorDia(inicio, fin));
+        BigDecimal totalCompras = nvl(comprasRepositorio.sumTotalCompras(inicio, fin));
+        BigDecimal totalVentas = nvl(ventarepositorio.sumaVentasRango(inicio, fin));
 
-        BigDecimal totalCompras = Optional.ofNullable(
-                comprasRepositorio.sumTotalCompras(inicio, fin)
-        ).orElse(BigDecimal.ZERO);
+        BigDecimal saldoTeorico = caja.getMontoInicial().add(totalVentas).subtract(totalEgresos).subtract(totalCompras);
 
-        BigDecimal totalVentas = Optional.ofNullable(
-                ventarepositorio.sumaVentasRango(inicio, fin)
-        ).orElse(BigDecimal.ZERO);
+        // Actualización de la entidad
+        caja.setIngresoTotal(totalVentas);
+        caja.setEgresosTotales(totalEgresos);
+        caja.setGastosTotales(totalCompras);
+        caja.setMontoReal(montoEnCaja);
+        caja.setDiferencia(montoEnCaja.subtract(saldoTeorico));
+        caja.setFechaCierre(fin);
+        caja.setEstado(EstadoDeCaja.CERRADA);
 
-        BigDecimal saldoTeorico = cerrarCaja.getMontoInicial()
-                .add(totalVentas)
-                .subtract(totalEgresos)
-                .subtract(totalCompras);
-
-        cerrarCaja.setIngresoTotal(totalVentas);
-        cerrarCaja.setEgresosTotales(totalEgresos);
-        cerrarCaja.setGastosTotales(totalCompras);
-        cerrarCaja.setMontoReal(montoEnCaja);
-        cerrarCaja.setDiferencia(montoEnCaja.subtract(saldoTeorico));
-        cerrarCaja.setFechaCierre(LocalDateTime.now());
-        cerrarCaja.setEstado(EstadoDeCaja.CERRADA);
-
-        cajaRepositorio.save(cerrarCaja);
+         return cajaRepositorio.save(caja);
     }
 
 
@@ -122,10 +113,16 @@ public class CajaServicioImp implements CajaServicio{
 
         BigDecimal ventasEfectivo = Optional.ofNullable(ventarepositorio.sumaPorMetodoPago(inicio, fin, "EFECTIVO"))
                 .orElse(BigDecimal.ZERO);
+        BigDecimal efectivo = nvl(ventarepositorio.sumaPorMetodoPago(inicio, fin, "EFECTIVO"));
+        BigDecimal tarjeta = nvl(ventarepositorio.sumaPorMetodoPago(inicio, fin, "TARJETA"));
+        BigDecimal transferencia = nvl(ventarepositorio.sumaPorMetodoPago(inicio, fin, "TRANSFERENCIA"));
+        BigDecimal mixto = nvl(ventarepositorio.sumaPorMetodoPago(inicio, fin, "MIXTO"));
+        BigDecimal totalVentas = efectivo.add(tarjeta).add(transferencia).add(mixto);
 
         // Cálculo del saldo esperado en caja física
         BigDecimal saldoActual = caja.getMontoInicial()
                 .add(ventasEfectivo)
+                .add(efectivo)
                 .subtract(egresos)
                 .subtract(compras);
 
@@ -137,6 +134,20 @@ public class CajaServicioImp implements CajaServicio{
         resumenCaja.put("fechaConsulta", fin);
 
         return resumenCaja;
+        resumenCaja.put("ingresosEfectivo", efectivo);
+        resumenCaja.put("ventasTarjeta", tarjeta);
+        resumenCaja.put("ventasTransferencia", transferencia);
+        resumenCaja.put("ventasMixto", mixto);
+        resumenCaja.put("egresosTotales", egresos.add(compras)); // Suma de gastos y compras
+        resumenCaja.put("saldoActual", saldoActual);
+        resumenCaja.put("fechaConsulta", fin);
+        resumenCaja.put("fechaApertura", caja.getFechaApertura());
+
+        return resumenCaja;
+    }
+
+    private BigDecimal nvl(BigDecimal value) {
+        return value != null ? value : BigDecimal.ZERO;
     }
 
     @Override

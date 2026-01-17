@@ -8,7 +8,7 @@ import java.util.Map;
 
 public interface CajaServicio {
     Caja CajaAbierta(Usuario user);
-    void CerrarCaja(Long id,BigDecimal MontoEnCaja);
+    Caja CerrarCaja(Long id,BigDecimal MontoEnCaja);
     void EjecutarCaja(Usuario user, BigDecimal MontoInicial);
     Map<String ,Object> obtenerResumenActual(Long cajaId);
     Caja cajaByid(Long id);
