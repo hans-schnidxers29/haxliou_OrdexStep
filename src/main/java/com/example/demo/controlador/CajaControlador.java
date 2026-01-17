@@ -104,8 +104,8 @@ public class CajaControlador {
         }
 
     }
-
-    /* =========================
+/*
+    *//* =========================
        PDF REPORTE DE AVANCE
        ========================= */
     @GetMapping("/reporte-cierre-final/{id}")
@@ -134,5 +134,5 @@ public class CajaControlador {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=cierre_final_caja_" + id + ".pdf")
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(pdf);
-    }
+    }*/
 }

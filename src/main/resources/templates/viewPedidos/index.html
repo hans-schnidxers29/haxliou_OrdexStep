@@ -65,96 +65,122 @@
                     </div>
                 </div>
             </div>
+            <div class="card card-outline card-primary shadow"
+                 th:if="${pedidos != null and !pedidos.isEmpty()}">
 
-            <div class="card card-outline card-primary shadow">
                 <div class="card-header border-0 d-flex justify-content-between align-items-center">
-                    <h3 class="card-title font-weight-bold">Listado General de Pedidos</h3>
-                    <div class="card-tools ml-auto">
-                        <button type="button" class="btn btn-outline-warning btn-sm shadow-sm" onclick="descargarPendientes()">
-                            <i class="fas fa-file-excel mr-1"></i> Descargar Pendientes
-                        </button>
+                        <h3 class="card-title font-weight-bold">Listado General de Pedidos</h3>
+                        <div class="card-tools ml-auto">
+                            <button type="button" class="btn btn-outline-warning btn-sm shadow-sm" onclick="descargarPendientes()">
+                                <i class="fas fa-file-excel mr-1"></i> Descargar Pendientes
+                            </button>
+                        </div>
                     </div>
-                </div>
-                <div class="card-body">
-                    <table id="tablaPedidos" class="table table-bordered table-striped table-hover w-100">
-                        <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Cliente</th>
-                            <th>Fecha Pedido</th>
-                            <th>Fecha Entrega</th>
-                            <th>Productos</th>
-                            <th>Total</th>
-                            <th>Estado</th>
-                            <th class="text-center">Acciones</th>
-                            <th class="text-center">Imprimir POS</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr th:each="pedido : ${pedidos}"
-                            th:class="${pedido.estado.name() == 'ENTREGADO'} ? 'fila-entregado' :
-                                       (${pedido.estado.name() == 'CANCELADO'} ? 'fila-cancelado' :
-                                       (${pedido.estado.name() == 'PENDIENTE'} ? 'fila-pendiente' : ''))">
+                    <div class="card-body">
+                        <table id="tablaPedidos" class="table table-bordered table-striped table-hover w-100">
+                            <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Cliente</th>
+                                <th>Fecha Pedido</th>
+                                <th>Fecha Entrega</th>
+                                <th>Productos</th>
+                                <th>Total</th>
+                                <th>Estado</th>
+                                <th class="text-center">Acciones</th>
+                                <th class="text-center">Imprimir POS</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="pedido : ${pedidos}"
+                                th:class="${pedido.estado.name() == 'ENTREGADO'} ? 'fila-entregado' :
+                                           (${pedido.estado.name() == 'CANCELADO'} ? 'fila-cancelado' :
+                                           (${pedido.estado.name() == 'PENDIENTE'} ? 'fila-pendiente' : ''))">
 
-                            <td th:text="'#' + ${pedido.id}" class="font-weight-bold"></td>
-                            <td>
-                                <span th:text="${pedido.cliente.nombre}"></span><br>
-                                <small class="text-muted" th:text="${pedido.cliente.email}"></small>
-                            </td>
-                            <td>
-                                <span th:text="${#temporals.format(pedido.fechaPedido, 'dd/MM/yyyy')}"></span><br>
-                                <small class="text-muted" th:text="${#temporals.format(pedido.fechaPedido, 'HH:mm')}"></small>
-                            </td>
-                            <td>
-                                <span th:text="${#temporals.format(pedido.fechaEntrega, 'dd/MM/yyyy')}">Fecha</span>
-                            </td>
-                            <td>
-                                <span class="badge badge-info" th:text="${pedido.detalles.size()} + ' item(s)'"></span>
-                                <br>
-                                <small class="text-muted">
-                                 <span th:each="detalle, iterStat : ${pedido.detalles}">
-                                 <span th:text="${detalle.cantidad} + 'x ' + ${detalle.producto.nombre}"></span>
-                                 <span th:if="${!iterStat.last}">, </span>
-                                 </span>
-                                </small>
-                            </td>
-                            <td>
-                                <span class="text-primary font-weight-bold" th:text="'$' + ${#numbers.formatDecimal(pedido.total, 1, 3)}"></span>
-                            </td>
-                            <td>
-                                <span class="badge badge-estado"
-                                      th:classappend="${pedido.estado.name() == 'ENTREGADO' ? 'badge-success' :
-                                                       (pedido.estado.name() == 'CANCELADO' ? 'badge-danger' :
-                                                       (pedido.estado.name() == 'PENDIENTE' ? 'badge-warning' : 'badge-info'))}"
-                                      th:text="${pedido.estado}"></span>
-                            </td>
-                            <td class="text-center">
-                                <div class="btn-group">
-                                    <th:block th:if="${pedido.estado.name() != 'ENTREGADO' && pedido.estado.name() != 'CANCELADO'}">
-                                        <a th:href="@{/pedidos/Entregar/{id}(id=${pedido.id})}" class="btn btn-success btn-sm" title="Entregar">
-                                            <i class="fas fa-check"></i>
+                                <td th:text="'#' + ${pedido.id}" class="font-weight-bold"></td>
+                                <td>
+                                    <span th:text="${pedido.cliente.nombre}"></span><br>
+                                    <small class="text-muted" th:text="${pedido.cliente.email}"></small>
+                                </td>
+                                <td>
+                                    <span th:text="${#temporals.format(pedido.fechaPedido, 'dd/MM/yyyy')}"></span><br>
+                                    <small class="text-muted" th:text="${#temporals.format(pedido.fechaPedido, 'HH:mm')}"></small>
+                                </td>
+                                <td>
+                                    <span th:text="${#temporals.format(pedido.fechaEntrega, 'dd/MM/yyyy')}">Fecha</span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-info" th:text="${pedido.detalles.size()} + ' item(s)'"></span>
+                                    <br>
+                                    <small class="text-muted">
+                                     <span th:each="detalle, iterStat : ${pedido.detalles}">
+                                     <span th:text="${detalle.cantidad} + 'x ' + ${detalle.producto.nombre}"></span>
+                                     <span th:if="${!iterStat.last}">, </span>
+                                     </span>
+                                    </small>
+                                </td>
+                                <td>
+                                    <span class="text-primary font-weight-bold" th:text="'$' + ${#numbers.formatDecimal(pedido.total, 1, 3)}"></span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-estado"
+                                          th:classappend="${pedido.estado.name() == 'ENTREGADO' ? 'badge-success' :
+                                                           (pedido.estado.name() == 'CANCELADO' ? 'badge-danger' :
+                                                           (pedido.estado.name() == 'PENDIENTE' ? 'badge-warning' : 'badge-info'))}"
+                                          th:text="${pedido.estado}"></span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group">
+                                        <th:block th:if="${pedido.estado.name() != 'ENTREGADO' && pedido.estado.name() != 'CANCELADO'}">
+                                            <a th:href="@{/pedidos/Entregar/{id}(id=${pedido.id})}" class="btn btn-success btn-sm" title="Entregar">
+                                                <i class="fas fa-check"></i>
+                                            </a>
+                                            <a th:href="@{/pedidos/editar/{id}(id=${pedido.id})}" class="btn btn-info btn-sm">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a th:href="@{/pedidos/Cancelar/{id}(id=${pedido.id})}" class="btn btn-danger btn-sm" title="Cancelar">
+                                                <i class="fas fa-times"></i>
+                                            </a>
+                                        </th:block>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a th:href="@{/pedidos/generarTicket/{id}(id=${pedido.id})}" class="btn btn-default btn-sm ml-1">
+                                            <i class="fas fa-print"></i> POS
                                         </a>
-                                        <a th:href="@{/pedidos/editar/{id}(id=${pedido.id})}" class="btn btn-info btn-sm">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <a th:href="@{/pedidos/Cancelar/{id}(id=${pedido.id})}" class="btn btn-danger btn-sm" title="Cancelar">
-                                            <i class="fas fa-times"></i>
-                                        </a>
-                                    </th:block>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="btn-group">
-                                    <a th:href="@{/pedidos/generarTicket/{id}(id=${pedido.id})}" class="btn btn-default btn-sm ml-1">
-                                        <i class="fas fa-print"></i> POS
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
+                                    </div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+            </div>
+
+            <div class="card card-outline card-secondary shadow"
+                 th:if="${pedidos == null or pedidos.isEmpty()}">
+
+                <div class="card-body text-center py-5">
+
+                    <i class="fas fa-shopping-cart fa-4x text-muted mb-3"></i>
+
+                    <h4 class="text-muted font-weight-bold">
+                        No hay pedidos registrados
+                    </h4>
+
+                    <p class="text-muted mb-4">
+                        Aún no se han creado pedidos en el sistema.
+                    </p>
+
+                    <a th:href="@{/pedidos/nuevo}" class="btn btn-primary btn-lg shadow-sm">
+                        <i class="fas fa-plus-circle mr-1"></i>
+                        Crear primer pedido
+                    </a>
+
                 </div>
             </div>
+
+
         </div>
     </section>
 </div>

@@ -255,7 +255,7 @@
                         <button type="submit" class="btn btn-primary btn-block btn-lg font-weight-bold">
                             <i class="fas fa-key mr-2"></i> ABRIR CAJA Y CONTINUAR
                         </button>
-                        <a href="/" class="btn btn-link btn-sm text-muted">Volver al Menú Principal</a>
+                        <a th:href="@{/Home}" class="btn btn-link btn-sm text-muted">Volver al Menú Principal</a>
                     </div>
                 </form>
             </div>
@@ -605,6 +605,56 @@
         // Vincular el primer elemento manualmente (ya que no se crea por JS)
         document.querySelector('.producto-select').setAttribute('onchange', 'actualizarPrecioFila(this)');
         document.querySelector('.cantidad-input').setAttribute('onchange', 'calcularSubtotalFila(this)');
+
+
+        function calcularDiferenciaCierre() {
+    // Obtenemos los valores. Asegúrate de que estos IDs existan en tu HTML
+    const montoEsperado = parseFloat(document.getElementById('montoEsperadoValue').value) || 0;
+    const montoReal = parseFloat(document.getElementById('montoRealInput').value) || 0;
+
+    const alertDiv = document.getElementById('alertDiferencia');
+    const textoDif = document.getElementById('textoDiferencia');
+    const mensajeDif = document.getElementById('mensajeDiferencia');
+    const requiereObs = document.getElementById('requiereObservacion');
+
+    // Si el usuario ingresó un monto real (aunque sea 0)
+    if (document.getElementById('montoRealInput').value !== "") {
+        const diferencia = montoReal - montoEsperado;
+        const diferenciaAbsoluta = Math.abs(diferencia).toFixed(2);
+
+        // Mostrar el contenedor principal
+        alertDiv.style.display = 'block';
+
+        // Lógica de comparación
+        if (diferencia === 0) {
+            alertDiv.className = 'alert alert-success';
+            textoDif.className = 'mb-0 font-weight-bold text-success';
+            textoDif.textContent = "$ 0.00";
+            mensajeDif.textContent = '✓ Cuadre perfecto - No hay diferencia';
+            if(requiereObs) requiereObs.style.display = 'none';
+
+        } else if (diferencia > 0) {
+            alertDiv.className = 'alert alert-warning';
+            textoDif.className = 'mb-0 font-weight-bold text-warning';
+            textoDif.textContent = "+ $ " + diferenciaAbsoluta;
+            mensajeDif.textContent = '⚠️ Sobrante en caja (Ingresó más de lo esperado)';
+            if(requiereObs) requiereObs.style.display = 'block';
+
+        } else {
+            alertDiv.className = 'alert alert-danger';
+            textoDif.className = 'mb-0 font-weight-bold text-danger';
+            textoDif.textContent = "- $ " + diferenciaAbsoluta;
+            mensajeDif.textContent = '⚠️ Faltante en caja (Falta dinero según sistema)';
+            if(requiereObs) requiereObs.style.display = 'block';
+        }
+    } else {
+        // Si el campo está vacío, ocultamos los avisos
+        alertDiv.style.display = 'none';
+        if(requiereObs) requiereObs.style.display = 'none';
+    }
+}
+
+
     </script>
 </th:block>
 </body>

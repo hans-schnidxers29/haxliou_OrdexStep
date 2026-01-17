@@ -129,8 +129,6 @@ public class VentaControlador {
         return "ViewVentas/crearVenta";
     }
 
-
-
     // ============================
     // GUARDAR NUEVA VENTA
     // ============================

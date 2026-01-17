@@ -111,19 +111,29 @@ public class CajaServicioImp implements CajaServicio{
         BigDecimal compras = Optional.ofNullable(comprasRepositorio.sumTotalCompras(inicio, fin))
                 .orElse(BigDecimal.ZERO);
 
+        BigDecimal ventasEfectivo = Optional.ofNullable(ventarepositorio.sumaPorMetodoPago(inicio, fin, "EFECTIVO"))
+                .orElse(BigDecimal.ZERO);
         BigDecimal efectivo = nvl(ventarepositorio.sumaPorMetodoPago(inicio, fin, "EFECTIVO"));
         BigDecimal tarjeta = nvl(ventarepositorio.sumaPorMetodoPago(inicio, fin, "TARJETA"));
         BigDecimal transferencia = nvl(ventarepositorio.sumaPorMetodoPago(inicio, fin, "TRANSFERENCIA"));
         BigDecimal mixto = nvl(ventarepositorio.sumaPorMetodoPago(inicio, fin, "MIXTO"));
         BigDecimal totalVentas = efectivo.add(tarjeta).add(transferencia).add(mixto);
 
+        // Cálculo del saldo esperado en caja física
         BigDecimal saldoActual = caja.getMontoInicial()
+                .add(ventasEfectivo)
                 .add(efectivo)
                 .subtract(egresos)
                 .subtract(compras);
 
         Map<String, Object> resumenCaja = new HashMap<>();
         resumenCaja.put("montoInicial", caja.getMontoInicial());
+        resumenCaja.put("ingresosEfectivo", ventasEfectivo);
+        resumenCaja.put("egresosTotales", egresos.add(compras)); // Suma de gastos y compras
+        resumenCaja.put("saldoActual", saldoActual);
+        resumenCaja.put("fechaConsulta", fin);
+
+        return resumenCaja;
         resumenCaja.put("ingresosEfectivo", efectivo);
         resumenCaja.put("ventasTarjeta", tarjeta);
         resumenCaja.put("ventasTransferencia", transferencia);
