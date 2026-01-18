@@ -7,7 +7,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductoServiceImpl implements ProductoServicio{
@@ -81,6 +84,21 @@ public class ProductoServiceImpl implements ProductoServicio{
         BigDecimal stockActual = producto.getCantidad();
         BigDecimal nuevoStock = stockActual.add(cantidad);
         producto.setCantidad(nuevoStock);
+    }
+
+    @Override
+    public List<Map<String, Object>> ProductoSimple() {
+        List<Map<String, Object>> productosJson = repositorio.findAll().stream().map(p -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", p.getId());
+            map.put("nombre", p.getNombre());
+            map.put("precio", p.getPrecio());
+            map.put("impuesto", p.getImpuesto());
+            map.put("tipoVenta", p.getTipoVenta().name());
+            map.put("categoriaId", p.getCategoria().getId() != null ? p.getCategoria().getId() : null);
+            return map;
+        }).collect(Collectors.toList());
+        return productosJson;
     }
 
 

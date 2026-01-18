@@ -5,6 +5,7 @@ import jakarta.transaction.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 public interface ProductoServicio {
     List<Productos> listarProductos();
@@ -16,5 +17,6 @@ public interface ProductoServicio {
     List<BigDecimal>CantidadProductosVentas();
     List<Object[]>verificarStock();
     void AgregarStock(Long id,BigDecimal cantidad);
+    List<Map<String,Object>>ProductoSimple();
 
 }

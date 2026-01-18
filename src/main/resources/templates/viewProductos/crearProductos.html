@@ -136,7 +136,7 @@
                                     <div class="form-group">
                                         <label>Stock Mínimo (Alerta)</label>
                                         <div class="input-group">
-                                            <input type="number" th:field="*{stockMinimo}" id="inputStockMinimo" step="0.001" min="0" class="form-control" placeholder="0.000">
+                                            <input type="number" th:field="*{stockMinimo}" id="inputStockMinimo" step="0.01" min="0" class="form-control" placeholder="0.000">
                                             <div class="input-group-append">
                                                 <span class="input-group-text" id="addonStockMinimo">unidad</span>
                                             </div>
@@ -155,7 +155,7 @@
                                                     <div class="form-group">
                                                         <label>Cantidad Mínima de Venta</label>
                                                         <div class="input-group">
-                                                            <input type="number" th:field="*{cantidadMinima}" id="inputCantidadMinima" step="0.001" min="0" class="form-control" placeholder="0.000">
+                                                            <input type="number" th:field="*{cantidadMinima}" id="inputCantidadMinima" step="0.01" min="0" class="form-control" placeholder="0.000">
                                                             <div class="input-group-append"><span class="input-group-text" id="addonMinima">kg</span></div>
                                                         </div>
                                                     </div>
@@ -235,8 +235,8 @@
                     $labelPrecio.text('Unitario');
                 } else {
                     $contenedorAdicionales.fadeIn();
-                    $inputStock.attr('step', '0.001');
-                    $inputStockMinimo.attr('step', '0.001');
+                    $inputStock.attr('step', '0.01');
+                    $inputStockMinimo.attr('step', '0.01');
                     $addonStock.text(unidad);
                     $addonMinima.text(unidad);
                     $addonIncremento.text(unidad);

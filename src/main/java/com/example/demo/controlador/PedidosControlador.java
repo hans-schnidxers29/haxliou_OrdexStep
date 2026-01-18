@@ -61,6 +61,17 @@ public class PedidosControlador {
         model.addAttribute("Estadisticas3",pedidoService.estadoCancelado(EstadoPedido.CANCELADO));
         model.addAttribute("conteoPedidos",clienteService.ListaCLientePedidos());
         model.addAttribute("nombresClientes",clienteService.NombreListPedidos());
+        List<Map<String, Object>> pendientesSimple = pedidoService.listarpedidos().stream()
+                .filter(p -> p.getEstado() == EstadoPedido.PENDIENTE)
+                .map(p -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", p.getId());
+                    map.put("clienteNombre", p.getCliente() != null ? p.getCliente().getNombre() : "N/A");
+                    map.put("fechaPedido", p.getFechaPedido() != null ? p.getFechaPedido().toString() : "");
+                    map.put("total", p.getTotal());
+                    return map;
+                }).toList();
+        model.addAttribute("pedidosPendientes", pendientesSimple);
         return "viewPedidos/index";
     }
 
@@ -71,7 +82,7 @@ public class PedidosControlador {
     public String mostrarFormularioNuevo(Model model) {
         model.addAttribute("productos", productoService.listarProductos());
         model.addAttribute("clientes", clienteService.clienteSimple());
-        model.addAttribute("categoria",categoriaService.Listarcategoria());
+        model.addAttribute("categorias",categoriaService.Listarcategoria());
 
         Pedidos pedido = new Pedidos();
         pedido.setCliente(new Cliente()); // Inicializar cliente vacío
@@ -92,11 +103,26 @@ public class PedidosControlador {
                                 RedirectAttributes redirectAttributes,
                                 Model model) {
         try {
+            if (pedido.getDetalles() != null) {
+                pedido.getDetalles().removeIf(d -> d == null || d.getProducto() == null || d.getProducto().getId() == null);
+            }
+
             // Validar que tenga detalles
             if (pedido.getDetalles() == null || pedido.getDetalles().isEmpty()) {
-                model.addAttribute("info", "El pedido debe tener al menos un producto");
+                redirectAttributes.addFlashAttribute("info", "El pedido debe tener al menos un producto válido");
                 model.addAttribute("productos", productoService.listarProductos());
-                model.addAttribute("clientes", clienteService.listarcliente());
+                model.addAttribute("clientes", clienteService.clienteSimple());
+                model.addAttribute("categorias", categoriaService.Listarcategoria());
+                model.addAttribute("pedido", pedido);
+                return "viewPedidos/crearPedidos";
+            }
+
+            // Validar que tenga detalles
+            if (pedido.getDetalles() == null || pedido.getDetalles().isEmpty()) {
+                redirectAttributes.addFlashAttribute("info", "El pedido debe tener al menos un producto");
+                model.addAttribute("productos", productoService.listarProductos());
+                model.addAttribute("clientes", clienteService.clienteSimple());
+                model.addAttribute("categorias",categoriaService.Listarcategoria());
                 model.addAttribute("pedido", pedido);
                 return "viewPedidos/crearPedidos";
             }
@@ -105,7 +131,8 @@ public class PedidosControlador {
             if (pedido.getCliente() == null || pedido.getCliente().getId() == null) {
                 model.addAttribute("info", "Debes seleccionar un cliente");
                 model.addAttribute("productos", productoService.listarProductos());
-                model.addAttribute("clientes", clienteService.listarcliente());
+                model.addAttribute("clientes", clienteService.clienteSimple());
+                model.addAttribute("categorias",categoriaService.Listarcategoria());
                 model.addAttribute("pedido", pedido);
                 return "viewPedidos/crearPedidos";
             }
@@ -115,7 +142,8 @@ public class PedidosControlador {
             if (clienteCompleto == null) {
                 model.addAttribute("info", "Cliente no encontrado");
                 model.addAttribute("productos", productoService.listarProductos());
-                model.addAttribute("clientes", clienteService.listarcliente());
+                model.addAttribute("clientes", clienteService.clienteSimple());
+                model.addAttribute("categorias",categoriaService.Listarcategoria());
                 model.addAttribute("pedido", pedido);
                 return "viewPedidos/crearPedidos";
             }
@@ -123,7 +151,7 @@ public class PedidosControlador {
 
             // ✅ BUSCAR PRODUCTOS COMPLETOS Y CALCULAR TOTALES
             BigDecimal subtotalPedido = BigDecimal.ZERO;
-            BigDecimal montoTotalImpuestos = BigDecimal.ZERO; // Nueva variable acumuladora
+            BigDecimal montoTotalImpuestos = BigDecimal.ZERO;
             List<DetallePedido> detallesValidos = new ArrayList<>();
 
             for (DetallePedido detalle : pedido.getDetalles()) {
@@ -139,62 +167,66 @@ public class PedidosControlador {
                         model.addAttribute("info", "Producto no encontrado");
                         model.addAttribute("productos", productoService.listarProductos());
                         model.addAttribute("clientes", clienteService.listarcliente());
+                        model.addAttribute("categorias",categoriaService.Listarcategoria());
                         model.addAttribute("pedido", pedido);
                         return "viewPedidos/crearPedidos";
                     }
 
-                    // --- LÓGICA DE CONVERSIÓN GRAMOS A KILOS ---
-                    BigDecimal cantidadOriginal = detalle.getCantidad(); // Lo que viene del form (ej: 500g)
-                    BigDecimal cantidadProcesada = cantidadOriginal;
+                    // --- LÓGICA DE CONVERSIÓN (USA VARIABLE TEMPORAL) ---
+                    BigDecimal cantidadOriginal = detalle.getCantidad();
+                    BigDecimal cantidadParaCalculo;
 
-                    // Si el producto se vende por PESO, convertimos los gramos recibidos a KG
+                    // Solo convertimos si es PESO, si no, se queda igual (UNIDAD/LIQUIDO)
                     if ("PESO".equals(productoCompleto.getTipoVenta().name())) {
-                        cantidadProcesada = cantidadOriginal.divide(new BigDecimal("1000"), 2, RoundingMode.HALF_UP);
-                        // Seteamos la cantidad convertida al detalle para que el stock se descuente correctamente
-                        detalle.setCantidad(cantidadProcesada);
+                        cantidadParaCalculo = cantidadOriginal.divide(new BigDecimal("1000"), 2, RoundingMode.HALF_UP);
+                    } else {
+                        cantidadParaCalculo = cantidadOriginal;
                     }
 
-                    // ✅ VALIDACIÓN 1: Cantidad mínima de venta (comparando en la unidad base: KG)
+                    // ✅ VALIDACIÓN 1: Cantidad mínima
                     if (productoCompleto.getCantidadMinima() != null &&
-                            cantidadProcesada.compareTo(productoCompleto.getCantidadMinima()) < 0) {
-                        redirectAttributes.addFlashAttribute("warning",
-                                String.format("La cantidad mínima para '%s' es %s %s",
-                                        productoCompleto.getNombre(),
-                                        productoCompleto.getCantidadMinima(),
-                                        productoCompleto.getUnidadMedida()));
-                        return "redirect:/ventas/crear";
+                            cantidadParaCalculo.compareTo(productoCompleto.getCantidadMinima()) < 0) {
+                        model.addAttribute("info", String.format("La cantidad mínima para '%s' es %s",
+                                productoCompleto.getNombre(), productoCompleto.getCantidadMinima()));
+                        model.addAttribute("productos", productoService.listarProductos());
+                        model.addAttribute("clientes", clienteService.listarcliente());
+                        model.addAttribute("pedido", pedido);
+                        return "viewPedidos/crearPedidos";
                     }
 
-                    // ✅ VALIDACIÓN 2: Stock suficiente (comparando KG disponibles vs KG solicitados)
-                    if (productoCompleto.getCantidad().compareTo(cantidadProcesada) < 0) {
-                        redirectAttributes.addFlashAttribute("error",
-                                String.format("Stock insuficiente para '%s'. Disponible: %s %s",
-                                        productoCompleto.getNombre(),
-                                        productoCompleto.getCantidad(),
-                                        productoCompleto.getUnidadMedida()));
-                        return "redirect:/ventas/crear";
+                    // ✅ VALIDACIÓN 2: Stock suficiente
+                    if (productoCompleto.getCantidad().compareTo(cantidadParaCalculo) < 0) {
+                        model.addAttribute("info", String.format("Stock insuficiente para '%s'. Disponible: %s",
+                                productoCompleto.getNombre(), productoCompleto.getCantidad()));
+                        model.addAttribute("productos", productoService.listarProductos());
+                        model.addAttribute("clientes", clienteService.listarcliente());
+                        model.addAttribute("pedido", pedido);
+                        return "viewPedidos/crearPedidos";
                     }
 
-                    // Asignar producto completo
+                    // Asignar producto y precio real de la BD
                     detalle.setProducto(productoCompleto);
                     detalle.setPedido(pedido);
+                    detalle.setPrecioUnitario(productoCompleto.getPrecio());
 
-                    // Establecer precio unitario si no viene del formulario
-                    if (detalle.getPrecioUnitario() == null) {
-                        detalle.setPrecioUnitario(productoCompleto.getPrecio());
-                    }
-
-                    // --- NUEVA LOGICA IMPUESTO INDIVIDUAL ---
-                    BigDecimal tasaImpuesto = (productoCompleto.getImpuesto() != null) ? productoCompleto.getImpuesto() : BigDecimal.ZERO;
+                    // Impuestos
+                    BigDecimal tasaImpuesto = (productoCompleto.getImpuesto() != null)
+                            ? productoCompleto.getImpuesto()
+                            : BigDecimal.ZERO;
                     detalle.setPorcentajeImpuesto(tasaImpuesto);
 
-                    // Calcular subtotal del detalle
-                    BigDecimal cantidad = detalle.getCantidad();
-                    BigDecimal subtotalItem = detalle.getPrecioUnitario().multiply(cantidad);
-                    detalle.setSubtotal(subtotalItem.setScale(2, RoundingMode.HALF_UP));
+                    // ✅ CALCULO FINANCIERO (Usando la variable temporal cantidadParaCalculo)
+                    BigDecimal subtotalItem = detalle.getPrecioUnitario()
+                            .multiply(cantidadParaCalculo)
+                            .setScale(2, RoundingMode.HALF_UP);
+                    detalle.setSubtotal(subtotalItem);
 
-                    // Calcular monto de impuesto de este item: (subtotal * tasa) / 100
-                    BigDecimal impuestoItem = subtotalItem.multiply(tasaImpuesto).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+                    BigDecimal impuestoItem = subtotalItem
+                            .multiply(tasaImpuesto)
+                            .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+
+                    // ✅ Actualizar la cantidad en el detalle DESPUÉS de todos los cálculos
+                    detalle.setCantidad(cantidadParaCalculo);
 
                     subtotalPedido = subtotalPedido.add(subtotalItem);
                     montoTotalImpuestos = montoTotalImpuestos.add(impuestoItem);
@@ -202,11 +234,10 @@ public class PedidosControlador {
                 }
             }
 
-            if (pedido.getFlete() == null){
+            if (pedido.getFlete() == null) {
                 pedido.setFlete(BigDecimal.ZERO);
             }
 
-            // Validar que haya al menos un detalle válido
             if (detallesValidos.isEmpty()) {
                 model.addAttribute("error", "Debes agregar al menos un producto válido");
                 model.addAttribute("productos", productoService.listarProductos());
@@ -215,13 +246,9 @@ public class PedidosControlador {
                 return "viewPedidos/crearPedidos";
             }
 
-            // Establecer los detalles válidos
             pedido.setDetalles(detallesValidos);
-            // Calcular total del pedido
-            pedido.setSubtotal(subtotalPedido);
-
-            // ✅ ASIGNAR MONTO TOTAL DE IMPUESTOS CALCULADO
-            pedido.setImpuesto(montoTotalImpuestos);
+            pedido.setSubtotal(subtotalPedido.setScale(2, RoundingMode.HALF_UP));
+            pedido.setImpuesto(montoTotalImpuestos.setScale(2, RoundingMode.HALF_UP));
 
             BigDecimal total = subtotalPedido.add(montoTotalImpuestos).add(pedido.getFlete());
             pedido.setTotal(total.setScale(2, RoundingMode.HALF_UP));
@@ -229,17 +256,12 @@ public class PedidosControlador {
             pedidoService.DescantorStock(pedido);
             pedido.setEstado(EstadoPedido.PENDIENTE);
 
-
-            // Guardar el pedido
-            Pedidos pedidoGuardado = pedidoService.guardarpedidos(pedido);
-            System.out.println("Pedido guardado con ID: " + pedidoGuardado.getId() +
-                    " - Cliente: " + pedidoGuardado.getCliente().getNombre());
+            pedidoService.guardarpedidos(pedido);
 
             redirectAttributes.addFlashAttribute("success", "Pedido creado exitosamente");
             return "redirect:/pedidos/listarpedidos";
 
         } catch (Exception e) {
-            System.err.println("Error al guardar pedido: " + e.getMessage());
             e.printStackTrace();
             redirectAttributes.addFlashAttribute("error", "Error al guardar el pedido: " + e.getMessage());
             return "redirect:/pedidos/nuevo";
@@ -261,9 +283,11 @@ public class PedidosControlador {
                 pedido.setCliente(new Cliente());
             }
 
-            model.addAttribute("productos", productoService.listarProductos());
-            model.addAttribute("clientes", clienteService.listarcliente());
-            model.addAttribute("categoria",categoriaService.Listarcategoria());
+            model.addAttribute("productos", productoService.ProductoSimple());
+            model.addAttribute("clientes", clienteService.clienteSimple());
+
+            model.addAttribute("categoria",categoriaService.Categorias());
+            model.addAttribute("estadoPedido", EstadoPedido.values());
             model.addAttribute("pedido", pedido);
             return "viewPedidos/actualizarPedido";
 
@@ -276,88 +300,104 @@ public class PedidosControlador {
     @PostMapping("/actualizar/{id}")
     public String ActualizarPedido(@PathVariable Long id,
                                    @ModelAttribute("pedido") Pedidos pedido,
-                                   RedirectAttributes redirectAttributes) {
+                                   RedirectAttributes redirectAttributes,Model model) {
         try {
+            // 1. Cargar el pedido real de la base de datos
             Pedidos pedidoExistente = pedidoService.pedidosByid(id);
             if (pedidoExistente == null) {
                 redirectAttributes.addFlashAttribute("error", "Pedido no encontrado");
                 return "redirect:/pedidos/listarpedidos";
             }
 
-            EstadoPedido estadoAnterior = pedidoExistente.getEstado();
             BigDecimal subtotalProductos = BigDecimal.ZERO;
-            BigDecimal montoTotalImpuestos = BigDecimal.ZERO; // Nueva variable acumuladora
-            List<DetallePedido> detallesValidos = new ArrayList<>();
+            BigDecimal montoTotalImpuestos = BigDecimal.ZERO;
+            List<DetallePedido> detallesNuevos = new ArrayList<>();
 
+            // 2. Procesar los detalles que vienen del formulario
             if (pedido.getDetalles() != null) {
-                for (DetallePedido detalle : pedido.getDetalles()) {
-                    if (detalle.getProducto() != null && detalle.getProducto().getId() != null &&
-                            detalle.getCantidad() != null && detalle.getCantidad().compareTo(BigDecimal.ZERO) > 0) {
+                for (DetallePedido detalleForm : pedido.getDetalles()) {
+                    // Validar que el detalle tenga los datos mínimos necesarios
+                    if (detalleForm.getProducto() != null && detalleForm.getProducto().getId() != null &&
+                            detalleForm.getCantidad() != null && detalleForm.getCantidad().compareTo(BigDecimal.ZERO) > 0) {
 
-                        Productos prod = productoService.productoById(detalle.getProducto().getId());
+                        Productos prod = productoService.productoById(detalleForm.getProducto().getId());
                         if (prod != null) {
-                            detalle.setProducto(prod);
-                            detalle.setPedido(pedidoExistente);
+                            // Seteamos datos oficiales desde la DB (Seguridad)
+                            detalleForm.setProducto(prod);
+                            detalleForm.setPedido(pedidoExistente);
 
-                            if (detalle.getPrecioUnitario() == null) {
-                                detalle.setPrecioUnitario(prod.getPrecio());
-                            }
+                            BigDecimal precioUnit = prod.getPrecio();
+                            BigDecimal tasaImpuesto = (prod.getImpuesto() != null) ? prod.getImpuesto() : BigDecimal.ZERO;
 
-                            // --- CORRECCIÓN AQUÍ ---
-                            BigDecimal cantidadOriginal = detalle.getCantidad();
+                            detalleForm.setPrecioUnitario(precioUnit);
+                            detalleForm.setPorcentajeImpuesto(tasaImpuesto);
+
+                            // --- TRANSFORMACIÓN SEGÚN TIPO DE VENTA ---
+                            BigDecimal cantidadOriginal = detalleForm.getCantidad();
                             BigDecimal cantTransformada;
 
                             if ("PESO".equals(prod.getTipoVenta().name())) {
-                                // Convertimos gramos a kilos
-                                cantTransformada = cantidadOriginal.divide(new BigDecimal("1000"), 2, RoundingMode.HALF_UP);
-                                // IMPORTANTE: Seteamos la nueva cantidad en kilos al detalle para que se guarde así en la BD
-                                detalle.setCantidad(cantTransformada);
+                                // Gramos a Kilos: 500gr -> 0.50kg (Usamos 4 decimales para el cálculo)
+                                cantTransformada = cantidadOriginal.divide(new BigDecimal("1000"), 4, RoundingMode.HALF_UP);
                             } else {
                                 cantTransformada = cantidadOriginal;
                             }
 
-                            // --- NUEVA LOGICA IMPUESTO INDIVIDUAL ---
-                            BigDecimal tasaImpuesto = (prod.getImpuesto() != null) ? prod.getImpuesto() : BigDecimal.ZERO;
-                            detalle.setPorcentajeImpuesto(tasaImpuesto);
+                            detalleForm.setCantidad(cantTransformada);
 
-                            BigDecimal subtotalItem = detalle.getPrecioUnitario().multiply(cantTransformada);
-                            detalle.setSubtotal(subtotalItem.setScale(2, RoundingMode.HALF_UP));
+                            // --- CÁLCULO DE TOTALES POR LÍNEA ---
+                            BigDecimal subtotalItem = precioUnit.multiply(cantTransformada);
+                            BigDecimal impuestoItem = subtotalItem.multiply(tasaImpuesto)
+                                    .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
 
-                            // Calcular monto de impuesto de este item
-                            BigDecimal impuestoItem = subtotalItem.multiply(tasaImpuesto).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+                            detalleForm.setSubtotal(subtotalItem.setScale(2, RoundingMode.HALF_UP));
 
-                            subtotalProductos = subtotalProductos.add(detalle.getSubtotal());
+                            // Acumuladores generales
+                            subtotalProductos = subtotalProductos.add(detalleForm.getSubtotal());
                             montoTotalImpuestos = montoTotalImpuestos.add(impuestoItem);
-                            detallesValidos.add(detalle);
+
+                            detallesNuevos.add(detalleForm);
                         }
                     }
                 }
             }
+            if (pedido.getFlete() == null) {
+                pedido.setFlete(BigDecimal.ZERO);
+            }
 
-            // 2. Lógica Financiera
+            if (detallesNuevos.isEmpty()) {
+                redirectAttributes.addFlashAttribute("error", "Debes agregar al menos un producto válido");
+                model.addAttribute("productos", productoService.listarProductos());
+                model.addAttribute("clientes", clienteService.listarcliente());
+                model.addAttribute("pedido", pedido);
+                return "redirect:/pedidos/listar";
+            }
+
+            // 3. Lógica Financiera Final
             BigDecimal flete = (pedido.getFlete() != null) ? pedido.getFlete() : BigDecimal.ZERO;
-
-            // ✅ ELIMINAMOS EL CALCULO BASADO EN PorcentajeImpuesto GLOBAL Y USAMOS EL ACUMULADO
             BigDecimal totalFinal = subtotalProductos.add(flete).add(montoTotalImpuestos);
 
-            // 3. Asignar valores
-            pedido.setDetalles(detallesValidos);
-            pedido.setSubtotal(subtotalProductos);
-            pedido.setFlete(flete);
-            pedido.setImpuesto(montoTotalImpuestos); // Asignamos el acumulado de cada producto
-            pedido.setTotal(totalFinal.setScale(2, RoundingMode.HALF_UP));
+            // 4. Sincronizar el objeto existente (Evita duplicados)
+            pedidoExistente.setFechaEntrega(pedido.getFechaEntrega()); // Actualizar fecha si cambió
+            pedidoExistente.setFlete(flete);
+            pedidoExistente.setSubtotal(subtotalProductos.setScale(2, RoundingMode.HALF_UP));
+            pedidoExistente.setImpuesto(montoTotalImpuestos.setScale(2, RoundingMode.HALF_UP));
+            pedidoExistente.setTotal(totalFinal.setScale(2, RoundingMode.HALF_UP));
+            pedidoExistente.actualizarDetalles(detallesNuevos);
 
-            pedidoService.Updatepedido(id, pedido);
+            // 5. Guardar cambios
+            pedidoService.Updatepedido(id, pedidoExistente);
 
             redirectAttributes.addFlashAttribute("success", "Pedido actualizado correctamente");
             return "redirect:/pedidos/listarpedidos";
 
         } catch (Exception e) {
             e.printStackTrace();
-            redirectAttributes.addFlashAttribute("error", "Error al actualizar: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Error crítico al actualizar: " + e.getMessage());
             return "redirect:/pedidos/listarpedidos";
         }
     }
+
     @GetMapping("/eliminar/{id}")
     public String eliminarPedido(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {

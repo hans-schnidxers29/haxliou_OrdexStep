@@ -14,5 +14,5 @@ public interface ClienteService {
     List<Long>ListaCLientePedidos();
     List<String>NombreListPedidos();
     boolean VerifcarCliente(String numeroIdentificacion);
-    List<Map<String, Object>> clienteSimple();
+    List<Map<String, Object>>clienteSimple();
 }

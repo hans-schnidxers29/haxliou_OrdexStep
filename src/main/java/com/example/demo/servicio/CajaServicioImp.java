@@ -97,10 +97,6 @@ public class CajaServicioImp implements CajaServicio{
         Caja caja = cajaRepositorio.findById(cajaId)
                 .orElseThrow(() -> new RuntimeException("Caja no encontrada"));
 
-        if (caja.getEstado() == EstadoDeCaja.CERRADA) {
-            throw new IllegalStateException("La caja seleccionada ya está cerrada.");
-        }
-
         LocalDateTime inicio = caja.getFechaApertura();
         LocalDateTime fin = LocalDateTime.now();
 
@@ -132,15 +128,9 @@ public class CajaServicioImp implements CajaServicio{
         resumenCaja.put("egresosTotales", egresos.add(compras)); // Suma de gastos y compras
         resumenCaja.put("saldoActual", saldoActual);
         resumenCaja.put("fechaConsulta", fin);
-
-        return resumenCaja;
-        resumenCaja.put("ingresosEfectivo", efectivo);
         resumenCaja.put("ventasTarjeta", tarjeta);
         resumenCaja.put("ventasTransferencia", transferencia);
         resumenCaja.put("ventasMixto", mixto);
-        resumenCaja.put("egresosTotales", egresos.add(compras)); // Suma de gastos y compras
-        resumenCaja.put("saldoActual", saldoActual);
-        resumenCaja.put("fechaConsulta", fin);
         resumenCaja.put("fechaApertura", caja.getFechaApertura());
 
         return resumenCaja;

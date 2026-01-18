@@ -44,7 +44,7 @@ public class Productos {
     @Column(name = "impuesto", precision = 10, scale = 2)
     private BigDecimal Impuesto = BigDecimal.ZERO;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "proveedor_id", nullable = true)
     private Proveedores proveedor;
 

@@ -1,6 +1,7 @@
 package com.example.demo.entidad;
 
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.proxy.HibernateProxy;
@@ -52,6 +53,7 @@ public class Cliente {
     private LocalDateTime fechaRegistro;
 
     @OneToMany(mappedBy = "cliente", fetch=FetchType.LAZY, cascade= CascadeType.ALL )
+    @JsonManagedReference
     private List<Pedidos> pedidos = new ArrayList<>();
 
     @Column(columnDefinition = "TEXT")

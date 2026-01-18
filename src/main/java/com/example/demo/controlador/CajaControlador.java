@@ -111,28 +111,28 @@ public class CajaControlador {
     @GetMapping("/reporte-cierre-final/{id}")
     public ResponseEntity<byte[]> cerrarCajaYGenerarPDF(@PathVariable Long id) throws Exception {
 
-        Caja caja = servicio.cajaByid(id);
-        BigDecimal montoReal = caja.getMontoReal();
-        Caja cajaCerrada = servicio.CerrarCaja(caja.getId(), montoReal);
+        // 1. Obtener y cerrar la caja (Persistencia)
+        Caja cajaOriginal = servicio.cajaByid(id);
+        BigDecimal montoReal = cajaOriginal.getMontoReal();
+        Caja cajaCerrada = servicio.CerrarCaja(cajaOriginal.getId(), montoReal);
 
+        Map<String, Object> resumen = servicio.obtenerResumenActual(id);
 
+        // 3. Crear el mapa principal para el PDF y combinar
         Map<String, Object> data = new HashMap<>();
+        data.putAll(resumen); // Inserta todos los valores del resumen automáticamente
+
+        // 4. Agregar objetos adicionales necesarios para el ticket
         data.put("caja", cajaCerrada);
         data.put("usuario", cajaCerrada.getUsuario());
         data.put("titulo", "Reporte de Cierre Definitivo");
+        data.put("montoRealContado", montoReal); // Valor físico reportado
 
-        // Mapeo manual de montos para que coincidan con los nombres en tu HTML corregido
-        data.put("montoInicial", cajaCerrada.getMontoInicial());
-        data.put("ingresosEfectivo", cajaCerrada.getIngresoTotal()); // Ya guardado en DB
-        data.put("egresosTotales", cajaCerrada.getEgresosTotales().add(cajaCerrada.getGastosTotales()));
-        data.put("saldoActual", montoReal); // O el saldo teórico según prefieras mostrar
-        data.put("fechaConsulta", cajaCerrada.getFechaCierre());
-
-        byte[] pdf = pdfService.generarPdf("pdf/ticketCaja", data);
+        byte[] pdf = pdfService.generarPdf("pdf/ticketFinal", data);
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=cierre_final_caja_" + id + ".pdf")
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(pdf);
-    }*/
+    }
 }
