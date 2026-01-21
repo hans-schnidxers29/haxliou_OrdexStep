@@ -26,8 +26,8 @@ import java.util.Map;
 @RequestMapping("/caja")
 public class CajaControlador {
 
-    @Autowired
-    private CajaServicio servicio;
+    @Autowired private CajaServicio servicio;
+
 
     @Autowired
     private ServicioUsuario servicioUsuario;

@@ -111,6 +111,7 @@
                                             <small class="text-muted">
                                                 ID: <span th:text="${pedido.cliente.numeroIdentificacion}"></span> |
                                                 Tel: <span th:text="${pedido.cliente.telefono} ?: 'N/A'"></span>
+                                                Email: <span th:text="${pedido.cliente.email} ?: 'N/A'"></span>
                                             </small>
                                         </div>
                                         <span class="badge badge-primary badge-pill">Asignado</span>
@@ -302,7 +303,7 @@
 
 <th:block layout:fragment="scripts">
     <script th:inline="javascript">
-        const clientesData = /*[[${clientesData}]]*/ [];
+        const clientesData = /*[[${clientes}]]*/ [];
         const productosData = /*[[${productosData}]]*/ [];
         const categoriasData = /*[[${categoriaData}]]*/ [];
 
@@ -355,8 +356,11 @@
                 document.getElementById('clienteIdHidden').value = cliente.id;
                 document.getElementById('clienteNombre').textContent = cliente.nombre + ' ' + (cliente.apellido || '');
                 document.getElementById('clienteTelefono').textContent = "Tel: " + (cliente.telefono || 'N/A');
+                document.getElementById('clienteEmail').textContent = cliente.email || 'N/A';
                 document.getElementById('clienteCard').style.display = 'block';
+                document.getElementById('clienteInfo').classList.add('show');
                 document.getElementById('clienteCard').classList.add('encontrado');
+                Swal.fire({ icon: 'success', title: 'Cliente Encontrado', timer: 1000, showConfirmButton: false });
 
                 Swal.fire({
                     icon: 'success',

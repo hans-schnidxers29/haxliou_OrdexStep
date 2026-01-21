@@ -100,104 +100,211 @@
             </div>
 
             <div class="row">
-                <div class="col-lg-3 col-6">
-                    <div class="card card-custom shadow-sm mb-4 bg-white" style="border-left: 5px solid #17a2b8 !important;">
+                <div class="col-lg-3 col-md-6 col-12">
+                    <div class="card card-custom shadow-sm mb-4 bg-white h-100" style="border-left: 5px solid #17a2b8 !important;">
                         <div class="card-body py-3">
-                            <p class="text-muted small mb-1 font-weight-bold">STOCK UNIDADES</p>
-                            <h4 class="font-weight-bold" th:text="${datos['stockUnidades'] ?: 0}">0</h4>
+                            <p class="text-muted small mb-1 font-weight-bold text-uppercase">Stock Unidades</p>
+                            <h4 class="font-weight-bold mb-0" th:text="${datos['stockUnidades'] ?: 0}">0</h4>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-3 col-6">
-                    <div class="card card-custom shadow-sm mb-4 bg-white" style="border-left: 5px solid #ffc107 !important;">
+
+                <div class="col-lg-3 col-md-6 col-12">
+                    <div class="card card-custom shadow-sm mb-4 bg-white h-100" style="border-left: 5px solid #ffc107 !important;">
                         <div class="card-body py-3">
-                            <p class="text-muted small mb-1 font-weight-bold">STOCK GRANEL (KG)</p>
-                            <h4 class="font-weight-bold" th:text="${datos['stockPesable'] ?: 0}">0</h4>
+                            <p class="text-muted small mb-1 font-weight-bold text-uppercase">Stock Granel (KG)</p>
+                            <h4 class="font-weight-bold mb-0" th:text="${datos['stockPesable'] ?: 0}">0</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6 col-12">
+                    <div class="card card-custom shadow-sm mb-4 bg-white h-100" style="border-left: 5px solid #ff851b !important;">
+                        <div class="card-body py-3">
+                            <p class="text-muted small mb-1 font-weight-bold text-uppercase">Ticket Promedio</p>
+                            <h4 class="font-weight-bold mb-0" th:text="'$' + ${#numbers.formatDecimal(datos['ticketPromedio'], 1, 'COMMA', 2, 'POINT')}">$0.00</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6 col-12">
+                    <div class="card card-custom shadow-sm mb-4 bg-white h-100" style="border-left: 5px solid #39cccc !important;">
+                        <div class="card-body py-3">
+                            <p class="text-muted small mb-1 font-weight-bold text-uppercase">Margen Neto</p>
+                            <h4 class="font-weight-bold mb-0" th:text="${datos['margenBruto'] ?: 0} + '%'">0%</h4>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <div class="row mt-2">
-                <div class="col-md-6 mb-4">
-                    <div class="card card-custom shadow-sm h-100">
+            <div class="row mt-4">
+                <div class="col-md-8 mb-4">
+                    <div class="card card-custom shadow-sm h-100 card-outline card-info">
                         <div class="card-header bg-white border-0 pt-4">
-                            <h3 class="card-title font-weight-bold text-dark"><i class="fas fa-users text-primary mr-2"></i>Top 5 Clientes VIP</h3>
+                            <h3 class="card-title font-weight-bold text-dark">
+                                <i class="fas fa-chart-area text-info mr-2"></i>Tendencia de Ingresos Mensuales
+                            </h3>
                         </div>
                         <div class="card-body">
-                            <div style="min-height: 250px; position: relative;">
+                            <div class="chart-wrapper" style="height: 350px;">
+                                <canvas id="ventasChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 mb-4">
+                    <div class="card card-custom shadow-sm h-100 card-outline card-dark">
+                        <div class="card-header bg-white border-0 pt-4">
+                            <h3 class="card-title font-weight-bold text-dark">
+                                <i class="fas fa-balance-scale text-dark mr-2"></i>Balance vs Mes Ant.
+                            </h3>
+                        </div>
+                        <div class="card-body p-0">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between align-items-center py-4">
+                                    <span class="text-muted"><i class="fas fa-chart-line mr-2"></i> Crecimiento</span>
+                                    <span th:class="${datos['utilidadSubio'] ? 'badge badge-success px-3 py-2' : 'badge badge-danger px-3 py-2'}"
+                                          th:text="${#numbers.formatDecimal(datos['porcentajeUtilidad'], 1, 2)} + '%'">0%</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center py-4">
+                                    <span class="text-muted"><i class="fas fa-shopping-cart mr-2"></i> Pedidos</span>
+                                    <span class="font-weight-bold h5 mb-0 text-primary" th:text="${datos['totalPedidos'] ?: 0}">0</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center py-4">
+                                    <span class="text-muted"><i class="fas fa-percentage mr-2"></i> Margen Real</span>
+                                    <span class="font-weight-bold h5 mb-0 text-dark" th:text="${datos['porcentajeMargen']} + '%'">0%</span>
+                                </li>
+                            </ul>
+                            <div class="px-4 py-4 bg-light">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <p class="small text-muted mb-0 font-weight-bold text-uppercase">Meta Mensual ($)</p>
+                                    <input type="number" id="inputMeta" class="form-control form-control-sm w-50 text-right"
+                                           value="10000" onchange="recalcularMeta(this.value)">
+                                </div>
+
+                                <div class="progress shadow-sm" style="height: 12px; border-radius: 10px;">
+                                    <div id="barMeta" class="progress-bar bg-info progress-bar-striped progress-bar-animated"
+                                         role="progressbar"
+                                         th:style="'width: ' + (${datos['ingresosTotales']} / 100) + '%'"></div>
+                                </div>
+
+                                <div class="d-flex justify-content-between mt-2">
+                                    <small class="text-muted">Inicio: $0</small>
+                                    <small class="text-bold text-primary" id="txtMeta">Objetivo: $10,000</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-4">
+                    <div class="card card-custom shadow-sm h-100 card-outline card-success">
+                        <div class="card-header bg-white border-0 pt-4">
+                            <h3 class="card-title font-weight-bold text-dark">
+                                <i class="fas fa-crown text-success mr-2"></i>Top 5 Clientes VIP
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-wrapper" style="height: 300px;">
                                 <canvas id="clientesChart"></canvas>
                             </div>
                         </div>
                     </div>
                 </div>
+
                 <div class="col-md-6 mb-4">
-                    <div class="card card-custom shadow-sm h-100">
+                    <div class="card card-custom shadow-sm h-100 card-outline card-warning">
                         <div class="card-header bg-white border-0 pt-4">
-                            <h3 class="card-title font-weight-bold text-dark"><i class="fas fa-truck text-warning mr-2"></i>Resumen de Proveedores</h3>
+                            <h3 class="card-title font-weight-bold text-dark">
+                                <i class="fas fa-fire text-warning mr-2"></i>Productos Estrella
+                            </h3>
                         </div>
-                        <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table table-modern table-hover mb-0">
-                                    <thead>
-                                    <tr>
-                                        <th>Proveedor</th>
-                                        <th>Monto</th>
-                                        <th class="text-center">Items</th>
-                                        <th>Estado</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    <tr th:each="p : ${datos['resumenProveedores']}">
-                                        <td class="font-weight-bold text-dark" th:text="${p.nombre}">Proveedor</td>
-                                        <td th:text="'$' + ${#numbers.formatDecimal(p.totalMonto, 1, 'COMMA', 2, 'POINT')}">$0.00</td>
-                                        <td class="text-center" th:text="${p.cantidadItems}">0</td>
-                                        <td><span class="badge badge-success">Saldado</span></td>
-                                    </tr>
-                                    </tbody>
-                                </table>
+                        <div class="card-body">
+                            <div class="chart-wrapper" style="height: 300px;">
+                                <canvas id="productosChart"></canvas>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div> </div> </section>
-</div><th:block layout:fragment="script">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+            </div>
+        </div>
+    </section>
+</div>
+<th:block layout:fragment="scripts">
+    <script th:src="@{/plugins/chart.js/chart.js}"></script>
     <script th:inline="javascript">
         $(document).ready(function() {
-            const nombres = /*[[${nombresClientes}]]*/ [];
-            const montos = /*[[${montosClientes}]]*/ [];
 
-            const ctx = document.getElementById('clientesChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: nombres,
-                    datasets: [{
-                        label: 'Ventas ($)',
-                        data: montos,
-                        backgroundColor: '#28a745',
-                        borderRadius: 5
-                    }]
-                },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
+            var nombres = [[${nombresClientes}]] || [];
+            var montos = [[${montosClientes}]] || [];
+
+
+            const canvas = document.getElementById('clientesChart');
+            if (canvas && typeof Chart !== 'undefined' && nombres.length > 0) {
+                const ctx = canvas.getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: nombres,
+                        datasets: [{
+                            label: 'Ventas ($)',
+                            data: montos,
+                            backgroundColor: '#28a745',
+                            borderRadius: 5
+                        }]
                     },
-                    scales: {
-                        x: { beginAtZero: true }
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        }
                     }
-                }
-            });
+                });
+            } else {
+                console.error("Error: no hay datos de clientes.");
+            }
+
+            const nombresProd = [[${productosNombres}]] || [];
+            const cantProd = [[${productosCantidades}]] || [];
+
+            const canvasProd = document.getElementById('productosChart');
+            if (canvasProd && nombresProd.length > 0) {
+                new Chart(canvasProd, {
+                    type: 'bar', // Cambiado de doughnut a bar
+                    data: {
+                        labels: nombresProd,
+                        datasets: [{
+                            label: 'Cantidad Vendida',
+                            data: cantProd,
+                            backgroundColor: '#f6c23e', // Color amarillo/naranja para combinar con tus tarjetas
+                            borderColor: '#e5a50a',
+                            borderWidth: 1,
+                            borderRadius: 5
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { precision: 0 }
+                            }
+                        }
+                    }
+                });
+            }
         });
 
         function actualizarVista() {
             const mes = document.getElementById('selectMes').value;
             const anio = document.getElementById('selectAnio').value;
-            window.location.href = `/cierres/resumen?mes=${mes}&anio=${anio}`;
+            window.location.href = `/cierre/resumen?mes=${mes}&anio=${anio}`;
         }
 
         function confirmarYDescargar() {
@@ -214,6 +321,101 @@
                 if (result.isConfirmed) window.location.href = `/cierres/exportar-excel?mes=${m}&anio=${a}`;
             });
         }
+        // Gráfica Lineal
+        new Chart(document.getElementById('ventasChart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: [[${labelsGrafica}]],
+                datasets: [{
+                    label: 'Ventas ($)',
+                    data: [[${datosGrafica}]],
+                    borderColor: '#007bff',
+                    backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    borderWidth: 2,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#007bff'
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                layout: {
+                    padding: {
+                        left: 15,
+                        right: 25,
+                        top: 20,
+                        bottom: 15
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false, // Permite que la escala se ajuste al rango real de datos
+                        ticks: {
+                            maxTicksLimit: 5, // Obliga a mostrar máximo 5 números, evitando que se encimen
+                            padding: 10,
+                            callback: function (value) {
+                                return '$' + value.toLocaleString(); // Agrega el signo $ y separador de miles
+                            }
+                        },
+                        grid: {
+                            drawBorder: false,
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            padding: 10
+                        },
+                        grid: {
+                            display: false
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                }
+            }
+        });
+        function recalcularMeta(nuevaMeta) {
+            // 1. Obtener el total de ingresos desde los datos enviados por el controlador
+            const ingresosTotales = [[${datos['ingresosTotales']}]] || 0;
+            const meta = parseFloat(nuevaMeta);
+
+            if (meta > 0) {
+                // 2. Calcular el nuevo porcentaje
+                let porcentaje = (ingresosTotales / meta) * 100;
+
+                // Limitar a 100% para que la barra no se salga del contenedor
+                if (porcentaje > 100) porcentaje = 100;
+
+                // 3. Actualizar la barra de progreso
+                const barra = document.getElementById('barMeta');
+                barra.style.width = porcentaje + '%';
+
+                // 4. Actualizar el texto del objetivo
+                const textoMeta = document.getElementById('txtMeta');
+                textoMeta.innerText = 'Objetivo: $' + meta.toLocaleString();
+
+                // 5. Cambiar color si se cumplió la meta
+                if (porcentaje >= 100) {
+                    barra.classList.replace('bg-info', 'bg-success');
+                } else {
+                    barra.classList.replace('bg-success', 'bg-info');
+                }
+            }
+        }
+
+        // Ejecutar una vez al cargar para asegurar que el input y la barra coincidan
+        $(document).ready(function() {
+            recalcularMeta(document.getElementById('inputMeta').value);
+        });
     </script>
 </th:block>
 </body>

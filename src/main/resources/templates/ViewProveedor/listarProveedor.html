@@ -40,150 +40,121 @@
         <div class="card-header">
           <h3 class="card-title">Gestión de Proveedores</h3>
           <div class="card-tools">
-          <!--  <span class="badge badge-info"
-                  th:text="${proveedores.size()} + ' Proveedores'">
-            </span>-->
           </div>
         </div>
-
         <div class="card-body">
-
-          <!-- SIN PROVEEDORES -->
-          <div th:if="${#lists.isEmpty(proveedores)}"
-               class="text-center p-5">
-            <i class="fas fa-truck-loading fa-3x text-muted mb-3"></i>
-            <p class="text-muted">No hay proveedores registrados.</p>
-          </div>
-
-          <!-- TABLA -->
-          <div th:unless="${#lists.isEmpty(proveedores)}"
-               class="table-responsive">
-
-            <table id="tablaProveedores"
-                   class="table table-bordered table-striped table-hover">
-
+          <div th:unless="${#lists.isEmpty(proveedores)}" class="table-responsive">
+            <table id="tablaProveedores" class="table table-hover w-100">
               <thead>
               <tr>
-                <th>Nombre</th>
-                <th>Razón Social</th>
-                <th>Documento</th>
-                <th>Teléfono</th>
-                <th>Email</th>
-                <th>Dirección</th>
-                <th>Estado</th>
+                <th>Proveedor</th>
+                <th>Identificación</th>
+                <th>Contacto</th>
+                <th>Ubicación</th>
+                <th class="text-center">Estado</th>
                 <th class="text-center">Acciones</th>
               </tr>
               </thead>
-
               <tbody>
               <tr th:each="proveedor : ${proveedores}">
-
-                <td class="font-weight-bold"
-                    th:text="${proveedor.nombre}">
-                </td>
-
-                <td th:text="${proveedor.razonSocial}"></td>
-
                 <td>
-                  <span class="badge badge-secondary">
-                    <span th:text="${proveedor.tipoDocumento}"></span>:
-                    <span th:text="${proveedor.numeroDocumento}"></span>
-                  </span>
-                </td>
-
-                <td th:text="${proveedor.telefono}"></td>
-
-                <td>
-                  <a th:href="'mailto:' + ${proveedor.email}"
-                     th:text="${proveedor.email}">
-                  </a>
-                </td>
-
-                <td th:text="${proveedor.direccion}"></td>
-
-                <td>
-                  <span class="badge shadow-sm"
-                        th:classappend="${proveedor.estado}
-                        ? 'badge-success' : 'badge-danger'"
-                        th:text="${proveedor.estado}
-                        ? 'Activo' : 'Inactivo'">
-                  </span>
-                </td>
-
-                <td class="text-center">
-                  <div class="btn-group">
-
-                    <a th:href="@{/proveedores/editar/{id}(id=${proveedor.id})}"
-                       class="btn btn-warning btn-sm"
-                       title="Editar">
-                      <i class="fas fa-edit"></i>
-                    </a>
-
-                    <button type="button"
-                            class="btn btn-danger btn-sm"
-                            th:data-id="${proveedor.id}"
-                            onclick="confirmarEliminar(this)"
-                            title="Eliminar">
-                      <i class="fas fa-trash"></i>
-                    </button>
-
+                  <div class="d-flex align-items-center">
+                    <div class="bg-primary-soft rounded-circle mr-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: #e7f1ff; color: #007bff;">
+                      <i class="fas fa-building"></i>
+                    </div>
+                    <div>
+                      <div class="provider-name font-weight-bold" th:text="${proveedor.nombre}"></div>
+                      <small class="text-muted" th:text="${proveedor.razonSocial}"></small>
+                    </div>
                   </div>
                 </td>
-
+                <td>
+                  <span class="text-muted small d-block" th:text="${proveedor.tipoDocumento}"></span>
+                  <span class="font-weight-500" th:text="${proveedor.numeroDocumento}"></span>
+                </td>
+                <td class="contact-info">
+                  <div class="small"><i class="fas fa-phone fa-xs"></i> <span th:text="${proveedor.telefono}"></span></div>
+                  <div class="small text-primary"><i class="fas fa-envelope fa-xs"></i>
+                    <a th:href="'mailto:' + ${proveedor.email}" th:text="${proveedor.email}"></a>
+                  </div>
+                </td>
+                <td class="small">
+                  <i class="fas fa-map-marker-alt text-danger mr-1"></i>
+                  <span th:text="${proveedor.direccion}"></span>
+                </td>
+                <td class="text-center">
+                        <span class="badge badge-pill-custom shadow-none"
+                              th:classappend="${proveedor.estado} ? 'bg-success-light text-success' : 'bg-danger-light text-danger'"
+                              th:style="${proveedor.estado} ? 'background: #d4edda; color: #155724;' : 'background: #f8d7da; color: #721c24;'"
+                              th:text="${proveedor.estado} ? '● Activo' : '● Inactivo'">
+                        </span>
+                </td>
+                <td class="text-center">
+                  <div class="btn-group">
+                    <a th:href="@{/proveedores/editar/{id}(id=${proveedor.id})}"
+                       class="btn btn-action btn-outline-warning mr-2" title="Editar">
+                      <i class="fas fa-edit"></i>
+                    </a>
+                    <button type="button" class="btn btn-action btn-outline-danger"
+                            th:data-id="${proveedor.id}" th:data-nombre="${proveedor.nombre}"
+                            onclick="confirmarEliminar(this)" title="Eliminar">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </div>
+                </td>
               </tr>
               </tbody>
             </table>
           </div>
-
         </div>
       </div>
     </div>
   </section>
-
 </section>
 
 <!-- SCRIPTS PERSONALIZADOS -->
 <th:block layout:fragment="scripts">
-
-  <script>
-    function confirmarEliminar(btn) {
-      const id = btn.getAttribute("data-id");
-
-      if (confirm("¿Seguro que deseas eliminar este proveedor?")) {
-        window.location.href = "/proveedores/eliminar/" + id;
-      }
-    }
-  </script>
+  <script th:src="@{/plugins/datatables/jquery.dataTables.min.js}"></script>
+  <script th:src="@{/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js}"></script>
 
   <script th:inline="javascript">
     $(document).ready(function () {
+      $('#tablaProveedores').DataTable({
+        "responsive": true,
+        "autoWidth": false,
+        "language": {
+          "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json"
+        }
+      });
 
+      // Alerts existentes
       var success = /*[[${success}]]*/ null;
       var error = /*[[${error}]]*/ null;
-
-      if (success) {
-        Swal.fire({
-          icon: 'success',
-          title: 'Éxito',
-          text: success,
-          timer: 3000,
-          showConfirmButton: false
-        });
-      }
-
-      if (error) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: error,
-          timer: 3000,
-          showConfirmButton: false
-        });
-      }
+      if (success) Swal.fire({ icon: 'success', title: '¡Éxito!', text: success, timer: 2500, showConfirmButton: false });
+      if (error) Swal.fire({ icon: 'error', title: 'Error', text: error });
     });
+
+    function confirmarEliminar(btn) {
+      const id = btn.getAttribute("data-id");
+      const nombre = btn.getAttribute("data-nombre");
+
+      Swal.fire({
+        title: '¿Eliminar proveedor?',
+        text: "Estás por eliminar a: " + nombre + ". Esta acción no se puede deshacer.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = "/proveedores/eliminar/" + id;
+        }
+      });
+    }
   </script>
 </th:block>
-
 
 </body>
 </html>

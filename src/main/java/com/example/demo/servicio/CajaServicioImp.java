@@ -91,50 +91,51 @@ public class CajaServicioImp implements CajaServicio{
         cajaRepositorio.save(abrirCaja);
     }
 
-    @Override
-    public Map<String, Object> obtenerResumenActual(Long cajaId) {
+        @Override
+        public Map<String, Object> obtenerResumenActual(Long cajaId) {
 
-        Caja caja = cajaRepositorio.findById(cajaId)
-                .orElseThrow(() -> new RuntimeException("Caja no encontrada"));
+            Caja caja = cajaRepositorio.findById(cajaId)
+                    .orElseThrow(() -> new RuntimeException("Caja no encontrada"));
 
-        LocalDateTime inicio = caja.getFechaApertura();
-        LocalDateTime fin = LocalDateTime.now();
+            LocalDateTime inicio = caja.getFechaApertura();
+            LocalDateTime fin = LocalDateTime.now();
 
-        // Protección contra nulos (Null Safe)
-        BigDecimal egresos = Optional.ofNullable(egresoRepositorio.sumarEgresosPorDia(inicio, fin))
-                .orElse(BigDecimal.ZERO);
+            // Protección contra nulos
+            BigDecimal egresos = nvl(egresoRepositorio.sumarEgresosPorDia(inicio, fin));
+            BigDecimal compras = nvl(comprasRepositorio.sumTotalCompras(inicio, fin));
 
-        BigDecimal compras = Optional.ofNullable(comprasRepositorio.sumTotalCompras(inicio, fin))
-                .orElse(BigDecimal.ZERO);
+            // Obtención de ventas por método
+            BigDecimal efectivo = nvl(ventarepositorio.sumaPorMetodoPago(inicio, fin, "EFECTIVO"));
+            BigDecimal tarjeta = nvl(ventarepositorio.sumaPorMetodoPago(inicio, fin, "TARJETA"));
+            BigDecimal transferencia = nvl(ventarepositorio.sumaPorMetodoPago(inicio, fin, "TRANSFERENCIA"));
+            BigDecimal mixto = nvl(ventarepositorio.sumaPorMetodoPago(inicio, fin, "MIXTO"));
 
-        BigDecimal ventasEfectivo = Optional.ofNullable(ventarepositorio.sumaPorMetodoPago(inicio, fin, "EFECTIVO"))
-                .orElse(BigDecimal.ZERO);
-        BigDecimal efectivo = nvl(ventarepositorio.sumaPorMetodoPago(inicio, fin, "EFECTIVO"));
-        BigDecimal tarjeta = nvl(ventarepositorio.sumaPorMetodoPago(inicio, fin, "TARJETA"));
-        BigDecimal transferencia = nvl(ventarepositorio.sumaPorMetodoPago(inicio, fin, "TRANSFERENCIA"));
-        BigDecimal mixto = nvl(ventarepositorio.sumaPorMetodoPago(inicio, fin, "MIXTO"));
-        BigDecimal totalVentas = efectivo.add(tarjeta).add(transferencia).add(mixto);
+            // El saldo en CAJA FÍSICA solo debe sumar el EFECTIVO (y quizás una parte del mixto)
+            // Aquí corregimos la duplicidad que tenías:
+            BigDecimal saldoActual = caja.getMontoInicial()
+                    .add(efectivo)
+                    .subtract(egresos)
+                    .subtract(compras);
 
-        // Cálculo del saldo esperado en caja física
-        BigDecimal saldoActual = caja.getMontoInicial()
-                .add(ventasEfectivo)
-                .add(efectivo)
-                .subtract(egresos)
-                .subtract(compras);
+            // Total de todas las ventas (para estadística)
+            BigDecimal totalVentas = efectivo.add(tarjeta).add(transferencia).add(mixto);
 
-        Map<String, Object> resumenCaja = new HashMap<>();
-        resumenCaja.put("montoInicial", caja.getMontoInicial());
-        resumenCaja.put("ingresosEfectivo", ventasEfectivo);
-        resumenCaja.put("egresosTotales", egresos.add(compras)); // Suma de gastos y compras
-        resumenCaja.put("saldoActual", saldoActual);
-        resumenCaja.put("fechaConsulta", fin);
-        resumenCaja.put("ventasTarjeta", tarjeta);
-        resumenCaja.put("ventasTransferencia", transferencia);
-        resumenCaja.put("ventasMixto", mixto);
-        resumenCaja.put("fechaApertura", caja.getFechaApertura());
+            Map<String, Object> resumenCaja = new HashMap<>();
+            resumenCaja.put("montoInicial", caja.getMontoInicial());
+            resumenCaja.put("ingresosEfectivo", efectivo);
+            resumenCaja.put("egresosGastos", egresos);
+            resumenCaja.put("egresosCompras", compras);
+            resumenCaja.put("egresosTotales", egresos.add(compras));
+            resumenCaja.put("saldoActual", saldoActual);
+            resumenCaja.put("totalVentas", totalVentas);
+            resumenCaja.put("ventasTarjeta", tarjeta);
+            resumenCaja.put("ventasTransferencia", transferencia);
+            resumenCaja.put("ventasMixto", mixto);
+            resumenCaja.put("fechaConsulta", fin);
+            resumenCaja.put("fechaApertura", caja.getFechaApertura());
 
-        return resumenCaja;
-    }
+            return resumenCaja;
+        }
 
     private BigDecimal nvl(BigDecimal value) {
         return value != null ? value : BigDecimal.ZERO;

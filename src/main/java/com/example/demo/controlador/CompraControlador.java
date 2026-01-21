@@ -23,6 +23,10 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,17 +48,28 @@ public class CompraControlador {
 
     @GetMapping("/listar")
     public String listar(Model model){
+
+        int anio = LocalDate.now().getYear();
+        int mes = LocalDate.now().getMonthValue();
+        LocalDate primerDia = LocalDate.of(anio, mes, 1);
+        LocalDateTime inicio = primerDia.atStartOfDay();
+        LocalDateTime fin = primerDia.with(TemporalAdjusters.lastDayOfMonth()).atTime(LocalTime.MAX);
+
         model.addAttribute("Compras", compraServicio.listarCompra());
+        model.addAttribute("Datos",compraServicio.StokMensual(inicio,fin));
+
         return "viewCompras/listarCompras";
     }
 
     @GetMapping("/crear")
     public String Mostrarformulario(Model model){
+
         Compras compras = new Compras();
         model.addAttribute("compras",compras);
         model.addAttribute("proveedores",proveedorServicio.listarproveedores());
         model.addAttribute("productos",productoServicio.listarProductos());
         model.addAttribute("MetodoPago", MetodoPago.values());
+
         return "viewCompras/crearCompras";
     }
 
@@ -111,6 +126,15 @@ public class CompraControlador {
                 Productos productoCompleto = productoServicio.productoById(detalle.getProductos().getId());
                 if (productoCompleto == null) continue;
 
+
+                if (detalle.getProductos().getImpuesto() != null) {
+                    productoCompleto.setImpuesto(detalle.getProductos().getImpuesto());
+                }
+
+                if(detalle.getProductos().getPrecioCompra() != null){
+                    productoCompleto.setPrecioCompra(detalle.getProductos().getPrecioCompra());
+                }
+
                 detalle.setProductos(productoCompleto);
                 detalle.setCompra(compras);
                 BigDecimal subtotal = detalle.getPrecioUnitario().multiply(detalle.getCantidad());
@@ -146,103 +170,6 @@ public class CompraControlador {
         }
     }
 
-
-
-
-//    @PostMapping("/crear/compra")
-//    public String crearCompra(@Valid @ModelAttribute("compras") Compras compras,
-//                              BindingResult result,
-//                              RedirectAttributes redirectAttributes,
-//                              Model model,
-//                              @AuthenticationPrincipal UserDetails userDetails) {
-//
-//        // 1. Validación de anotaciones @NotNull, @Min, etc.
-//        if (result.hasErrors()) {
-//            model.addAttribute("compras", compras);
-//            // Cargamos nuevamente los proveedores y productos para la vista
-//            model.addAttribute("proveedores", proveedorServicio.listarproveedores());
-//            model.addAttribute("productos", productoServicio.listarProductos());
-//            return "viewCompras/crearCompras";
-//        }
-//
-//        try {
-//            // 2. Asignar Usuario autenticado
-//            Usuario user = servicioUsuario.findByEmail(userDetails.getUsername());
-//            compras.setUsuario(user);
-//
-//            // 3. Validar Proveedor
-//            Proveedores proveedor = proveedorServicio.proveedorById(compras.getProveedor().getId());
-//            if (proveedor == null) {
-//                redirectAttributes.addFlashAttribute("error", "Proveedor no encontrado");
-//                return "redirect:/compras/crear";
-//            }
-//            compras.setProveedor(proveedor);
-//
-//            // 4. Procesar Detalles de Compra
-//            if (compras.getDetalles() == null || compras.getDetalles().isEmpty()) {
-//                redirectAttributes.addFlashAttribute("info", "La lista de productos no puede estar vacía");
-//                return "redirect:/compras/crear";
-//            }
-//
-//            List<DetalleCompra> detallesValidos = new ArrayList<>();
-//            BigDecimal acumuladorSubtotales = BigDecimal.ZERO;
-//
-//            for (DetalleCompra detalle : compras.getDetalles()) {
-//                // Saltamos filas vacías o mal diligenciadas
-//                if (detalle.getProductos() == null || detalle.getProductos().getId() == null ||
-//                        detalle.getCantidad() == null || detalle.getCantidad().compareTo(BigDecimal.ZERO) <= 0 ||
-//                        detalle.getPrecioUnitario() == null) {
-//                    continue;
-//                }
-//
-//                // Validar existencia del producto
-//                Productos productoCompleto = productoServicio.productoById(detalle.getProductos().getId());
-//                if (productoCompleto == null) {
-//                    continue;
-//                }
-//
-//                // Configurar el detalle
-//                detalle.setProductos(productoCompleto);
-//                detalle.setCompra(compras); // Relación bidireccional importante
-//
-//                // Calcular subtotal del detalle
-//                BigDecimal subtotal = detalle.getPrecioUnitario().multiply(detalle.getCantidad());
-//                detalle.setSubtotal(subtotal);
-//
-//                acumuladorSubtotales = acumuladorSubtotales.add(subtotal);
-//                detallesValidos.add(detalle);
-//            }
-//
-//            if (detallesValidos.isEmpty()) {
-//                redirectAttributes.addFlashAttribute("error",
-//                        "Debe agregar al menos un producto válido con cantidad mayor a cero");
-//                return "redirect:/compras/crear";
-//            }
-//
-//            // 5. Finalizar cálculos de la Compra
-//            compras.setDetalles(detallesValidos);
-//
-//            // Manejo de Impuestos
-//            if (compras.getImpuesto() == null) {
-//                compras.setImpuesto(BigDecimal.ZERO);
-//            }
-//
-//            // Total = Suma de subtotales + Impuesto (asumiendo que el impuesto es un valor fijo)
-//            BigDecimal totalFinal = acumuladorSubtotales.add(compras.getImpuesto());
-//            compras.setTotal(totalFinal);
-//
-//            // 6. Estado inicial y Guardado
-//            compras.setEstado(EstadoCompra.BORRADOR);
-//            compraServicio.saveCompra(compras);
-//
-//            redirectAttributes.addFlashAttribute("success", "Compra creada con éxito en estado BORRADOR");
-//            return "redirect:/compras/listar";
-//
-//        } catch (Exception e) {
-//            redirectAttributes.addFlashAttribute("error", "Error al procesar la compra: " + e.getMessage());
-//            return "redirect:/compras/crear";
-//        }
-//    }
 
     @GetMapping("/editar/{id}")
     public String MostrarformularioEditar(@PathVariable Long id, Model model){

@@ -50,7 +50,10 @@ public class ProductoServiceImpl implements ProductoServicio{
         p1.setCantidad(producto.getCantidad());
         p1.setImpuesto(producto.getImpuesto());
         p1.setProveedor(producto.getProveedor());
-
+        p1.setPrecioCompra(producto.getPrecioCompra());
+        p1.setTipoVenta(producto.getTipoVenta());
+        p1.setStockMinimo(producto.getStockMinimo());
+        p1.setIncremento(producto.getIncremento());
         if (producto.getCategoria() != null) {
             p1.setCategoria(producto.getCategoria());
         }
@@ -78,12 +81,24 @@ public class ProductoServiceImpl implements ProductoServicio{
 
     @Transactional
     @Override
-    public void AgregarStock(Long id, BigDecimal cantidad) {
-        repositorio.findById(id).orElseThrow(()-> new RuntimeException("Producto No Encontrado"));
-        Productos producto = repositorio.findById(id).get();
-        BigDecimal stockActual = producto.getCantidad();
-        BigDecimal nuevoStock = stockActual.add(cantidad);
-        producto.setCantidad(nuevoStock);
+    public void AgregarStock(Long id, BigDecimal cantidad,BigDecimal nuevoImpuesto,BigDecimal precioCompraN) {
+        Productos producto = repositorio.findById(id)
+                .orElseThrow(() -> new RuntimeException("Producto No Encontrado con ID: " + id));
+
+
+        BigDecimal stockActual = (producto.getCantidad() == null) ? BigDecimal.ZERO : producto.getCantidad();
+        producto.setCantidad(stockActual.add(cantidad));
+
+        if (nuevoImpuesto != null && nuevoImpuesto.compareTo(BigDecimal.ZERO) >= 0) {
+            producto.setImpuesto(nuevoImpuesto);
+        }
+        
+        // ACTUALIZACIÓN: Guardar el precio de compra enviado desde la factura
+        if (precioCompraN != null && precioCompraN.compareTo(BigDecimal.ZERO) > 0) {
+            producto.setPrecioCompra(precioCompraN);
+        }
+
+        repositorio.save(producto);
     }
 
     @Override

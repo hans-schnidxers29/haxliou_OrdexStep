@@ -73,7 +73,7 @@
                     <div class="small-box bg-gradient-danger elevation-3">
                         <div class="inner">
                             <p>Total de Gastos</p>
-                            <h3>$ <span th:text="${#numbers.formatDecimal(totalGastos, 1, 'COMMA', 3, 'POINT')}">0.00</span></h3>
+                            <h3>$ <span th:text="${#numbers.formatDecimal(datos['EgresosTotales'], 1, 'COMMA', 3, 'POINT')}">0.00</span></h3>
                         </div>
                         <div class="icon">
                             <i class="fas fa-hand-holding-usd"></i>
@@ -85,7 +85,7 @@
                     <div class="small-box bg-gradient-warning elevation-3">
                         <div class="inner text-white">
                             <p>Gastos Fijos</p>
-                            <h3>$ <span th:text="${#numbers.formatDecimal(gastosFijos , 1, 'COMMA', , 'POINT')}">0.00</span></h3>
+                            <h3>$ <span th:text="${#numbers.formatDecimal(datos['GastosFijos'] , 1, 'COMMA', 2, 'POINT')}">0.00</span></h3>
                         </div>
                         <div class="icon">
                             <i class="fas fa-receipt"></i>
@@ -97,7 +97,7 @@
                     <div class="small-box bg-gradient-info elevation-3">
                         <div class="inner">
                             <p>Gastos Variables</p>
-                            <h3>$ <span th:text="${#numbers.formatDecimal(gastosVariables , 1, 'COMMA', 2, 'POINT')}">0.00</span></h3>
+                            <h3>$ <span th:text="${#numbers.formatDecimal(datos['GastosVariables'] , 1, 'COMMA', 2, 'POINT')}">0.00</span></h3>
                         </div>
                         <div class="icon">
                             <i class="fas fa-exchange-alt"></i>
@@ -109,7 +109,7 @@
                     <div class="small-box bg-gradient-secondary elevation-3">
                         <div class="inner">
                             <p>Cantidad de Registros</p>
-                            <h3 th:text="${cantidadGastos ?: 0}">0</h3>
+                            <h3 th:text="${egresos.size() ?: 0}">0</h3>
                         </div>
                         <div class="icon">
                             <i class="fas fa-list-ol"></i>

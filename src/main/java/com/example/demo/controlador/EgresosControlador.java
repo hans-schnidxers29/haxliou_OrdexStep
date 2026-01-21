@@ -15,6 +15,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.temporal.TemporalAdjusters;
+
 @Controller
 @RequestMapping("/egresos")
 public class EgresosControlador {
@@ -49,7 +54,7 @@ public class EgresosControlador {
             egresos.setUsuario(usuario_registra);
             egresoServicio.CrearGasto(egresos);
             redirectAttributes.addFlashAttribute("success", "Egreso creado exitosamente");
-            return "redirect:/egresos/crear";
+            return "redirect:/egresos/listar";
 
         }catch (Exception e){
             redirectAttributes.addFlashAttribute("error", "Error al crear el egreso: " + e.getMessage());
@@ -60,6 +65,12 @@ public class EgresosControlador {
     @GetMapping("/listar")
     public String ListaDeEgresos(Model model){
         model.addAttribute("egresos",egresoServicio.ListarGastos());
+        int anio = LocalDate.now().getYear();
+        int mes = LocalDate.now().getMonthValue();
+        LocalDate primerDia = LocalDate.of(anio, mes, 1);
+        LocalDateTime inicio = primerDia.atStartOfDay();
+        LocalDateTime fin = primerDia.with(TemporalAdjusters.lastDayOfMonth()).atTime(LocalTime.MAX);
+        model.addAttribute("datos",egresoServicio.DatosEgresos(inicio,fin));
         return "viewEgresos/index";
     }
 }

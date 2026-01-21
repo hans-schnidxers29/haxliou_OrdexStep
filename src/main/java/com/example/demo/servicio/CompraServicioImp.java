@@ -3,12 +3,19 @@ package com.example.demo.servicio;
 import com.example.demo.entidad.Compras;
 import com.example.demo.entidad.DetalleCompra;
 import com.example.demo.entidad.Enum.EstadoCompra;
+import com.example.demo.entidad.Enum.TipoVenta;
 import com.example.demo.repositorio.ComprasRepositorio;
+import com.example.demo.repositorio.ProductoRepositorio;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class CompraServicioImp implements CompraServicio{
@@ -18,6 +25,9 @@ public class CompraServicioImp implements CompraServicio{
 
     @Autowired
     private ProductoServicio productoServicio;
+
+    @Autowired
+    private ProductoRepositorio ProductoRepositorio;
 
     @Override
     public void saveCompra(Compras compras) {
@@ -81,12 +91,20 @@ public class CompraServicioImp implements CompraServicio{
             throw new IllegalStateException("La compra ya fue confirmada o anulada");
         }
         for (DetalleCompra detalleCompra : compra.getDetalles()) {
-            productoServicio.AgregarStock(detalleCompra.getProductos().getId(), detalleCompra.getCantidad());
+            // Obtenemos los valores que el usuario editó en el formulario de compra
+            BigDecimal nuevoImpuesto = detalleCompra.getProductos().getImpuesto();
+            BigDecimal nuevoPrecioCompra = detalleCompra.getProductos().getPrecioCompra(); // <-- CORREGIDO: Usar precioCompra
+            
+            productoServicio.AgregarStock(
+                    detalleCompra.getProductos().getId(), 
+                    detalleCompra.getCantidad(),
+                    nuevoImpuesto,
+                    nuevoPrecioCompra
+                );
+            }
+            
+            compra.setEstado(EstadoCompra.CONFIRMADA);
         }
-        String referencia = compra.getNumeroReferencia();
-        compra.setNumeroReferencia(referencia);
-        compra.setEstado(EstadoCompra.CONFIRMADA);
-    }
 
     @Override
     @Transactional
@@ -100,4 +118,30 @@ public class CompraServicioImp implements CompraServicio{
         compra.setEstado(EstadoCompra.ANULADA);
     }
 
+    public Map<String, Object> StokMensual(LocalDateTime inicio, LocalDateTime fin) {
+        Map<String, Object> datos = new HashMap<>();
+
+        // Gasto total (este ya te funciona)
+        datos.put("TotalEgresos", repositorio.sumTotalCompras(inicio, fin));
+
+        // Cantidades (usando los nombres de los Enums)
+        BigDecimal unidades = repositorio.sumarTotalEntrantePorTipoYRango(
+                TipoVenta.UNIDAD.name(), // Convertir a String
+                EstadoCompra.CONFIRMADA.name(), // Convertir a String
+                inicio,
+                fin
+        );
+
+        BigDecimal peso = repositorio.sumarTotalEntrantePorTipoYRango(
+                TipoVenta.PESO.name(), // O el nombre exacto de tu enum para peso
+                EstadoCompra.CONFIRMADA.name(),
+                inicio,
+                fin
+        );
+
+        datos.put("EntradasEnUnidades", unidades);
+        datos.put("EntradasEnKg", peso);
+
+        return datos;
+     }
 }

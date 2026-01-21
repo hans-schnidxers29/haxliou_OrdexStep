@@ -3,6 +3,7 @@ package com.example.demo.servicio;
 import com.example.demo.ModuloVentas.VentaRepositorio;
 import com.example.demo.entidad.CierreMensual;
 import com.example.demo.entidad.DetalleCompra;
+import com.example.demo.entidad.Enum.EstadoPedido;
 import com.example.demo.entidad.Productos;
 import com.example.demo.repositorio.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -91,7 +92,7 @@ public class CierreMensualImp implements CierreMensualServicio{
         cierre.setTotalCompras(totalCompras);
         cierre.setUtilidadBruta(utilidadBruta); // AGREGAR ESTE CAMPO
         cierre.setUtilidadNeta(utilidadNeta);
-        cierre.setCantidadPedidos(pedidoRepo.cantidadPedidosPorRango(inicio, fin).intValue());
+        cierre.setCantidadPedidos(pedidoRepo.cantidadPedidosPorRango(inicio, fin,EstadoPedido.CONFIRMADO).intValue());
         cierre.setNuevosClientes(nuevosClientes);
         cierre.setTotalProductosEnStock(productoRepo.findAll().size());
         cierre.setValorInventarioTotal(valorInventario);
@@ -111,44 +112,71 @@ public class CierreMensualImp implements CierreMensualServicio{
         LocalDateTime fechaFin = fechaInicio.with(TemporalAdjusters.lastDayOfMonth()).withHour(23).withMinute(59).withSecond(59);
 
         BigDecimal utilidadActual = calcularUtilidad(mes, anio);
-        int mesAnt= (mes  == 1) ? 12 : mes-1;
-        int anioAnt = (mes == 1 ) ? anio - 1: anio;
+        int mesAnt = (mes == 1) ? 12 : mes - 1;
+        int anioAnt = (mes == 1) ? anio - 1 : anio;
         BigDecimal utilidadAnterior = calcularUtilidad(mesAnt, anioAnt);
 
         boolean utilidadSubio = utilidadActual.compareTo(utilidadAnterior) > 0;
         double porcentaje = 0.0;
 
         if (utilidadAnterior.compareTo(BigDecimal.ZERO) != 0) {
-            // (Actual - Anterior) / Anterior * 100
             porcentaje = utilidadActual.subtract(utilidadAnterior)
                     .divide(utilidadAnterior.abs(), 4, RoundingMode.HALF_UP)
                     .multiply(new BigDecimal("100")).doubleValue();
         }
-        // 1. Productos en Stock (Total unidades)
-        long stockTotalUnd = productoRepo.findAll().stream().filter(p->p.getUnidadMedida()
-                        .equalsIgnoreCase("unidad"))
+
+        // 1. Inventarios
+        long stockTotalUnd = productoRepo.findAll().stream().filter(p -> p.getUnidadMedida().equalsIgnoreCase("unidad"))
                 .mapToLong(p -> p.getCantidad().longValue()).sum();
 
-        BigDecimal stockTotalkg = productoRepo.findAll().stream().filter(p->p.getUnidadMedida()
-                .equalsIgnoreCase("kg")).map(Productos::getCantidad).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal stockTotalkg = productoRepo.findAll().stream().filter(p -> p.getUnidadMedida().equalsIgnoreCase("kg"))
+                .map(Productos::getCantidad).reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal valorInventario = productoRepo.findAll().stream().map(p -> {
-                    BigDecimal ultimoCosto = detalleRepo.findTopByProductosOrderByCompra_FechaCompraDesc(p)
-                            .map(DetalleCompra::getPrecioUnitario)
-                            .orElse(p.getPrecio());
-                    return ultimoCosto.multiply(p.getCantidad());
-                }).reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal ultimoCosto = detalleRepo.findTopByProductosOrderByCompra_FechaCompraDesc(p)
+                    .map(DetalleCompra::getPrecioUnitario)
+                    .orElse(p.getPrecio());
+            return ultimoCosto.multiply(p.getCantidad());
+        }).reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // 2. Ventas por método de pago (CON VALIDACIÓN NULL)
+        // 2. Ventas por método de pago
         BigDecimal efectivo = nvl(ventaRepo.sumaPorMetodoPago(fechaInicio, fechaFin, "EFECTIVO"));
         BigDecimal tarjeta = nvl(ventaRepo.sumaPorMetodoPago(fechaInicio, fechaFin, "TARJETA"));
         BigDecimal transferencia = nvl(ventaRepo.sumaPorMetodoPago(fechaInicio, fechaFin, "TRANSFERENCIA"));
         BigDecimal mixto = nvl(ventaRepo.sumaPorMetodoPago(fechaInicio, fechaFin, "MIXTO"));
+
+        // totalVentas representa solo ventas directas
         BigDecimal totalVentas = efectivo.add(tarjeta).add(transferencia).add(mixto);
 
-        // 3. Utilidad Proyectada (Ventas - Costos - Egresos del mes actual)
-        BigDecimal egresos = egresoRepo.sumarEgresosPorDia(fechaInicio, fechaFin); // Implementar en repo
+        // 3. Consolidación de Pedidos (MOVIDO HACIA ARRIBA PARA EL CÁLCULO)
+        BigDecimal TotalPediosConfirmados = pedidoRepo.sumaTotalPedidosPorEstado(fechaInicio, fechaFin, EstadoPedido.ENTREGADO);
+        Long TotalPedidos = pedidoRepo.cantidadPedidosPorRango(fechaInicio, fechaFin, EstadoPedido.ENTREGADO);
+        if (TotalPedidos == null) TotalPedidos = 0L;
 
+
+        // Usamos esta suma para el Margen y el Ticket
+        BigDecimal TotalIngresos = totalVentas.add(TotalPediosConfirmados).setScale(2, RoundingMode.HALF_UP);
+
+        // 4. Margen Bruto (Ahora usando TotalIngresos en lugar de solo totalVentas)
+        BigDecimal MargenBruto = BigDecimal.ZERO;
+        if (TotalIngresos.compareTo(BigDecimal.ZERO) > 0) {
+            MargenBruto = utilidadActual.multiply(new BigDecimal("100"))
+                    .divide(TotalIngresos, 2, RoundingMode.HALF_UP);
+        }
+
+        // 5. Consolidación de Cantidades y Ticket Promedio
+        BigDecimal CantidadDeVentas = nvl(ventaRepo.CantidadDeVentas(fechaInicio, fechaFin));
+        BigDecimal TotalCantidades = CantidadDeVentas.add(BigDecimal.valueOf(TotalPedidos));
+
+        BigDecimal TicketPromedio = BigDecimal.ZERO.setScale(2);
+        if (TotalCantidades.compareTo(BigDecimal.ZERO) > 0) {
+            // El ticket promedio debe ser sobre el dinero TOTAL
+            TicketPromedio = TotalIngresos.divide(TotalCantidades, 2, RoundingMode.HALF_UP);
+        }
+
+        BigDecimal egresos = nvl(egresoRepo.sumarEgresosPorDia(fechaInicio, fechaFin));
+
+        // Mantenemos tus nombres exactos en el mapa
         resumen.put("stockUnidades", stockTotalUnd);
         resumen.put("stockPesable", stockTotalkg);
         resumen.put("inversion", valorInventario);
@@ -156,11 +184,13 @@ public class CierreMensualImp implements CierreMensualServicio{
         resumen.put("utilidad", utilidadActual);
         resumen.put("utilidadSubio", utilidadSubio);
         resumen.put("porcentajeUtilidad", Math.abs(porcentaje));
-        resumen.put("ingresosTotales",totalVentas);
+        resumen.put("ingresosTotales", TotalIngresos); // Ahora sí incluye ventas + pedidos
+        resumen.put("porcentajeMargen", MargenBruto);
+        resumen.put("ticketPromedio", TicketPromedio);
+        resumen.put("totalPedidos", TotalPedidos);
 
         return resumen;
     }
-
     @Override
     public BigDecimal calcularUtilidad(int mes, int anio) {
         // 1. Definir rango de fechas para el mes solicitado

@@ -109,6 +109,7 @@
                                                 <p class="mb-0 font-weight-bold text-success small">Cliente Seleccionado:</p>
                                                 <div id="clienteNombre" class="font-weight-bold"></div>
                                                 <div id="clienteTelefono" class="small text-muted"></div>
+                                                <div id="clienteEmail" class="small text-muted"></div>
                                             </div>
                                         </div>
                                         <input type="hidden" name="cliente.id" id="clienteIdHidden">
@@ -263,9 +264,11 @@
                 document.getElementById('clienteIdHidden').value = cliente.id;
                 document.getElementById('clienteNombre').textContent = cliente.nombre + ' ' + (cliente.apellido || '');
                 document.getElementById('clienteTelefono').textContent = "Tel: " + (cliente.telefono || 'N/A');
+                document.getElementById('clienteEmail').textContent = cliente.email || 'N/A';
                 document.getElementById('clienteNoSeleccionado').style.display = 'none';
                 document.getElementById('clienteInfo').classList.add('show');
                 document.getElementById('clienteCard').classList.add('encontrado');
+                Swal.fire({ icon: 'success', title: 'Cliente Encontrado', timer: 1000, showConfirmButton: false });
             } else {
                 Swal.fire({
                     title: 'No existe',

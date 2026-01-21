@@ -16,7 +16,7 @@ public interface ProductoServicio {
     List<String>NombreProductosVentas();
     List<BigDecimal>CantidadProductosVentas();
     List<Object[]>verificarStock();
-    void AgregarStock(Long id,BigDecimal cantidad);
+    void AgregarStock(Long id,BigDecimal cantidad, BigDecimal NuevoImpuesto,BigDecimal precioCompra);
     List<Map<String,Object>>ProductoSimple();
 
 }

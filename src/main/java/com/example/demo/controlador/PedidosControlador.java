@@ -59,8 +59,6 @@ public class PedidosControlador {
         model.addAttribute("Estadisticas",pedidoService.ContarPorestados(EstadoPedido.PENDIENTE));
         model.addAttribute("Estadisticas2",pedidoService.estadoCEntregado(EstadoPedido.ENTREGADO));
         model.addAttribute("Estadisticas3",pedidoService.estadoCancelado(EstadoPedido.CANCELADO));
-        model.addAttribute("conteoPedidos",clienteService.ListaCLientePedidos());
-        model.addAttribute("nombresClientes",clienteService.NombreListPedidos());
         List<Map<String, Object>> pendientesSimple = pedidoService.listarpedidos().stream()
                 .filter(p -> p.getEstado() == EstadoPedido.PENDIENTE)
                 .map(p -> {
