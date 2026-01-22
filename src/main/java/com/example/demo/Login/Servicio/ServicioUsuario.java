@@ -15,5 +15,5 @@ public interface ServicioUsuario extends UserDetailsService {
     Usuario findByEmail(String email);
     void ActualizarRol(Long idUser, Rol rol );
     void actualizarContrasena(Long idUser, String password);
-
+    Usuario saveUserRolADmin(Usuario usuario);
 }

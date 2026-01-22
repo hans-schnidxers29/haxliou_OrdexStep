@@ -122,7 +122,17 @@ public class ServicioUsuarioImp implements ServicioUsuario {
     private Collection<? extends GrantedAuthority> mapearAutoridadesRoles(Collection<Rol> roles) {
         return roles.stream().map(role -> new SimpleGrantedAuthority(role.getNombre())).collect(Collectors.toList());
     }
+    @Override
+    public Usuario saveUserRolADmin(Usuario usuario) {
+        // Asignamos el rol por defecto (ROLE_ADMIN o ROLE_USER según prefieras)
+        usuario.setRoles(Arrays.asList(new Rol("ROLE_ADMIN")));
 
+        // Encriptamos la contraseña que viene del objeto
+        usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
+
+        // Guardamos el objeto completo con los campos de empresa
+        return repositorioUsuario.save(usuario);
+    }
 
 
 }
