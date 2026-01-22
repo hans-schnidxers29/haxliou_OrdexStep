@@ -1,8 +1,0 @@
-services:
-  - type: web
-    name: gestorpedidos-api
-    runtime: docker
-    dockerfilePath: ./Dockerfile
-    envVars:
-      - key: DATABASE_URL
-        sync: false
