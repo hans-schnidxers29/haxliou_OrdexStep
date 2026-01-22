@@ -4,10 +4,7 @@ package com.example.demo.Login.Controlador;
 import com.example.demo.Login.Servicio.ServicioUsuario;
 import com.example.demo.ModuloVentas.VentaServicio;
 import com.example.demo.entidad.Enum.EstadoPedido;
-import com.example.demo.servicio.ClienteService;
-import com.example.demo.servicio.EgresoServicio;
-import com.example.demo.servicio.PedidoService;
-import com.example.demo.servicio.ProductoServicio;
+import com.example.demo.servicio.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -34,6 +31,13 @@ public class ControldorInicio {
     @Autowired
     private EgresoServicio egresoServicio;
 
+    @Autowired
+    private CompraServicio compraServicio;
+
+    @Autowired private ProveedorServicio proveedorServicio;
+
+
+
 
 
     @GetMapping("/login")
@@ -44,8 +48,6 @@ public class ControldorInicio {
     @GetMapping( "/Home")
     public String verPaginaDeInicio(Model modelo) {
         modelo.addAttribute("usuarios", servicioUsuario.ListarUSer());
-        modelo.addAttribute("nombresMasVendidos", productoServicio.NombreProductosVentas());
-        modelo.addAttribute("cantidadesMasVendidas", productoServicio.CantidadProductosVentas());
         modelo.addAttribute("recaudacionMes", ventaServicio.TotalVentasMesActual());
         modelo.addAttribute("totalClientes", clienteService.listarcliente().size());
         modelo.addAttribute("totalPedidosPendientes", pedidoservicio.listarpedidos()
@@ -66,11 +68,11 @@ public class ControldorInicio {
         model.addAttribute("pedidos",pedidoservicio.listarpedidos());
         model.addAttribute("clientes",clienteService.listarcliente());
         model.addAttribute("egresos",egresoServicio.ListarGastos());
-        model.addAttribute("totalClientes",clienteService.listarcliente().size());
         model.addAttribute("totalPedidos",pedidoservicio.listarpedidos().size());
-        model.addAttribute("totalVentas",ventaServicio.ListarVenta().size());
         model.addAttribute("recaudacionTotal",ventaServicio.TotalVentasMesActual());
-
+        model.addAttribute("compras",compraServicio.listarCompra());
+        model.addAttribute("productos",productoServicio.listarProductos());
+        model.addAttribute("proveedores",proveedorServicio.listarproveedores());
         return "pdf/reportes";
     }
 

@@ -54,9 +54,7 @@ public class PedidosServiceImp implements PedidoService{
         pedidos1.setEstado(pedidos.getEstado());
         pedidos1.setObservaciones(pedidos.getObservaciones());
         pedidos1.setFlete(pedidos.getFlete());
-        // ✅ Actualizar detalles usando el método helper
-        pedidos1.actualizarDetalles(pedidos.getDetalles());
-        // Actualizar totales
+
         pedidos1.setSubtotal(pedidos.getSubtotal());
         pedidos1.setImpuesto(pedidos.getImpuesto());
         pedidos1.setTotal(pedidos.getTotal());
@@ -88,8 +86,7 @@ public class PedidosServiceImp implements PedidoService{
             // 3. Buscar el producto completo desde la BD
             Productos productoBD = productoServicio.productoById(detalle.getProducto().getId());
 
-            // 4. Verificar stock suficiente: productoBD.getCantidad() < detalle.getCantidad()
-            // compareTo devuelve -1 si el stock en BD es menor a lo solicitado
+            // 4. Verificar stock suficiente
             if (productoBD.getCantidad().compareTo(detalle.getCantidad()) < 0) {
                 throw new RuntimeException("Stock insuficiente para el producto: " + productoBD.getNombre() +
                         ". Disponible: " + productoBD.getCantidad() +
@@ -99,14 +96,12 @@ public class PedidosServiceImp implements PedidoService{
             // 5. Guardar cantidad original para el registro (Log)
             BigDecimal cantidadAnterior = productoBD.getCantidad();
 
-            // 6. Descontar stock: productoBD.getCantidad() - detalle.getCantidad()
+            // 6. Descontar stock
             BigDecimal nuevaCantidad = productoBD.getCantidad().subtract(detalle.getCantidad());
             productoBD.setCantidad(nuevaCantidad);
 
-            // 7. Sincronizar objetos
-            detalle.setProducto(productoBD);
 
-            // 8. Persistir cambios
+            // 8. Persistir cambios SOLO DEL PRODUCTO
             productoServicio.save(productoBD);
 
             System.out.println("Stock actualizado (Pedido) - Producto: " + productoBD.getNombre() +

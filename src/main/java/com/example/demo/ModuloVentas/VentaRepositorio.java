@@ -73,6 +73,9 @@ public interface VentaRepositorio extends JpaRepository<Venta, Long> {
             @Param("metodoPago") String metodoPago
     );
 
+    @Query("SELECT COALESCE((COUNT(v)),0) FROM Venta v WHERE v.fechaVenta BETWEEN :inicio AND :fin ")
+    BigDecimal CantidadDeVentas(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin);
+
 
 
 }

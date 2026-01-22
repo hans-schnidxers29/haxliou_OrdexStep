@@ -2,6 +2,7 @@ package com.example.demo.entidad;
 
 
 import com.example.demo.entidad.Enum.EstadoPedido;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
@@ -30,49 +31,28 @@ public class Pedidos {
     @Column(nullable = false)
     private EstadoPedido estado = EstadoPedido.PENDIENTE;
 
-    @Column(name = "subtotal", precision = 10, scale = 2, nullable = false)
+    @Column(name = "subtotal", precision = 15, scale = 2, nullable = false)
     private BigDecimal subtotal = BigDecimal.ZERO;
 
     @Column(name = "impuesto", precision = 10, scale = 2, nullable = false)
     private BigDecimal impuesto = BigDecimal.ZERO;
 
-    @Column(name = "total", precision = 10, scale = 2, nullable = false)
+    @Column(name = "total", precision = 15, scale = 2, nullable = false)
     private BigDecimal total = BigDecimal.ZERO;
 
     @Column(columnDefinition = "TEXT")
     private String observaciones;
 
-    @Column(name = "Flete", precision = 10, scale = 2)
+    @Column(name = "Flete", precision = 15, scale = 2)
     private BigDecimal Flete;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_cliente", nullable = false)
+    @JsonBackReference
     private Cliente cliente;
 
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DetallePedido> detalles = new ArrayList<>();
-
-    @PrePersist
-    @PreUpdate
-    public void calcularTotales() {
-        // 1. Inicializar subtotal de productos
-        this.subtotal = BigDecimal.ZERO;
-        if (this.detalles != null) {
-            for (DetallePedido detalle : detalles) {
-                this.subtotal = this.subtotal.add(detalle.getSubtotal());
-            }
-        }
-        BigDecimal valorFlete = (this.Flete != null) ? this.Flete : BigDecimal.ZERO;
-        BigDecimal porcentajeImpuesto = (this.impuesto != null) ? this.impuesto : BigDecimal.ZERO;
-
-        BigDecimal baseImponible = this.subtotal.add(valorFlete);
-
-        // 4. Calcular el MONTO del impuesto (Base * Porcentaje / 100)
-        BigDecimal montoImpuesto = baseImponible.multiply(porcentajeImpuesto)
-                .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
-        // 5. Total Final = Base + Impuesto
-        this.total = baseImponible.add(montoImpuesto).setScale(2, RoundingMode.HALF_UP);
-    }
 
     public Pedidos() {
     }
@@ -89,12 +69,15 @@ public class Pedidos {
     }
 
     public void actualizarDetalles(List<DetallePedido> nuevosDetalles) {
-        this.detalles.clear(); // Limpia los anteriores
+        // 1. Limpiar la lista actual (sin perder la referencia que Hibernate rastrea)
+        this.detalles.clear();
+
+        // 2. Añadir los nuevos elementos
         if (nuevosDetalles != null) {
-            for (DetallePedido detalle : nuevosDetalles) {
-                detalle.setPedido(this); // Importante: Vincular de vuelta al pedido
+            nuevosDetalles.forEach(detalle -> {
+                detalle.setPedido(this); // Mantener el vínculo bidireccional
                 this.detalles.add(detalle);
-            }
+            });
         }
     }
 

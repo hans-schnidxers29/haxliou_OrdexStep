@@ -9,7 +9,7 @@
         .cliente-card {
             border: 2px dashed #ddd;
             border-radius: 10px;
-            padding: 15px;
+            padding: 12px;
             background-color: #f9f9f9;
             transition: all 0.3s;
         }
@@ -20,22 +20,42 @@
         .cliente-info { display: none; }
         .cliente-info.show { display: block; }
 
-        .detalle-item {
-            border-bottom: 1px solid #eee;
-            transition: background 0.3s;
+        .sticky-resumen {
+            position: -webkit-sticky;
+            position: sticky;
+            top: 20px;
+            z-index: 1020;
         }
-        .detalle-item:hover { background-color: #fcfcfc; }
 
-        .total-box {
+        .resumen-compacto .card-body {
+            padding: 12px !important;
+        }
+
+        .resumen-compacto .form-group {
+            margin-bottom: 8px !important;
+        }
+
+        .total-box-mini {
             background-color: #f8f9fa;
             border-radius: 5px;
-            padding: 15px;
+            padding: 10px;
             border: 1px solid #dee2e6;
         }
-        .total-final {
-            font-size: 1.5rem;
+
+        .total-final-mini {
+            font-size: 1.3rem;
             color: #007bff;
             font-weight: bold;
+        }
+
+        .table td, .table th {
+            padding: 0.6rem !important;
+            vertical-align: middle !important;
+            font-size: 0.9rem;
+        }
+
+        .form-control-sm {
+            height: calc(1.8rem + 2px);
         }
     </style>
 </head>
@@ -55,21 +75,18 @@
     <section class="content">
         <div class="container-fluid">
             <form th:action="@{/pedidos/crear}" th:object="${pedido}" method="POST" id="formPedido">
-
                 <div class="row">
-                    <div class="col-md-8">
-                        <div class="card card-primary card-outline shadow">
-                            <div class="card-header">
-                                <h3 class="card-title font-weight-bold">
-                                    <i class="fas fa-user-search mr-1"></i> Información del Cliente
-                                </h3>
+                    <div class="col-md-9">
+                        <div class="card card-primary card-outline shadow mb-3">
+                            <div class="card-header py-2">
+                                <h3 class="card-title font-weight-bold"><i class="fas fa-user-search mr-1"></i> Cliente</h3>
                             </div>
                             <div class="card-body">
                                 <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="buscarNumeroId">Identificación <span class="text-danger">*</span></label>
-                                            <div class="input-group">
+                                    <div class="col-md-7">
+                                        <div class="form-group mb-2">
+                                            <label class="small">Identificación <span class="text-danger">*</span></label>
+                                            <div class="input-group input-group-sm">
                                                 <input type="text" id="buscarNumeroId" class="form-control" placeholder="Cédula o NIT...">
                                                 <div class="input-group-append">
                                                     <button type="button" class="btn btn-primary" onclick="buscarCliente()">
@@ -78,24 +95,21 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="form-group">
-                                            <label for="fechaEntrega">Fecha de Entrega <span class="text-danger">*</span></label>
-                                            <input type="datetime-local" id="fechaEntrega" th:field="*{fechaEntrega}" class="form-control" required>
+                                        <div class="form-group mb-0">
+                                            <label class="small">Fecha de Entrega <span class="text-danger">*</span></label>
+                                            <input type="datetime-local" th:field="*{fechaEntrega}" class="form-control form-control-sm" required>
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-5">
                                         <div class="cliente-card" id="clienteCard">
                                             <div class="text-center text-muted" id="clienteNoSeleccionado">
-                                                <i class="fas fa-user-slash fa-2x mb-2"></i>
-                                                <p class="mb-0">Sin cliente seleccionado</p>
+                                                <p class="mb-0 small">Busque un cliente para continuar</p>
                                             </div>
                                             <div class="cliente-info" id="clienteInfo">
-                                                <h5 class="text-success mb-2">
-                                                    <i class="fas fa-check-circle mr-1"></i> Seleccionado
-                                                </h5>
-                                                <p class="mb-1"><strong>Nombre:</strong> <span id="clienteNombre"></span></p>
-                                                <p class="mb-1"><strong>Email:</strong> <span id="clienteEmail"></span></p>
-                                                <p class="mb-0"><strong>Tel:</strong> <span id="clienteTelefono"></span></p>
+                                                <p class="mb-0 font-weight-bold text-success small">Cliente Seleccionado:</p>
+                                                <div id="clienteNombre" class="font-weight-bold"></div>
+                                                <div id="clienteTelefono" class="small text-muted"></div>
+                                                <div id="clienteEmail" class="small text-muted"></div>
                                             </div>
                                         </div>
                                         <input type="hidden" name="cliente.id" id="clienteIdHidden">
@@ -105,109 +119,106 @@
                         </div>
 
                         <div class="card card-info shadow">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <h3 class="card-title font-weight-bold">
-                                    <i class="fas fa-boxes mr-1"></i> Ítems del Pedido
-                                </h3>
-                                <button type="button" class="btn btn-primary btn-sm ml-auto" onclick="agregarDetalle()">
-                                    <i class="fas fa-plus mr-1"></i> Agregar Producto
+                            <div class="card-header d-flex justify-content-between align-items-center py-2">
+                                <h3 class="card-title font-weight-bold small"><i class="fas fa-boxes mr-1"></i> Ítems</h3>
+                                <button type="button" class="btn btn-primary btn-xs ml-auto" onclick="agregarDetalle()">
+                                    <i class="fas fa-plus"></i> Añadir
                                 </button>
                             </div>
                             <div class="card-body p-0">
-                                <table class="table table-striped mb-0">
-                                    <thead class="bg-light">
-                                    <tr>
-                                        <th style="width: 25%">Categoría</th>
-                                        <th style="width: 25%">Producto</th>
-                                        <th style="width: 10%">Cant.</th>
-                                        <th style="width: 15%">P. Unit</th>
-                                        <th style="width: 10%">IVA %</th>
-                                        <th style="width: 15%">Subtotal</th>
-                                        <th style="width: 40px"></th>
-                                    </tr>
-                                    </thead>
-                                    <tbody id="detallesContainer">
-                                    <tr class="detalle-item">
-                                        <td>
-                                            <select class="form-control categoria-filter" onchange="filtrarProductos(this)">
-                                                <option value="">-- Todas --</option>
-                                                <option th:each="cat : ${categoria}"
-                                                        th:value="${cat.id}"
-                                                        th:text="${cat.nombrecategoria}"></option>
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <select name="detalles[0].producto.id" class="form-control producto-select" required onchange="actualizarPrecio(0)">
-                                                <option value="" disabled selected>-- Seleccionar --</option>
-                                                <option th:each="p : ${productos}"
-                                                        th:value="${p.id}"
-                                                        th:text="${p.nombre}"
-                                                        th:data-categoria="${p.categoria.id}"
-                                                        th:data-precio="${p.precio}"
-                                                        th:data-impuesto="${p.impuesto}"
-                                                        th:data-tipo="${p.tipoVenta.name()}"></option>
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <input type="number" name="detalles[0].cantidad" class="form-control cantidad-input" min="0.01" value="1.00" step="0.01" required onchange="calcularSubtotal(0)">
-                                        </td>
-                                        <td>
-                                            <input type="number" name="detalles[0].precioUnitario" class="form-control precio-unitario bg-light" step="0.01" readonly>
-                                        </td>
-                                        <td>
-                                            <input type="number" name="detalles[0].impuestoProducto" class="form-control impuesto-producto bg-light" step="0.01" readonly>
-                                        </td>
-                                        <td>
-                                            <input type="number" name="detalles[0].subtotal" class="form-control subtotal-item bg-light text-bold" step="0.01" readonly>
-                                        </td>
-                                        <td class="text-center"></td>
-                                    </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <div class="card card-secondary card-outline shadow">
-                            <div class="card-header p-2">
-                                <span class="ml-2 font-weight-bold text-muted">Observaciones</span>
-                            </div>
-                            <div class="card-body p-2">
-                                <textarea th:field="*{observaciones}" class="form-control border-0" rows="2" placeholder="Notas adicionales..."></textarea>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-striped mb-0">
+                                        <thead class="bg-light">
+                                        <tr>
+                                            <th>Categoría</th>
+                                            <th>Producto</th>
+                                            <th style="width: 120px;">Cantidad</th>
+                                            <th>P. Unit (Ref)</th>
+                                            <th>IVA % (Ref)</th>
+                                            <th>Subtotal (Ref)</th>
+                                            <th style="width: 40px;"></th>
+                                        </tr>
+                                        </thead>
+                                        <tbody id="detallesContainer">
+                                        <tr class="detalle-item">
+                                            <td>
+                                                <select class="form-control form-control-sm categoria-filter" onchange="filtrarProductos(this)">
+                                                    <option value="">-- Todas --</option>
+                                                    <option th:each="cat : ${categorias}" th:value="${cat.id}" th:text="${cat.nombrecategoria}"></option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <select name="detalles[0].producto.id" class="form-control form-control-sm producto-select" required onchange="actualizarPrecio(0)">
+                                                    <option value="" disabled selected>-- Seleccionar --</option>
+                                                    <option th:each="p : ${productos}"
+                                                            th:value="${p.id}"
+                                                            th:text="${p.nombre}"
+                                                            th:data-categoria="${p.categoria.id}"
+                                                            th:data-precio="${p.precio}"
+                                                            th:data-impuesto="${p.impuesto}"
+                                                            th:data-tipo="${p.tipoVenta.name()}"></option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <div class="input-group input-group-sm">
+                                                    <input type="number"
+                                                           name="detalles[0].cantidad"
+                                                           class="form-control cantidad-input"
+                                                           min="0.01"
+                                                           value="1"
+                                                           step="any"
+                                                           required
+                                                           onchange="calcularSubtotal(0)">
+                                                    <div class="input-group-append">
+                                                        <span class="input-group-text unidad-label p-1" style="font-size: 0.7rem;">un</span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td><input type="text" class="form-control form-control-sm precio-unitario-display bg-light text-right" readonly tabindex="-1"></td>
+                                            <td><input type="text" class="form-control form-control-sm impuesto-display bg-light text-right" readonly tabindex="-1"></td>
+                                            <td><input type="text" class="form-control form-control-sm subtotal-display bg-light font-weight-bold text-right" readonly tabindex="-1"></td>
+                                            <td></td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="col-md-4">
-                        <div class="card shadow">
-                            <div class="card-header bg-primary">
-                                <h3 class="card-title font-weight-bold">Resumen Económico</h3>
-                            </div>
-                            <div class="card-body">
-                                <div class="form-group d-flex justify-content-between">
-                                    <span>Subtotal (Base):</span>
-                                    <span class="font-weight-bold">$ <span id="totalSubtotalLabel">0.00</span></span>
-                                    <input type="hidden" id="totalSubtotal">
+                    <div class="col-md-3">
+                        <div class="sticky-resumen">
+                            <div class="card shadow resumen-compacto border-primary">
+                                <div class="card-header bg-primary py-2 text-center">
+                                    <h3 class="card-title float-none font-weight-bold" style="font-size: 0.9rem;">Resumen</h3>
                                 </div>
-                                <div class="form-group">
-                                    <label for="flete">Flete / Envío (Opcional)</label>
-                                    <input type="number" id="flete" th:field="*{flete}" class="form-control" step="0.01" min="0" onchange="calcularTotal()">
-                                </div>
-                                <div class="form-group d-flex justify-content-between">
-                                    <label>Sumatoria IVA:</label>
-                                    <span class="font-weight-bold">$ <span id="totalImpuestosLabel">0.00</span></span>
-                                    <input type="hidden" id="impuesto" th:field="*{impuesto}">
-                                </div>
-                                <hr>
-                                <div class="total-box text-center mb-4">
-                                    <span class="d-block text-muted small text-uppercase">Total a Pagar</span>
-                                    <span class="total-final">$ <span id="totalPedidoLabel">0.00</span></span>
-                                    <input type="hidden" id="totalPedido" th:field="*{total}">
-                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="text-muted small">Subtotal:</span>
+                                        <span class="small font-weight-bold">$ <span id="totalSubtotalLabel">0.00</span></span>
+                                    </div>
+                                    <div class="form-group mb-2">
+                                        <label class="small mb-0">Costo Envío / Flete</label>
+                                        <input type="number" th:field="*{flete}" class="form-control form-control-sm" step="0.01" min="0" onchange="calcularTotal()" placeholder="0.00">
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="text-muted small">IVA Total:</span>
+                                        <span class="small font-weight-bold">$ <span id="totalImpuestosLabel">0.00</span></span>
+                                    </div>
+                                    <hr class="my-2">
+                                    <div class="total-box-mini text-center mb-3">
+                                        <span class="d-block text-muted small text-uppercase" style="font-size: 0.65rem;">Total a Pagar</span>
+                                        <span class="total-final-mini">$ <span id="totalPedidoLabel">0.00</span></span>
+                                    </div>
+                                    <div class="alert alert-warning alert-sm py-2 px-2 mb-2" style="font-size: 0.7rem;">
+                                        <i class="fas fa-info-circle"></i> <strong>Nota:</strong> Los valores mostrados son referenciales. El sistema calculará automáticamente los totales finales al guardar.
+                                    </div>
 
-                                <button type="submit" class="btn btn-success btn-block btn-lg shadow">
-                                    <i class="fas fa-save mr-1"></i> GUARDAR PEDIDO
-                                </button>
-                                <a th:href="@{/pedidos/listarpedidos}" class="btn btn-default btn-block mt-2">Cancelar</a>
+                                    <button type="submit" class="btn btn-success btn-block shadow-sm font-weight-bold">
+                                        <i class="fas fa-save mr-1"></i> GUARDAR PEDIDO
+                                    </button>
+                                    <a th:href="@{/pedidos/listarpedidos}" class="btn btn-xs btn-outline-secondary btn-block mt-2">Cancelar</a>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -222,15 +233,12 @@
         const clientesData = /*[[${clientes}]]*/ [];
         let detalleCount = 1;
 
-        // FILTRO DE CATEGORÍAS
         function filtrarProductos(selectCategoria) {
             const categoriaId = selectCategoria.value;
             const fila = selectCategoria.closest('tr');
             const selectProducto = fila.querySelector('.producto-select');
             const opciones = selectProducto.querySelectorAll('option');
-
-            selectProducto.value = ""; // Resetear selección
-
+            selectProducto.value = "";
             opciones.forEach(opt => {
                 if (opt.value === "") return;
                 const productoCatId = opt.getAttribute('data-categoria');
@@ -242,142 +250,138 @@
                     opt.disabled = true;
                 }
             });
-            actualizarPrecio(fila.rowIndex - 1); // Forzar reset de precio/subtotal
+            actualizarPrecio(fila.rowIndex - 1);
         }
 
-        // BÚSQUEDA DE CLIENTE
         function buscarCliente() {
             const numeroId = document.getElementById('buscarNumeroId').value.trim();
             if (!numeroId) {
-                Swal.fire('Atención', 'Ingrese un número de identificación', 'warning');
+                Swal.fire('Error', 'Ingrese identificación', 'error');
                 return;
             }
             const cliente = clientesData.find(c => c.numeroIdentificacion === numeroId);
             if (cliente) {
                 document.getElementById('clienteIdHidden').value = cliente.id;
                 document.getElementById('clienteNombre').textContent = cliente.nombre + ' ' + (cliente.apellido || '');
+                document.getElementById('clienteTelefono').textContent = "Tel: " + (cliente.telefono || 'N/A');
                 document.getElementById('clienteEmail').textContent = cliente.email || 'N/A';
-                document.getElementById('clienteTelefono').textContent = cliente.telefono || 'N/A';
                 document.getElementById('clienteNoSeleccionado').style.display = 'none';
                 document.getElementById('clienteInfo').classList.add('show');
                 document.getElementById('clienteCard').classList.add('encontrado');
                 Swal.fire({ icon: 'success', title: 'Cliente Encontrado', timer: 1000, showConfirmButton: false });
             } else {
                 Swal.fire({
-                    title: 'Cliente no encontrado',
-                    text: '¿Desea registrarlo?',
+                    title: 'No existe',
+                    text: '¿Registrar nuevo cliente?',
                     icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonText: 'Sí, registrar'
-                }).then((result) => {
-                    if (result.isConfirmed) window.open('/crearcliente/nuevo', '_blank');
+                    showCancelButton: true
+                }).then((r) => {
+                    if (r.isConfirmed) window.open('/crearcliente/nuevo', '_blank');
                 });
             }
         }
 
-        // AGREGAR FILA
         function agregarDetalle() {
             const container = document.getElementById('detallesContainer');
             const opcionesCat = document.querySelector('.categoria-filter').innerHTML;
             const opcionesProd = document.querySelector('.producto-select').innerHTML;
-
             const tr = document.createElement('tr');
             tr.className = 'detalle-item';
             tr.innerHTML = `
+                <td><select class="form-control form-control-sm categoria-filter" onchange="filtrarProductos(this)">${opcionesCat}</select></td>
+                <td><select name="detalles[${detalleCount}].producto.id" class="form-control form-control-sm producto-select" required onchange="actualizarPrecio(${detalleCount})">${opcionesProd}</select></td>
                 <td>
-                    <select class="form-control categoria-filter" onchange="filtrarProductos(this)">
-                        ${opcionesCat}
-                    </select>
+                    <div class="input-group input-group-sm">
+                        <input type="number" name="detalles[${detalleCount}].cantidad" class="form-control cantidad-input" min="0.01" value="1" step="any" required onchange="calcularSubtotal(${detalleCount})">
+                        <div class="input-group-append"><span class="input-group-text unidad-label p-1" style="font-size: 0.7rem;">un</span></div>
+                    </div>
                 </td>
-                <td>
-                    <select name="detalles[${detalleCount}].producto.id" class="form-control producto-select" required onchange="actualizarPrecio(${detalleCount})">
-                        ${opcionesProd}
-                    </select>
-                </td>
-                <td>
-                    <input type="number" name="detalles[${detalleCount}].cantidad" class="form-control cantidad-input" min="0.01" value="1.00" step="0.01" required onchange="calcularSubtotal(${detalleCount})">
-                </td>
-                <td>
-                    <input type="number" name="detalles[${detalleCount}].precioUnitario" class="form-control precio-unitario bg-light" readonly step="0.01">
-                </td>
-                <td>
-                    <input type="number" name="detalles[${detalleCount}].impuestoProducto" class="form-control impuesto-producto bg-light" readonly step="0.01">
-                </td>
-                <td>
-                    <input type="number" name="detalles[${detalleCount}].subtotal" class="form-control subtotal-item bg-light text-bold" readonly step="0.01">
-                </td>
-                <td class="text-center">
-                    <button type="button" class="btn btn-link text-danger" onclick="eliminarFila(this)"><i class="fas fa-trash-alt"></i></button>
-                </td>
+                <td><input type="text" class="form-control form-control-sm bg-light text-right precio-unitario-display" readonly tabindex="-1"></td>
+                <td><input type="text" class="form-control form-control-sm bg-light text-right impuesto-display" readonly tabindex="-1"></td>
+                <td><input type="text" class="form-control form-control-sm bg-light font-weight-bold text-right subtotal-display" readonly tabindex="-1"></td>
+                <td class="text-center"><button type="button" class="btn btn-link text-danger p-0" onclick="this.closest('tr').remove(); calcularTotal();"><i class="fas fa-trash"></i></button></td>
             `;
             container.appendChild(tr);
             detalleCount++;
         }
 
-        function eliminarFila(btn) {
-            btn.closest('tr').remove();
-            calcularTotal();
-        }
-
         function actualizarPrecio(index) {
             const row = document.querySelectorAll('#detallesContainer tr')[index];
             if(!row) return;
-            const select = row.querySelector('.producto-select');
 
+            const select = row.querySelector('.producto-select');
             if (!select.value) {
-                row.querySelector('.precio-unitario').value = "";
-                row.querySelector('.impuesto-producto').value = "";
-                row.querySelector('.subtotal-item').value = "";
+                row.querySelector('.precio-unitario-display').value = "";
+                row.querySelector('.impuesto-display').value = "";
+                row.querySelector('.subtotal-display').value = "";
                 calcularTotal();
                 return;
             }
 
-            const precio = select.options[select.selectedIndex].getAttribute('data-precio');
-            const impuesto = select.options[select.selectedIndex].getAttribute('data-impuesto');
+            const precio = parseFloat(select.options[select.selectedIndex].getAttribute('data-precio')) || 0;
+            const impuesto = parseFloat(select.options[select.selectedIndex].getAttribute('data-impuesto')) || 0;
+            const tipo = select.options[select.selectedIndex].getAttribute('data-tipo');
 
-            row.querySelector('.precio-unitario').value = parseFloat(precio).toFixed(2);
-            row.querySelector('.impuesto-producto').value = parseFloat(impuesto).toFixed(2);
+            const label = row.querySelector('.unidad-label');
+            label.textContent = (tipo === 'PESO') ? "gr" : (tipo === 'LIQUIDO' ? "ml" : "un");
+
+            // Mostrar valores de referencia formateados
+            row.querySelector('.precio-unitario-display').value = precio.toLocaleString('es-CO', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            row.querySelector('.impuesto-display').value = impuesto.toFixed(2) + '%';
 
             calcularSubtotal(index);
         }
 
         function calcularSubtotal(index) {
             const row = document.querySelectorAll('#detallesContainer tr')[index];
-            if(!row) return;
             const select = row.querySelector('.producto-select');
             if (!select.value) return;
 
-            const tipoVenta = select.options[select.selectedIndex].getAttribute('data-tipo');
-            let cant = parseFloat(row.querySelector('.cantidad-input').value) || 0;
-            const precio = parseFloat(row.querySelector('.precio-unitario').val) || parseFloat(row.querySelector('.precio-unitario').value) || 0;
+            const tipo = select.options[select.selectedIndex].getAttribute('data-tipo');
+            const cantidadOriginal = parseFloat(row.querySelector('input[name*="cantidad"]').value) || 0;
+            const precio = parseFloat(select.options[select.selectedIndex].getAttribute('data-precio')) || 0;
 
-            let cantCalculo = (tipoVenta === 'PESO') ? cant / 1000 : cant;
-            const subtotal = cantCalculo * precio;
+            // Para la vista: si es PESO convertimos gr a kg
+            let cantidadParaCalculo = cantidadOriginal;
+            if (tipo === 'PESO') {
+                cantidadParaCalculo = cantidadOriginal / 1000;
+            }
 
-            row.querySelector('.subtotal-item').value = subtotal.toFixed(2);
+            const subtotalVista = cantidadParaCalculo * precio;
+            row.querySelector('.subtotal-display').value = subtotalVista.toLocaleString('es-CO', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
             calcularTotal();
         }
 
         function calcularTotal() {
-            let subtotalGral = 0;
-            let impuestoGral = 0;
+            let subtotalVista = 0;
+            let impuestoVista = 0;
 
             document.querySelectorAll('.detalle-item').forEach(fila => {
-                const subItem = parseFloat(fila.querySelector('.subtotal-item').value) || 0;
-                const pctIVA = parseFloat(fila.querySelector('.impuesto-producto').value) || 0;
+                const select = fila.querySelector('.producto-select');
+                if (!select || !select.value) return;
 
-                subtotalGral += subItem;
-                impuestoGral += (subItem * pctIVA) / 100;
+                const tipo = select.options[select.selectedIndex].getAttribute('data-tipo');
+                const cantidad = parseFloat(fila.querySelector('input[name*="cantidad"]').value) || 0;
+                const precio = parseFloat(select.options[select.selectedIndex].getAttribute('data-precio')) || 0;
+                const tasaImpuesto = parseFloat(select.options[select.selectedIndex].getAttribute('data-impuesto')) || 0;
+
+                let cantidadCalculo = cantidad;
+                if (tipo === 'PESO') {
+                    cantidadCalculo = cantidad / 1000;
+                }
+
+                const subItem = cantidadCalculo * precio;
+                subtotalVista += subItem;
+                impuestoVista += (subItem * tasaImpuesto) / 100;
             });
 
-            const flete = parseFloat(document.getElementById('flete').value) || 0;
-            const total = subtotalGral + impuestoGral + flete;
+            const flete = parseFloat(document.querySelector('input[name="flete"]').value) || 0;
+            const totalVista = subtotalVista + impuestoVista + flete;
 
-            document.getElementById('totalSubtotalLabel').innerText = subtotalGral.toFixed(2);
-            document.getElementById('totalImpuestosLabel').innerText = impuestoGral.toFixed(2);
-            document.getElementById('impuesto').value = impuestoGral.toFixed(2);
-            document.getElementById('totalPedidoLabel').innerText = total.toFixed(2);
-            document.getElementById('totalPedido').value = total.toFixed(2);
+            document.getElementById('totalSubtotalLabel').innerText = subtotalVista.toLocaleString('es-CO', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('totalImpuestosLabel').innerText = impuestoVista.toLocaleString('es-CO', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('totalPedidoLabel').innerText = totalVista.toLocaleString('es-CO', {minimumFractionDigits: 2, maximumFractionDigits: 2});
         }
 
         $(document).ready(function () {

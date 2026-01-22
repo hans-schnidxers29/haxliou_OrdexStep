@@ -1,5 +1,6 @@
 package com.example.demo.Login.Servicio;
 
+import com.example.demo.Login.Rol;
 import com.example.demo.Login.Usuario;
 import org.springframework.security.core.userdetails.UserDetailsService;
 
@@ -12,5 +13,7 @@ public interface ServicioUsuario extends UserDetailsService {
     void deleteUser(Long id);
     void updateUser(Usuario usuario, Long id);
     Usuario findByEmail(String email);
+    void ActualizarRol(Long idUser, Rol rol );
+    void actualizarContrasena(Long idUser, String password);
 
 }

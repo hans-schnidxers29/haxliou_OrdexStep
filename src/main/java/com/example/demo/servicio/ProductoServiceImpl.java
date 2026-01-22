@@ -7,7 +7,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductoServiceImpl implements ProductoServicio{
@@ -47,7 +50,10 @@ public class ProductoServiceImpl implements ProductoServicio{
         p1.setCantidad(producto.getCantidad());
         p1.setImpuesto(producto.getImpuesto());
         p1.setProveedor(producto.getProveedor());
-
+        p1.setPrecioCompra(producto.getPrecioCompra());
+        p1.setTipoVenta(producto.getTipoVenta());
+        p1.setStockMinimo(producto.getStockMinimo());
+        p1.setIncremento(producto.getIncremento());
         if (producto.getCategoria() != null) {
             p1.setCategoria(producto.getCategoria());
         }
@@ -75,12 +81,39 @@ public class ProductoServiceImpl implements ProductoServicio{
 
     @Transactional
     @Override
-    public void AgregarStock(Long id, BigDecimal cantidad) {
-        repositorio.findById(id).orElseThrow(()-> new RuntimeException("Producto No Encontrado"));
-        Productos producto = repositorio.findById(id).get();
-        BigDecimal stockActual = producto.getCantidad();
-        BigDecimal nuevoStock = stockActual.add(cantidad);
-        producto.setCantidad(nuevoStock);
+    public void AgregarStock(Long id, BigDecimal cantidad,BigDecimal nuevoImpuesto,BigDecimal precioCompraN) {
+        Productos producto = repositorio.findById(id)
+                .orElseThrow(() -> new RuntimeException("Producto No Encontrado con ID: " + id));
+
+
+        BigDecimal stockActual = (producto.getCantidad() == null) ? BigDecimal.ZERO : producto.getCantidad();
+        producto.setCantidad(stockActual.add(cantidad));
+
+        if (nuevoImpuesto != null && nuevoImpuesto.compareTo(BigDecimal.ZERO) >= 0) {
+            producto.setImpuesto(nuevoImpuesto);
+        }
+        
+        // ACTUALIZACIÓN: Guardar el precio de compra enviado desde la factura
+        if (precioCompraN != null && precioCompraN.compareTo(BigDecimal.ZERO) > 0) {
+            producto.setPrecioCompra(precioCompraN);
+        }
+
+        repositorio.save(producto);
+    }
+
+    @Override
+    public List<Map<String, Object>> ProductoSimple() {
+        List<Map<String, Object>> productosJson = repositorio.findAll().stream().map(p -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", p.getId());
+            map.put("nombre", p.getNombre());
+            map.put("precio", p.getPrecio());
+            map.put("impuesto", p.getImpuesto());
+            map.put("tipoVenta", p.getTipoVenta().name());
+            map.put("categoriaId", p.getCategoria().getId() != null ? p.getCategoria().getId() : null);
+            return map;
+        }).collect(Collectors.toList());
+        return productosJson;
     }
 
 

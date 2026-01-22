@@ -8,11 +8,13 @@ import com.example.demo.servicio.CajaServicio;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -24,8 +26,8 @@ import java.util.Map;
 @RequestMapping("/caja")
 public class CajaControlador {
 
-    @Autowired
-    private CajaServicio servicio;
+    @Autowired private CajaServicio servicio;
+
 
     @Autowired
     private ServicioUsuario servicioUsuario;
@@ -54,46 +56,18 @@ public class CajaControlador {
         }
     }
 
-    /* =========================
-       CERRAR CAJA
-       ========================= */
-//
-//    @PostMapping("/cerrar")
-//    public String cerrarCaja(@RequestParam("id") Long id,
-//                             @RequestParam("montoReal") BigDecimal montoReal,
-//                             RedirectAttributes redirectAttributes) {
-//
-//        try {
-//            servicio.CerrarCaja(id, montoReal);
-//
-//            redirectAttributes.addFlashAttribute(
-//                    "success",
-//                    "Caja cerrada correctamente"
-//            );
-//
-//            // 👇 usamos el MISMO id que ya tenías
-//            return "redirect:/caja/cierre/exitoso/" + id;
-//
-//        } catch (Exception e) {
-//            redirectAttributes.addFlashAttribute(
-//                    "error",
-//                    "Error al cerrar la caja: " + e.getMessage()
-//            );
-//            return "redirect:/ventas/crear";
-//        }
-//    }
-//
-//
 
-    @PostMapping("/cerrar")
-    public String cerrarCaja(@RequestParam("id") Long id,
-                             @RequestParam("montoReal") BigDecimal montoReal,
-                             RedirectAttributes redirectAttributes) {
+    @PostMapping("/cerrar/{id}")
+    public String cerrarCaja(@PathVariable Long id, RedirectAttributes redirectAttributes,Model model) {
 
+        model.addAttribute("cajaId", id);
         try {
+            Caja caja = servicio.cajaByid(id);
+            BigDecimal montoReal = caja.getMontoReal();
+
             servicio.CerrarCaja(id, montoReal);
             redirectAttributes.addFlashAttribute("success", "Caja cerrada correctamente");
-            return "redirect:/ventas/crear";
+            return "caja/cierre_exitoso";
 
         } catch (DataAccessException e) {
             redirectAttributes.addFlashAttribute("error", "Error al cerrar la caja: " + e.getMessage());
@@ -105,57 +79,59 @@ public class CajaControlador {
         }
     }
 
-
-
-
-
-
     /* =========================
        PDF CIERRE DE CAJA
        ========================= */
     @GetMapping("/cerrar/ticket/{id}")
     public ResponseEntity<byte[]> descargarPDF(@PathVariable Long id) throws Exception {
+        try {
 
-        Caja caja = servicio.cajaByid(id);
-        Usuario usuario = caja.getUsuario();
+            Caja caja1 = servicio.cajaByid(id);
+            Usuario usuario = caja1.getUsuario();
 
-        Map<String, Object> data = new HashMap<>();
-        data.put("caja", caja);
-        data.put("usuario", usuario);
-        data.put("Base", caja.getMontoInicial());
-        data.put("totalEgresos", caja.getEgresosTotales());
-        data.put("totalGastos", caja.getGastosTotales());
-        data.put("totalIngresos", caja.getIngresoTotal());
-        data.put("diferencia", caja.getDiferencia());
-        data.put("montoReal", caja.getMontoReal());
+            Map<String, Object> caja = servicio.obtenerResumenActual(id);
+            caja.put("usuario", usuario);
+            caja.put("titulo", "Reporte de Cierre de Caja");
+            byte[] pdf = pdfService.generarPdf("pdf/ticketCaja", caja);
 
-        byte[] pdf = pdfService.generarPdf("pdf/ticketCaja", data);
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                            "inline; filename=ticket_Cierre_Caja_" + id + ".pdf")
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .body(pdf);
+        }catch (Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
 
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "inline; filename=ticket_Cierre_Caja_" + id + ".pdf")
-                .contentType(MediaType.APPLICATION_PDF)
-                .body(pdf);
     }
-
-    /* =========================
+/*
+    *//* =========================
        PDF REPORTE DE AVANCE
        ========================= */
-    @GetMapping("/reporte-avance/{id}")
-    public ResponseEntity<byte[]> reporteAvance(@PathVariable Long id) throws Exception {
+    @GetMapping("/reporte-cierre-final/{id}")
+    public ResponseEntity<byte[]> cerrarCajaYGenerarPDF(@PathVariable Long id) throws Exception {
 
-        Caja cajaResumen = servicio.obtenerResumenActual(id);
+        // 1. Obtener y cerrar la caja (Persistencia)
+        Caja cajaOriginal = servicio.cajaByid(id);
+        BigDecimal montoReal = cajaOriginal.getMontoReal();
+        Caja cajaCerrada = servicio.CerrarCaja(cajaOriginal.getId(), montoReal);
 
+        Map<String, Object> resumen = servicio.obtenerResumenActual(id);
+
+        // 3. Crear el mapa principal para el PDF y combinar
         Map<String, Object> data = new HashMap<>();
-        data.put("caja", cajaResumen);
-        data.put("titulo", "Reporte de Avance de Caja");
-        data.put("esAvance", true);
+        data.putAll(resumen); // Inserta todos los valores del resumen automáticamente
 
-        byte[] pdf = pdfService.generarPdf("pdf/ticketCaja", data);
+        // 4. Agregar objetos adicionales necesarios para el ticket
+        data.put("caja", cajaCerrada);
+        data.put("usuario", cajaCerrada.getUsuario());
+        data.put("titulo", "Reporte de Cierre Definitivo");
+        data.put("montoRealContado", montoReal); // Valor físico reportado
+
+        byte[] pdf = pdfService.generarPdf("pdf/ticketFinal", data);
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "inline; filename=avance_caja_" + id + ".pdf")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=cierre_final_caja_" + id + ".pdf")
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(pdf);
     }

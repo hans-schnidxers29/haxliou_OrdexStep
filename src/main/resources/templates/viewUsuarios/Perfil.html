@@ -106,6 +106,7 @@
                                         <th>Email</th>
                                         <th>Rol</th>
                                         <th class="text-center">Acciones</th>
+                                        <th class="text-center">Subir De Nivel</th>
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -122,12 +123,12 @@
                                         <td th:text="${usuario.email}">email@ejemplo.com</td>
                                         <td>
                                             <th:block th:each="rol : ${usuario.roles}">
-                                                <span th:if="${rol.nombre == 'ROLE_ADMIN'}" class="badge badge-danger shadow-sm mr-1">
-                                                    <i class="fas fa-crown mr-1"></i>ADMIN
-                                                </span>
+                                            <span th:if="${rol.nombre == 'ROLE_ADMIN'}" class="badge badge-danger shadow-sm mr-1">
+                                                <i class="fas fa-crown mr-1"></i>ADMIN
+                                            </span>
                                                 <span th:if="${rol.nombre == 'ROLE_USER'}" class="badge badge-info shadow-sm">
-                                                    <i class="fas fa-user-tag mr-1"></i>VENDEDOR
-                                                </span>
+                                                <i class="fas fa-user-tag mr-1"></i>VENDEDOR
+                                            </span>
                                             </th:block>
                                         </td>
                                         <td class="text-center">
@@ -144,6 +145,19 @@
                                                     <i class="fas fa-trash-alt text-danger"></i>
                                                 </a>
                                             </div>
+                                        </td>
+                                        <td>
+                                            <th:block th:each="rol : ${usuario.roles}">
+                                                <a th:if="${rol.nombre == 'ROLE_USER'}"
+                                                   th:href="@{/registro/actualizar/rol/{id}(id=${usuario.id})}"
+                                                   class="btn btn-outline-warning btn-xs shadow-sm btn-ascender"
+                                                   title="Ascender a Administrador">
+                                                    <i class="fas fa-arrow-up mr-1"></i> Ascender a Admin
+                                                </a>
+                                                <span th:if="${rol.nombre == 'ROLE_ADMIN'}" class="text-muted small">
+                                                <i class="fas fa-check-double text-success"></i> Nivel Máximo
+                                            </span>
+                                            </th:block>
                                         </td>
                                     </tr>
                                     </tbody>
@@ -183,6 +197,24 @@
                 // Llamamos a la función confirmarEliminarUrl de tu notifications.js
                 // Argumentos: (id, url, titulo, texto)
                 confirmarEliminar(null, url, '¿Eliminar Usuario?', 'Esta acción no se puede deshacer');
+            });
+        });
+        $('.btn-ascender').on('click', function(event) {
+            event.preventDefault();
+            const url = $(this).attr('href');
+
+            Swal.fire({
+                title: '¿Ascender a Administrador?',
+                text: "Este usuario tendrá acceso total al sistema y cierres de mes.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ffc107',
+                confirmButtonText: 'Sí, Ascender',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = url;
+                }
             });
         });
     </script>

@@ -1,11 +1,13 @@
 package com.example.demo.Login.Controlador;
 
+import com.example.demo.Login.Rol;
 import com.example.demo.entidad.Empresa;
 import com.example.demo.Login.Servicio.ServicioEmpresa;
 import com.example.demo.Login.Usuario;
 import com.example.demo.Login.Servicio.RolServicio;
 import com.example.demo.Login.Servicio.ServicioUsuario;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -77,6 +79,11 @@ public class UsuarioControlador {
     @PostMapping("/usuario/nuevo")
     public String RegistraNuevoUsuario(@ModelAttribute("usuario") Usuario usuario, RedirectAttributes redirectAttributes) {
         try {
+            int MaximosUsuarios = usuarioservico.ListarUSer().size();
+            if (MaximosUsuarios >= 3) {
+                redirectAttributes.addFlashAttribute("error", "Solo se permiten 3 usuarios");
+                return "redirect:/registro/usuario";
+            }
             // Usamos saveUser para que procese todos los campos nuevos
             usuarioservico.saveUser(usuario);
             redirectAttributes.addFlashAttribute("success", "Usuario creado exitosamente");
@@ -117,6 +124,43 @@ public class UsuarioControlador {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Error al actualizar: " + e.getMessage());
             return "redirect:/registro/editar/usuario/" + id;
+        }
+    }
+    @PostMapping("/editar/contraseña/{id}")
+    public String CambiarContrasena(@PathVariable Long id,
+                                    @RequestParam("password") String nuevaPassword,
+                                    RedirectAttributes flash) {
+        try {
+            // Validar que la contraseña no llegue vacía
+            if (nuevaPassword == null || nuevaPassword.trim().isEmpty()) {
+                flash.addFlashAttribute("error", "La contraseña no puede estar vacía");
+                return "redirect:/registro/editar/usuario/" + id;
+            }
+
+            // Llamar al servicio pasando el ID y la NUEVA contraseña
+            usuarioservico.actualizarContrasena(id, nuevaPassword);
+
+            flash.addFlashAttribute("success", "Contraseña actualizada con éxito");
+            return "redirect:/perfil";
+        } catch (DataAccessException e) {
+            flash.addFlashAttribute("error", "Error en la base de datos: " + e.getMessage());
+            return "redirect:/perfil";
+        } catch (Exception e) {
+            flash.addFlashAttribute("error", "Error inesperado: " + e.getMessage());
+            return "redirect:/perfil";
+        }
+    }
+
+    @GetMapping("/actualizar/rol/{id}")
+    public String ActualizarRol(@PathVariable Long id, RedirectAttributes flash){
+        try{
+            Rol role = new Rol("ROLE_ADMIN");
+            usuarioservico.ActualizarRol(id,role);
+            flash.addFlashAttribute("success","Rol actualizado con exito");
+            return "redirect:/perfil";
+        }catch (Exception e){
+            flash.addFlashAttribute("error","Error al actualizar rol"+ e.getMessage());
+            return "redirect:/perfil";
         }
     }
 }

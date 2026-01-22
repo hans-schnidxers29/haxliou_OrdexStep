@@ -1,0 +1,114 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <style type="text/css">
+        @page {
+            size: 226pt 842pt;
+            margin: 0;
+        }
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 12px;
+            width: 190px;
+            padding: 15px;
+            margin: 0;
+            color: #000;
+        }
+        .bold { font-weight: bold; }
+        .center { text-align: center; }
+        .right { float: right; text-align: right; }
+
+        .line-dashed {
+            border-top: 1px dashed #000;
+            margin: 8px 0;
+            height: 1px;
+        }
+
+        .line-double {
+            border-top: 2px solid #000;
+            margin: 8px 0;
+        }
+
+        .header-title {
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .item-row {
+            clear: both;
+            overflow: hidden;
+            margin-bottom: 5px;
+        }
+
+        .total-section {
+            font-size: 13px;
+            margin-top: 10px;
+        }
+
+        .footer-spacing {
+            height: 60px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="center bold header-title" th:text="${titulo}">REPORTE DE CIERRE</div>
+
+<div class="item-row">
+    Cajero: <span class="bold" th:text="${usuario.nombre + ' ' + usuario.apellido}"></span>
+</div>
+<div class="item-row">
+    Fecha Cierre: <span th:text="${#temporals.format(fechaConsulta, 'dd/MM/yyyy HH:mm')}"></span>
+</div>
+
+<div class="line-double"></div>
+<div class="center bold">DESGLOSE DE PAGOS</div>
+
+<div class="item-row">
+    Efectivo: <span class="right" th:text="${#numbers.formatCurrency(ingresosEfectivo)}"></span>
+</div>
+<div class="item-row">
+    Tarjeta: <span class="right" th:text="${#numbers.formatCurrency(ventasTarjeta)}"></span>
+</div>
+<div class="item-row">
+    Transferencia: <span class="right" th:text="${#numbers.formatCurrency(ventasTransferencia)}"></span>
+</div>
+
+<div class="line-dashed"></div>
+<div class="center bold">RESUMEN DE CAJA FÍSICA</div>
+
+<div class="item-row">
+    Base Inicial: <span class="right" th:text="${#numbers.formatCurrency(montoInicial)}"></span>
+</div>
+<div class="item-row">
+    Egresos/Gastos: <span class="right" th:text="${'- ' + #numbers.formatCurrency(egresosTotales)}"></span>
+</div>
+
+<div class="line-bold"></div>
+<div class="item-row bold">
+    SALDO ESPERADO: <span class="right" th:text="${#numbers.formatCurrency(saldoActual)}"></span>
+</div>
+<div class="item-row bold">
+    SALDO CONTADO: <span class="right" th:text="${#numbers.formatCurrency(montoRealContado)}"></span>
+</div>
+
+<div class="line-dashed"></div>
+<div class="item-row bold" style="font-size: 13px;">
+    DIFERENCIA:
+    <span class="right" th:text="${#numbers.formatCurrency(montoRealContado - saldoActual)}"></span>
+</div>
+
+<div class="center" style="margin-top: 20px;">
+    ¡GRACIAS POR SU GESTIÓN!<br/>
+    *** Fin del Reporte ***<br/>
+    <br/>
+    ________________________<br/>
+    Firma Responsable
+</div>
+
+<div class="footer-spacing"></div>
+
+</body>
+</html>

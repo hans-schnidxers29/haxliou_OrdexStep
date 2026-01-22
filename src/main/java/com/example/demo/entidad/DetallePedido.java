@@ -11,16 +11,16 @@ public class DetallePedido {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal cantidad;
 
-    @Column(name = "precio_unitario", precision = 10, scale = 3, nullable = false)
+    @Column(name = "precio_unitario", precision = 10, scale = 2, nullable = false)
     private BigDecimal precioUnitario;
 
-    @Column(precision = 19, scale = 2)
+    @Column(precision = 10, scale = 2)
     private BigDecimal porcentajeImpuesto;
 
-    @Column(name = "subtotal", precision = 10, scale = 3, nullable = false)
+    @Column(name = "subtotal", precision = 10, scale = 2, nullable = false)
     private BigDecimal subtotal = BigDecimal.ZERO;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -31,13 +31,6 @@ public class DetallePedido {
     @JoinColumn(name = "producto_id", nullable = false)
     private Productos producto;
 
-    @PrePersist
-    @PreUpdate
-    public void calcularSubtotal() {
-        if (cantidad != null && precioUnitario != null) {
-            this.subtotal = precioUnitario.multiply(cantidad);
-        }
-    }
 
     // Getters y Setters
     public Long getId() {

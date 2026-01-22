@@ -1,11 +1,13 @@
 package com.example.demo.repositorio;
 
+import com.example.demo.entidad.Enum.EstadoPedido;
 import com.example.demo.entidad.Productos;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -57,4 +59,24 @@ public interface ProductoRepositorio extends JpaRepository<Productos,Long> {
 
     @Query(value = "SELECT nombre, cantidad from productos WHERE cantidad <= 10 ",nativeQuery = true)
     List<Object[]>StockBajo();
+
+    @Query("SELECT SUM(dv.cantidad * p.precioCompra) " +
+            "FROM DetalleVenta dv " +
+            "JOIN dv.producto p " +
+            "WHERE dv.venta.fechaVenta BETWEEN :inicio AND :fin")
+    BigDecimal sumaCostoVendidoMes(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin);
+
+    // En PedidoRepository.java
+    @Query("SELECT SUM(dp.cantidad * p.precioCompra) " +
+            "FROM DetallePedido dp " +
+            "JOIN dp.producto p " +
+            "WHERE dp.pedido.fechaPedido BETWEEN :inicio AND :fin " +
+            "AND dp.pedido.estado = :estado")
+    BigDecimal sumaCostoPedidosMes(@Param("inicio") LocalDateTime inicio,
+                                   @Param("fin") LocalDateTime fin,
+                                   @Param("estado") EstadoPedido estado);
+
+    // En ProductoRepository.java
+    @Query("SELECT SUM(p.cantidad * p.precioCompra) FROM Productos p")
+    BigDecimal calcularValorInventarioTotal();
 }

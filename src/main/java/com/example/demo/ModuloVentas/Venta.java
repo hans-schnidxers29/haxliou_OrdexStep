@@ -29,10 +29,10 @@ public class Venta {
     @Column(nullable = false)
     private BigDecimal impuesto;
 
-    @Column(nullable = false, precision = 10, scale = 3)
+    @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal total;
 
-    @Column(nullable = false, precision = 10, scale = 3)
+    @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal subtotal;
 
     @Column(name = "metodo_pago", nullable = false)
