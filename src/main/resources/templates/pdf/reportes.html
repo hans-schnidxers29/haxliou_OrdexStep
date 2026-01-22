@@ -17,10 +17,27 @@
     .bg-pedidos { background: linear-gradient(135deg, #007bff, #0056b3); }
     .bg-compras { background: linear-gradient(135deg, #17a2b8, #117a8b); }
     .bg-egresos { background: linear-gradient(135deg, #dc3545, #a71d2a); }
+    .checkbox-xl {
+      width: 1.5rem;
+      height: 1.5rem;
+      cursor: pointer;
+    }
+    .label-xl {
+      font-size: 1.2rem;
+      font-weight: bold;
+      cursor: pointer;
+      vertical-align: middle;
+    }
+    /* Estilo para tarjetas bloqueadas */
+    .card-disabled {
+      opacity: 0.5;
+      pointer-events: none;
+      filter: grayscale(80%);
+      transition: all 0.3s ease;
+    }
   </style>
 </head>
 <body>
-
 <div layout:fragment="content">
   <section class="content-header">
     <div class="container-fluid">
@@ -30,68 +47,14 @@
 
   <section class="content">
     <div class="container-fluid">
-      <div class="row">
-        <div class="col-lg-3 col-6">
-          <div class="small-box bg-success shadow">
-            <div class="inner">
-              <h3 th:text="'$'+${#numbers.formatDecimal(recaudacionTotal, 1, 'COMMA', 2, 'POINT')}">0</h3>
-              <p>Recaudación Ventas</p>
-            </div>
-            <div class="icon">
-              <i class="fas fa-dollar-sign"></i>
-            </div>
-            <a th:href="@{/ventas/listar}" class="small-box-footer">
-              Ir a Ventas <i class="fas fa-arrow-circle-right"></i>
-            </a>
-          </div>
-        </div>
-
-        <div class="col-lg-3 col-6">
-          <div class="small-box bg-warning shadow">
-            <div class="inner">
-              <h3 th:text="${totalPedidos ?: '0'}">0</h3>
-              <p>Pedidos por Despachar</p>
-            </div>
-            <div class="icon">
-              <i class="fas fa-truck"></i>
-            </div>
-            <a th:href="@{/pedidos/listar}" class="small-box-footer">
-              Ver Pedidos <i class="fas fa-arrow-circle-right"></i>
-            </a>
-          </div>
-        </div>
-
-        <div class="col-lg-3 col-6">
-          <div class="small-box bg-info shadow">
-            <div class="inner">
-              <h3 th:text="'$'+${#numbers.formatDecimal(totalInversionCompras, 1, 'COMMA', 2, 'POINT')}">0</h3>
-              <p>Inversión en Compras</p>
-            </div>
-            <div class="icon">
-              <i class="fas fa-shopping-bag"></i>
-            </div>
-            <a th:href="@{/compras/listar}" class="small-box-footer">
-              Ver Compras <i class="fas fa-arrow-circle-right"></i>
-            </a>
-          </div>
-        </div>
-
-        <div class="col-lg-3 col-6">
-          <div class="small-box bg-danger shadow">
-            <div class="inner">
-              <h3 th:text="'$'+${#numbers.formatDecimal(totalGastosOtros, 1, 'COMMA', 2, 'POINT')}">0</h3>
-              <p>Gastos Operativos</p>
-            </div>
-            <div class="icon">
-              <i class="fas fa-money-bill-wave"></i>
-            </div>
-            <a th:href="@{/egresos/listar}" class="small-box-footer">
-              Revisar Gastos <i class="fas fa-arrow-circle-right"></i>
-            </a>
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="custom-control custom-checkbox bg-light p-3 border rounded shadow-sm">
+            <input type="checkbox" class="checkbox-xl" id="checkTodo" onclick="gestionarBloqueo()">
+            <label for="checkTodo" class="label-xl ml-2 mb-0">Descargar todos los documentos</label>
           </div>
         </div>
       </div>
-
       <h5 class="mb-3 mt-4 text-muted">Seleccione el módulo a exportar:</h5>
       <div class="row">
         <div class="col-md-3 mb-3">
@@ -156,12 +119,6 @@
         <div class="col-md-12">
           <div class="card card-dark shadow">
             <div class="card-body d-flex justify-content-between align-items-center">
-              <div>
-                <div class="custom-control custom-checkbox d-inline mr-4">
-                  <input class="custom-control-input" type="checkbox" id="checkTodo">
-                  <label for="checkTodo" class="custom-control-label font-weight-bold">Exportar Consolidado Completo (Excel con todas las pestañas)</label>
-                </div>
-              </div>
               <button type="button" onclick="generarReporte()" class="btn btn-success btn-lg px-5 shadow">
                 <i class="fas fa-file-excel mr-2"></i> DESCARGAR EXCEL
               </button>
@@ -354,6 +311,23 @@
       }
 
       XLSX.writeFile(wb, `Reporte_Sistema_${tipo}_${fecha}.xlsx`);
+    }
+    function gestionarBloqueo() {
+      const isChecked = document.getElementById('checkTodo').checked;
+      const contenedor = document.getElementById('contenedorCards');
+
+      if (isChecked) {
+        // Añade la clase que opaca y bloquea los clics
+        contenedor.classList.add('card-disabled');
+
+        // Opcional: Mostrar un aviso rápido con showToast si ya la tienes definida
+        if (typeof showToast === "function") {
+          showToast('info', 'Tarjetas bloqueadas: Descarga completa activada');
+        }
+      } else {
+        // Remueve el bloqueo
+        contenedor.classList.remove('card-disabled');
+      }
     }
   </script>
 </th:block>

@@ -10,4 +10,5 @@ public interface CierreMensualServicio {
     CierreMensual procesarCierreMes(int mes, int anio);
     Map<String, Object> obtenerResumenProyectado(int mes, int anio);
     BigDecimal calcularUtilidad(int mes, int anio);
+    CierreMensual obtenerPorId(Long id);
 }

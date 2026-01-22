@@ -220,7 +220,17 @@ public class VentaControlador {
             // 3. Finalización de la Venta
             venta.setDetalles(detallesValidos);
             venta.setSubtotal(subtotalGeneral.setScale(2, RoundingMode.HALF_UP));
-            venta.setImpuesto(totalImpuestosAcumulado); // Ahora es el valor total en dinero
+            
+            // CORRECCIÓN: Guardar el PORCENTAJE de impuesto global (puedes tomarlo del primer producto o un promedio)
+            // Si manejas un IVA estándar (ej. 19%), guárdalo como valor fijo.
+            // Aquí lo calculamos de forma segura basándonos en los productos vendidos:
+            BigDecimal porcentajeGlobal = BigDecimal.ZERO;
+            if (!detallesValidos.isEmpty()) {
+                porcentajeGlobal = detallesValidos.get(0).getProducto().getImpuesto();
+            }
+            venta.setImpuesto(porcentajeGlobal != null ? porcentajeGlobal : BigDecimal.ZERO); 
+
+            // El Total sigue siendo Subtotal + Dinero del Impuesto Acumulado
             venta.setTotal(subtotalGeneral.add(totalImpuestosAcumulado).setScale(2, RoundingMode.HALF_UP));
 
             // 4. Gestión de Usuario y Stock

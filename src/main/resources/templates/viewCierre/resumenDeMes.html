@@ -25,9 +25,23 @@
                     </h1>
                 </div>
                 <div class="col-sm-6 text-right">
-                    <button type="button" onclick="confirmarYDescargar()" class="btn btn-success px-4 shadow-sm">
-                        <i class="fas fa-file-excel mr-2"></i> Finalizar y Cerrar Mes
-                    </button>
+                    <div class="btn-group shadow-sm">
+                        <button type="button" class="btn btn-success px-4 font-weight-bold">
+                            <i class="fas fa-check-circle mr-2"></i> Finalizar y Cerrar Mes
+                        </button>
+                        <button type="button" class="btn btn-success dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <span class="sr-only">Toggle Dropdown</span>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-right">
+                            <h6 class="dropdown-header">Seleccionar Formato de Reporte</h6>
+                            <a class="dropdown-item" href="javascript:void(0)" onclick="confirmarYExportar('excel')">
+                                <i class="far fa-file-excel text-success mr-2"></i> Reporte en Excel (.xlsx)
+                            </a>
+                            <a class="dropdown-item" href="javascript:void(0)" onclick="confirmarYExportar('pdf')">
+                                <i class="far fa-file-pdf text-danger mr-2"></i> Reporte en PDF (.pdf)
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -307,18 +321,40 @@
             window.location.href = `/cierre/resumen?mes=${mes}&anio=${anio}`;
         }
 
-        function confirmarYDescargar() {
-            const m = /*[[${mes}]]*/ 1;
-            const a = /*[[${anio}]]*/ 2026;
+        function confirmarYExportar(formato) {
+            const m = [[${mes}]];
+            const a = [[${anio}]];
+            const nombreFormato = formato.toUpperCase();
+
             Swal.fire({
-                title: '¿Confirmar Cierre?',
-                text: "Se generará el reporte final.",
+                title: '¿Confirmar Cierre Mensual?',
+                text: `Se procesará el cierre definitivo y se descargará el archivo en formato ${nombreFormato}.`,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#28a745',
-                confirmButtonText: 'Sí, Cerrar'
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="fas fa-download mr-1"></i> Sí, Cerrar y Descargar',
+                cancelButtonText: 'Cancelar'
             }).then((result) => {
-                if (result.isConfirmed) window.location.href = `/cierres/exportar-excel?mes=${m}&anio=${a}`;
+                if (result.isConfirmed) {
+                    // Ajusta estas URLs según tus controladores de exportación
+                    let url = "";
+                    if (formato === 'excel') {
+                        url = `/cierre/excel/exportar?mes=${m}&anio=${a}`;
+                    } else {
+                        url = `/cierre/pdf/exportar?mes=${m}&anio=${a}`; // Asegúrate que esta ruta exista en tu controlador
+                    }
+                    window.location.href = url;
+
+                    // Notificación opcional de éxito
+                    Swal.fire({
+                        title: 'Procesando...',
+                        text: 'Tu reporte se está generando.',
+                        icon: 'success',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                }
             });
         }
         // Gráfica Lineal

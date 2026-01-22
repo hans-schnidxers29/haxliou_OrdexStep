@@ -50,7 +50,7 @@ public class Cliente {
     private int codigoPostal;
 
     @Column(name="fecha_registro")
-    private LocalDateTime fechaRegistro;
+    private LocalDateTime fechaRegistro = LocalDateTime.now();
 
     @OneToMany(mappedBy = "cliente", fetch=FetchType.LAZY, cascade= CascadeType.ALL )
     @JsonManagedReference
@@ -59,11 +59,8 @@ public class Cliente {
     @Column(columnDefinition = "TEXT")
     private String direccion ;
 
-
-
     public Cliente() {
     }
-
 
     public Cliente(Long id, String tipoidentificacion, String numeroIdentificacion, String nombre, String email, String apellido,
                    String telefono, String ciudad, String pais, int codigoPostal, List<Pedidos> pedidos, String direccion
