@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/adminlte}">
+
+<head>
+    <title>Registro de Compra</title>
+    <style>
+        .table-totals td { vertical-align: middle; border: none !important; }
+        /* Estilo para el switch pequeño */
+        .custom-switch { padding-left: 2.25rem; cursor: pointer; }
+        .iva-input-container { display: none; margin-top: 5px; }
+    </style>
+</head>
+
+<body>
+
+<section layout:fragment="content">
+    <section class="content-header">
+        <div class="container-fluid">
+            <h1><i class="fas fa-cart-plus mr-2 text-primary"></i>Nueva Compra</h1>
+        </div>
+    </section>
+
+    <section class="content">
+        <div class="container-fluid">
+            <form th:action="@{/compras/crear}" th:object="${compras}" method="post" id="compraForm">
+
+                <input type="hidden" th:field="*{numeroReferencia}">
+
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="card card-primary card-outline shadow">
+                            <div class="card-header"><h3 class="card-title font-weight-bold">Proveedor y Pago</h3></div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label>Proveedor</label>
+                                    <select th:field="*{proveedor.id}" class="form-control" required>
+                                        <option value="" disabled selected>Seleccione...</option>
+                                        <option th:each="prov : ${proveedores}" th:value="${prov.id}" th:text="${prov.nombre}"></option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Método de Pago</label>
+                                    <select th:field="*{metodoPago}" class="form-control" required>
+                                        <option value="">Seleccione un método</option>
+                                        <option th:each="metodo : ${T(com.example.demo.entidad.Enum.MetodoPago).values()}"
+                                                th:value="${metodo}"
+                                                th:text="${metodo.descripcion}">
+                                        </option>
+                                    </select>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-9">
+                        <div class="card card-outline card-success shadow">
+                            <div class="card-header border-0">
+                                <h3 class="card-title font-weight-bold">Detalle de Items</h3>
+                                <div class="card-tools">
+                                    <button type="button" class="btn btn-success btn-sm" id="agregarFila">
+                                        <i class="fas fa-plus mr-1"></i> Agregar Item
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body p-0">
+                                <table class="table table-striped" id="detalleTable">
+                                    <thead>
+                                    <tr>
+                                        <th style="width: 30%">Producto</th>
+                                        <th style="width: 12%">Cant.</th>
+                                        <th style="width: 15%">Precio U.</th>
+                                        <th style="width: 20%">¿Cambiar IVA?</th>
+                                        <th style="width: 15%">Subtotal</th>
+                                        <th style="width: 8%"></th>
+                                    </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                            <div class="card-footer bg-light">
+                                <div class="row align-items-center">
+                                    <div class="col-md-7">
+                                        <textarea th:field="*{observaciones}" class="form-control" rows="2" placeholder="Notas internas..."></textarea>
+                                    </div>
+                                    <div class="col-md-5 text-right">
+                                        <h3 class="mb-0 text-primary">Total: <span id="txtTotal">$ 0.00</span></h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right mb-4">
+                            <button type="submit" class="btn btn-success btn-lg shadow-sm px-5">
+                                <i class="fas fa-save mr-2"></i> Finalizar Compra
+                            </button>
+                            <a th:href="@{/compras/listar}" class="btn btn-default btn-lg px-5 ml-2">
+                                Cancelar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+</section>
+
+<th:block layout:fragment="scripts">
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const productos = /*[[${productos}]]*/ [];
+        let contador = 0;
+
+        function agregarFila() {
+            let tbody = document.querySelector('#detalleTable tbody');
+            let fila = document.createElement('tr');
+            fila.classList.add("fila-detalle");
+
+            fila.innerHTML = `
+            <td>
+                <select name="detalles[${contador}].productos.id" class="form-control select-producto" required>
+                    <option value="">Seleccione...</option>
+                    ${productos.map(p => `<option value="${p.id}" data-precio="${p.precioCompra || 0}" data-iva="${p.impuesto || 0}">${p.nombre}</option>`).join('')}
+                </select>
+            </td>
+            <td><input type="number" name="detalles[${contador}].cantidad" class="form-control cantidad" step="0.01" value="1" required></td>
+            <td>
+                <input type="number" name="detalles[${contador}].precioUnitario" class="form-control precio-compra-actual" step="0.01" value="0" required>
+
+                <div class="custom-control custom-switch mt-1">
+                    <input type="hidden" name="detalles[${contador}].actualizarPrecio" class="val-switch-precio" value="false">
+                    <input type="checkbox" class="custom-control-input switch-precio" id="switchPrecio_${contador}">
+                    <label class="custom-control-label font-weight-normal small" for="switchPrecio_${contador}">¿Cambió el costo?</label>
+                </div>
+                <div class="div-nuevo-precio mt-1" style="display: none;">
+                    <input type="number" name="detalles[${contador}].productos.precioCompra" class="form-control form-control-sm border-primary" placeholder="Nuevo costo ficha" step="0.01">
+                    <small class="text-primary font-italic">Se guardará en el producto</small>
+                </div>
+            </td>
+            <td>
+                <div class="custom-control custom-switch mb-1">
+                    <input type="hidden" name="detalles[${contador}].actualizarImpuesto" class="val-switch-iva" value="false">
+                    <input type="checkbox" class="custom-control-input switch-iva" id="switchIVA_${contador}">
+                    <label class="custom-control-label font-weight-normal small" for="switchIVA_${contador}">¿Cambiar IVA?</label>
+                </div>
+                <div class="div-nuevo-iva" style="display: none;">
+                    <input type="number" name="detalles[${contador}].productos.Impuesto" class="form-control form-control-sm border-info iva-val" placeholder="%" step="0.01" value="0">
+                    <small class="text-info font-italic">Nuevo IVA ficha</small>
+                </div>
+            </td>
+            <td class="text-right font-weight-bold pt-3"><span class="subtotal-display">0.00</span></td>
+            <td class="text-center pt-2">
+                <button type="button" class="btn btn-sm text-danger eliminarFila"><i class="fas fa-trash-alt fa-lg"></i></button>
+            </td>
+        `;
+
+            tbody.appendChild(fila);
+
+            const select = fila.querySelector('.select-producto');
+            const inputPrecioActual = fila.querySelector('.precio-compra-actual');
+            const inputIvaFicha = fila.querySelector('.iva-val');
+
+            // --- LÓGICA SWITCH PRECIO ---
+            const swPrecio = fila.querySelector('.switch-precio');
+            const hiddenPrecio = fila.querySelector('.val-switch-precio');
+            const divPrecio = fila.querySelector('.div-nuevo-precio');
+            const inputPrecioFicha = divPrecio.querySelector('input');
+
+            swPrecio.addEventListener('change', function() {
+                hiddenPrecio.value = this.checked;
+                if(this.checked) {
+                    $(divPrecio).fadeIn();
+                    inputPrecioFicha.value = inputPrecioActual.value;
+                    inputPrecioFicha.required = true;
+                } else {
+                    $(divPrecio).fadeOut();
+                    inputPrecioFicha.required = false;
+                }
+            });
+
+            // --- LÓGICA SWITCH IVA ---
+            const swIva = fila.querySelector('.switch-iva');
+            const hiddenIva = fila.querySelector('.val-switch-iva');
+            const divIva = fila.querySelector('.div-nuevo-iva');
+
+            swIva.addEventListener('change', function() {
+                hiddenIva.value = this.checked;
+                if(this.checked) {
+                    $(divIva).fadeIn();
+                    inputIvaFicha.required = true;
+                } else {
+                    $(divIva).fadeOut();
+                    inputIvaFicha.required = false;
+                }
+            });
+
+            // --- CARGA DE DATOS ---
+            select.addEventListener('change', function() {
+                const option = this.options[this.selectedIndex];
+                if(option.value) {
+                    inputPrecioActual.value = option.getAttribute('data-precio');
+                    inputIvaFicha.value = option.getAttribute('data-iva');
+                    // Si están activos los switches, actualizar también los campos de ficha
+                    if(swPrecio.checked) inputPrecioFicha.value = inputPrecioActual.value;
+                    calcular();
+                }
+            });
+
+            fila.querySelector('.cantidad').addEventListener('input', calcular);
+            inputPrecioActual.addEventListener('input', function() {
+                if(swPrecio.checked) inputPrecioFicha.value = this.value;
+                calcular();
+            });
+            inputIvaFicha.addEventListener('input', calcular);
+
+            fila.querySelector('.eliminarFila').addEventListener('click', () => {
+                fila.remove();
+                calcular();
+                reindexar();
+            });
+
+            contador++;
+        }
+
+        function calcular() {
+            let totalCompra = 0;
+            document.querySelectorAll('.fila-detalle').forEach(fila => {
+                let c = parseFloat(fila.querySelector('.cantidad').value || 0);
+                let p = parseFloat(fila.querySelector('.precio-compra-actual').value || 0);
+                // El cálculo de la compra siempre usa el valor del IVA que esté en el input (sea el de la ficha o el nuevo)
+                let iva = parseFloat(fila.querySelector('.iva-val').value || 0);
+
+                let neto = c * p;
+                let impuesto = neto * (iva / 100);
+                let totalLinea = neto + impuesto;
+
+                fila.querySelector('.subtotal-display').innerText = totalLinea.toFixed(2);
+                totalCompra += totalLinea;
+            });
+            document.getElementById('txtTotal').innerText = '$ ' + totalCompra.toLocaleString('en-US', {minimumFractionDigits: 2});
+        }
+
+        function reindexar() {
+            document.querySelectorAll('.fila-detalle').forEach((f, i) => {
+                f.querySelector('.select-producto').name = `detalles[${i}].productos.id`;
+                f.querySelector('.cantidad').name = `detalles[${i}].cantidad`;
+                f.querySelector('.precio-compra-actual').name = `detalles[${i}].precioUnitario`;
+
+                // Mapeo exacto solicitado: productos.Impuesto y productos.precioCompra
+                f.querySelector('.div-nuevo-iva input').name = `detalles[${i}].productos.Impuesto`;
+                f.querySelector('.div-nuevo-precio input').name = `detalles[${i}].productos.precioCompra`;
+
+                f.querySelector('.val-switch-precio').name = `detalles[${i}].actualizarPrecio`;
+                f.querySelector('.val-switch-iva').name = `detalles[${i}].actualizarImpuesto`;
+
+                let swIva = f.querySelector('.switch-iva');
+                let lblIva = f.querySelector('label[for^="switchIVA"]');
+                swIva.id = `switchIVA_${i}`;
+                lblIva.setAttribute('for', `switchIVA_${i}`);
+
+                let swPrecio = f.querySelector('.switch-precio');
+                let lblPrecio = f.querySelector('label[for^="switchPrecio"]');
+                swPrecio.id = `switchPrecio_${i}`;
+                lblPrecio.setAttribute('for', `switchPrecio_${i}`);
+            });
+            contador = document.querySelectorAll('.fila-detalle').length;
+        }
+
+        document.getElementById('agregarFila').addEventListener('click', agregarFila);
+        window.onload = agregarFila;
+        /*]]>*/
+        $(document).ready(function () {
+            const s = /*[[${success}]]*/ null;
+            const e = /*[[${error}]]*/ null;
+            const i = /*[[${info}]]*/ null;
+            const w = /*[[${warning}]]*/ null;
+            if (window.checkNotifications) checkNotifications(s, e, i, w);
+        });
+    </script>
+</th:block>
+</body>
+</html>

@@ -3,6 +3,7 @@ package com.example.demo.Login.Servicio;
 import com.example.demo.Login.Usuario;
 import com.example.demo.Login.Repositorio.RepositorioUsuario;
 import com.example.demo.Login.Rol;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -68,6 +69,32 @@ public class ServicioUsuarioImp implements ServicioUsuario {
     }
 
     @Override
+    @Transactional
+    public void ActualizarRol(Long idUser, Rol rol) {
+        Usuario usuario = repositorioUsuario.findById(idUser)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        // Validación verifica si el String "ROLE_ADMIN" está presente en la lista de roles
+        boolean esAdmin = usuario.getRoles().stream()
+                .anyMatch(r -> r.getNombre().equalsIgnoreCase("ROLE_ADMIN"));
+
+        if (esAdmin) {
+            throw new RuntimeException("Protección de Seguridad: No se permite degradar o cambiar cuentas de administrador.");
+        }
+        // Actualizamos la lista con el nuevo rol
+        usuario.setRoles(Arrays.asList(rol));
+    }
+
+    @Override
+    @Transactional
+    public void actualizarContrasena(Long idUser, String password) {
+        Usuario user = repositorioUsuario.findById(idUser)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        String encodedPassword = passwordEncoder.encode(password);
+        user.setPassword(encodedPassword);
+    }
+
+    @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Usuario usuario = repositorioUsuario.findByEmail(username);
         if (usuario == null) {
@@ -95,5 +122,7 @@ public class ServicioUsuarioImp implements ServicioUsuario {
     private Collection<? extends GrantedAuthority> mapearAutoridadesRoles(Collection<Rol> roles) {
         return roles.stream().map(role -> new SimpleGrantedAuthority(role.getNombre())).collect(Collectors.toList());
     }
+
+
 
 }

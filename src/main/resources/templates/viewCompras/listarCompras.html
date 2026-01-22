@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/adminlte}">
+
+<head>
+    <title>Listado de Compras</title>
+    <link rel="stylesheet" th:href="@{/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css}">
+    <style>
+        .card-dashboard {
+            border-radius: 12px;
+            color: white;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            border: none;
+            min-height: 125px;
+            transition: transform 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .card-dashboard:hover { transform: translateY(-5px); }
+        .card-dashboard .inner h3 {
+            font-weight: 700;
+            font-size: 2rem;
+            margin-bottom: 5px;
+            position: relative;
+            z-index: 2;
+        }
+        .card-dashboard .inner p {
+            font-size: 1rem;
+            opacity: 0.9;
+            font-weight: 500;
+            text-transform: capitalize;
+            position: relative;
+            z-index: 2;
+        }
+        .card-dashboard .icon-overlay {
+            position: absolute;
+            right: -10px;
+            bottom: -10px;
+            font-size: 5rem;
+            opacity: 0.15;
+            transform: rotate(-10deg);
+            z-index: 1;
+        }
+        @media print {
+            /* Ocultar todo el sitio web */
+            body * { visibility: hidden; }
+
+            /* Mostrar solo el modal que está abierto y su contenido */
+            .modal.show, .modal.show * { visibility: visible; }
+
+            /* Posicionar el modal en la parte superior para que no salga movido */
+            .modal.show {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+
+            /* Quitar botones y elementos innecesarios al imprimir */
+            .modal-footer, .close { display: none !important; }
+
+            /* Quitar bordes y sombras pesadas para ahorrar tinta */
+            .modal-content { border: none !important; box-shadow: none !important; }
+        }
+        @media print {
+            .modal-body {
+                overflow: visible !important;
+                height: auto !important;
+            }
+        }
+        /* Colores exactos de la imagen */
+        .bg-info-custom { background-color: #17a2b8; }   /* Azul/Teal */
+        .bg-success-custom { background-color: #28a745; } /* Verde */
+        .bg-warning-custom { background-color: #ffc107; } /* Amarillo */
+        .bg-danger-custom { background-color: #dc3545; }  /* Rojo */
+    </style>
+</head>
+
+<body>
+
+<section layout:fragment="content">
+
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1><i class="fas fa-shopping-cart mr-2 text-primary"></i>Gestión de Compras</h1>
+                </div>
+                <div class="col-sm-6 text-right">
+                    <a th:href="@{/compras/crear}" class="btn btn-primary shadow-sm">
+                        <i class="fas fa-plus-circle mr-1"></i> Nueva Compra
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-3 col-6">
+                    <div class="card-dashboard bg-info-custom">
+                        <div class="inner">
+                            <h3 th:text="${Compras.size()}">0</h3>
+                            <p>Total Compras</p>
+                        </div>
+                        <div class="icon-overlay"><i class="fas fa-shopping-cart"></i></div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-6">
+                    <div class="card-dashboard bg-success-custom">
+                        <div class="inner">
+                            <h3 th:text="'$' + ${#numbers.formatDecimal(Datos['TotalEgresos'], 1, 'COMMA', 2, 'POINT')}">$0.00</h3>
+                            <p>Gasto Total Mes</p>
+                        </div>
+                        <div class="icon-overlay"><i class="fas fa-dollar-sign"></i></div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-6">
+                    <div class="card-dashboard bg-warning-custom text-dark"> <div class="inner">
+                        <h3 th:text="${#numbers.formatDecimal(Datos['EntradasEnUnidades'],1,0)}">0</h3>
+                        <p>Entradas en Unidades</p>
+                    </div>
+                        <div class="icon-overlay"><i class="fas fa-box"></i></div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-6">
+                    <div class="card-dashboard bg-danger-custom">
+                        <div class="inner">
+                            <h3 th:text="${#numbers.formatDecimal(Datos['EntradasEnKg'], 1, 'COMMA', 2, 'POINT')} + ' kg'">0.00 kg</h3>
+                            <p>Entradas en Peso</p>
+                        </div>
+                        <div class="icon-overlay"><i class="fas fa-weight-hanging"></i></div>
+                    </div>
+                </div>
+            </div>
+            <br>
+            <div class="card card-outline card-primary shadow">
+                <div class="card-header border-0">
+                    <h3 class="card-title font-weight-bold">Historial de Transacciones</h3>
+                </div>
+                <div th:if="${#lists.isEmpty(Compras)}" class="text-center p-5">
+                    <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                    <h4>No hay Compras registradas todavía.</h4>
+                    <a th:href="@{/compras/crear}" class="btn btn-outline-primary mt-2">Crear primera Compra</a>
+                </div>
+
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table id="tablaCompras" class="table table-hover table-striped w-100" th:unless="${#lists.isEmpty(Compras)}" >
+                            <thead class="bg-light">
+                            <tr>
+                                <th>Referencia</th>
+                                <th>Proveedor</th>
+                                <th>Items</th> <th>Total Pago</th>
+                                <th>Fecha</th>
+                                <th>Estado</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="compra : ${Compras}">
+                                <td class="font-weight-bold">
+                                    <span th:if="${compra.estado.name() == 'BORRADOR'}" class="text-muted small">
+                                        <i class="fas fa-clock mr-1"></i> PENDIENTE
+                                    </span>
+                                    <span th:unless="${compra.estado.name() == 'BORRADOR'}" class="text-primary"
+                                          th:text="${compra.numeroReferencia}"></span>
+                                </td>
+                                <td th:text="${compra.proveedor.nombre}"></td>
+                                <td>
+                                    <span class="badge badge-info shadow-sm" th:text="${compra.detalles.size()} + ' Items'"></span>
+                                    <small class="text-muted d-block mt-1" style="max-width: 250px; line-height: 1.2;">
+                                        <span th:each="detalle, iterStat : ${compra.detalles}">
+                                            <span th:if="${detalle.productos.tipoVenta.name() == 'UNIDAD'}"
+                                                  th:text="${#numbers.formatDecimal(detalle.cantidad, 1, 0)} + ' und'"></span>
+
+                                            <span th:if="${detalle.productos.tipoVenta.name() == 'PESO'}"
+                                                  th:text="${#numbers.formatDecimal(detalle.cantidad, 1, 2)} + ' kg'"></span>
+
+                                            x <span th:text="${detalle.productos.nombre}"></span>
+                                            <span th:if="${!iterStat.last}">, </span>
+                                        </span>
+                                    </small>
+                                </td>
+                                <td  th:text="${'$ ' + #numbers.formatDecimal(compra.total, 1, 'POINT', 2, 'COMMA')}"></td>
+                                <td th:text="${#temporals.format(compra.fechaCompra, 'dd/MM/yyyy')}"></td>
+                                <td>
+                                    <span th:class="'badge shadow-sm ' +
+                                          (${compra.estado.name() == 'BORRADOR'} ? 'badge-warning' :
+                                          (${compra.estado.name() == 'CONFIRMADA'} ? 'badge-success' : 'badge-danger'))"
+                                          th:text="${compra.estado.name()}">
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-sm btn-info mr-1"
+                                                data-toggle="modal" th:data-target="'#modalDetalle' + ${compra.id}" title="Ver Detalle">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+
+                                        <th:block th:if="${compra.estado.name() == 'BORRADOR'}">
+                                            <a th:href="@{/compras/editar/{id}(id=${compra.id})}" class="btn btn-sm btn-outline-primary mr-1" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button th:onclick="'confirmarAccion(\'/compras/confirmar/' + ${compra.id} + '\', \'¿Confirmar compra?\')'"
+                                                    class="btn btn-default btn-sm text-success" title="Confirmar">
+                                                <i class="fas fa-check-circle"></i>
+                                            </button>
+                                            <button th:onclick="'confirmarAccion(\'/compras/anular/' + ${compra.id} + '\', \'¿Anular esta compra?\')'"
+                                                    class="btn btn-default btn-sm text-danger" title="Anular">
+                                                <i class="fas fa-ban"></i>
+                                            </button>
+                                        </th:block>
+                                    </div>
+                                    <div class="modal fade text-left" th:id="'modalDetalle' + ${compra.id}" tabindex="-1" role="dialog">
+                                        <div class="modal-dialog modal-lg" role="document">
+                                            <div class="modal-content" style="border-radius: 15px;">
+                                                <div class="modal-header bg-primary text-white" style="border-radius: 15px 15px 0 0;">
+                                                    <h5 class="modal-title">
+                                                        <i class="fas fa-shopping-bag mr-2"></i>
+                                                        Detalle de Compra: <span th:text="${compra.numeroReferencia != null ? compra.numeroReferencia : 'PENDIENTE'}"></span>
+                                                    </h5>
+                                                    <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="row mb-3">
+                                                        <div class="col-md-4">
+                                                            <label class="text-muted small uppercase d-block">Proveedor</label>
+                                                            <strong th:text="${compra.proveedor.nombre}"></strong>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <label class="text-muted small d-block">Fecha de Compra</label>
+                                                            <strong th:text="${#temporals.format(compra.fechaCompra, 'dd/MM/yyyy')}"></strong>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <label class="text-muted small d-block">Estado Actual</label>
+                                                            <span th:class="'badge ' + (${compra.estado.name() == 'CONFIRMADA'} ? 'badge-success' : 'badge-warning')"
+                                                                  th:text="${compra.estado.name()}"></span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="table-responsive">
+                                                        <table class="table table-sm table-bordered">
+                                                            <thead class="bg-light">
+                                                            <tr>
+                                                                <th>Producto</th>
+                                                                <th class="text-center">Cant.</th>
+                                                                <th class="text-right">Precio Unit.</th>
+                                                                <th class="text-right">Subtotal</th>
+                                                            </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                            <tr th:each="detalle : ${compra.detalles}">
+                                                                <td th:text="${detalle.productos.nombre}"></td>
+                                                                <td class="text-center" th:text="${detalle.cantidad}"></td>
+                                                                <td class="text-right" th:text="'$' + ${#numbers.formatDecimal(detalle.precioUnitario, 1, 'COMMA', 2, 'POINT')}"></td>
+                                                                <td class="text-right font-weight-bold" th:text="'$' + ${#numbers.formatDecimal(detalle.cantidad * detalle.precioUnitario, 1, 'COMMA', 2, 'POINT')}"></td>
+                                                            </tr>
+                                                            </tbody>
+                                                            <tfoot>
+                                                            <tr class="bg-light">
+                                                                <th colspan="3" class="text-right text-uppercase">Total de la Operación:</th>
+                                                                <th class="text-right h5 text-primary" th:text="'$' + ${#numbers.formatDecimal(compra.total, 1, 'COMMA', 2, 'POINT')}"></th>
+                                                            </tr>
+                                                            </tfoot>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                                                    <button type="button" class="btn btn-primary" onclick="window.print()">
+                                                        <i class="fas fa-print mr-1"></i> Imprimir Reporte
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</section>
+
+<th:block layout:fragment="scripts">
+    <script th:src="@{/plugins/datatables/jquery.dataTables.min.js}"></script>
+    <script th:src="@{/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js}"></script>
+
+    <script th:inline="javascript">
+        $(document).ready(function () {
+            /*<![CDATA[*/
+            $('#tablaCompras').DataTable({
+                "responsive": true,
+                "lengthChange": true,
+                "autoWidth": false,
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json"
+                },
+                "order": [ [4, "desc"] ] // Ordenar por Fecha (columna 4)
+            });
+
+            const success = /*[[${success}]]*/ null;
+            const error = /*[[${error}]]*/ null;
+
+            if (success) Swal.fire({ icon: 'success', title: '¡Hecho!', text: success, timer: 3000 });
+            if (error) Swal.fire({ icon: 'error', title: 'Error', text: error });
+            /*]]>*/
+        });
+
+        function confirmarAccion(url, mensaje) {
+            Swal.fire({
+                title: mensaje,
+                text: "Esta acción no se puede deshacer",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, continuar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = url;
+                }
+            });
+        }
+    </script>
+</th:block>
+
+</body>
+</html>

@@ -2,7 +2,10 @@ package com.example.demo.servicio;
 
 import com.example.demo.entidad.Compras;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 public interface CompraServicio {
 
@@ -15,4 +18,5 @@ public interface CompraServicio {
     String GenerarReferenciasDeCompras();
     void ConfirmarCompra(Long id);
     void AnularCompra(Long id);
+    Map<String,Object>StokMensual(LocalDateTime fechaInicio, LocalDateTime fechaFin);
 }

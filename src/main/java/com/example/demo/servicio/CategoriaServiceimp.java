@@ -5,7 +5,10 @@ import com.example.demo.repositorio.CategoriaRepositorio;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class CategoriaServiceimp implements CategoriaService{
@@ -29,5 +32,16 @@ public class CategoriaServiceimp implements CategoriaService{
     public Categoria Buscarbyid(Long id) {
         return repositorio.findById(id)
                 .orElseThrow(()->new RuntimeException("categoria no encontrada"));
+    }
+
+    @Override
+    public List<Map<String, Object>> Categorias() {
+        List<Map<String,Object>> categortiaSimple= repositorio.findAll().stream().map(c ->{
+            Map<String,Object> datos = new HashMap<>();
+            datos.put("id",c.getId());
+            datos.put("nombre",c.getNombrecategoria());
+            return datos;
+        }).collect(Collectors.toList());
+        return categortiaSimple;
     }
 }

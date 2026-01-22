@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -81,10 +82,6 @@ public class VentaControlador {
                 .map(obj -> (BigDecimal) obj[1])
                 .orElse(BigDecimal.ZERO));
 
-        List<String> etiquetas = servicio.ListaMeses();
-        List<BigDecimal> valores = servicio.listarTotalVentas();
-        model.addAttribute("labelsGrafica", etiquetas);
-        model.addAttribute("datosGrafica", valores );
         model.addAttribute("nombresProductos",servicio.NombreProductos());
         model.addAttribute("conteoProductos",servicio.CantidadProductos());
         return "ViewVentas/index";
@@ -106,6 +103,8 @@ public class VentaControlador {
         // 🔑 ENVIAR AMBAS COSAS
         model.addAttribute("cajaAbierta", cajaActiva);
         model.addAttribute("necesitaAbrirCaja", cajaActiva == null);
+        model.addAttribute("caja",cajaActiva);
+
 
         Venta venta = new Venta();
         venta.setCliente(new Cliente());
@@ -114,6 +113,10 @@ public class VentaControlador {
         DetalleVenta det = new DetalleVenta();
         det.setProducto(new Productos());
         det.setVenta(venta);
+        if (cajaActiva != null) {
+            Map<String, Object> resumen = cajaServicio.obtenerResumenActual(cajaActiva.getId());
+            model.addAttribute("resumen", resumen);
+        }
 
         model.addAttribute("clientes", clienteService.clienteSimple());
         model.addAttribute("productos", productoServicio.listarProductos());
@@ -122,28 +125,6 @@ public class VentaControlador {
 
         return "ViewVentas/crearVenta";
     }
-
-
-//    @GetMapping("/crear")
-//    public String crearVentaMostrarForm(Model model,@AuthenticationPrincipal UserDetails userDetails) {
-//        Usuario usuario = servicioUsuario.findByEmail(userDetails.getUsername());
-//        Caja cajaActiva = cajaServicio.CajaAbierta(usuario);
-//        model.addAttribute("necesitaAbrirCaja", cajaActiva == null);
-//
-//        Venta venta = new Venta();
-//        // Cliente vacío
-//        venta.setCliente(new Cliente());
-//        // Lista inicializada
-//        venta.setDetalles(new ArrayList<>());
-//        // Agregar un detalle vacío
-//        DetalleVenta det = new DetalleVenta();
-//        det.setProducto(new Productos());
-//        det.setVenta(venta);
-//        model.addAttribute("clientes", clienteService.clienteSimple());
-//        model.addAttribute("productos", productoServicio.listarProductos());
-//        model.addAttribute("venta", venta);
-//        return "ViewVentas/crearVenta";
-//    }
 
     // ============================
     // GUARDAR NUEVA VENTA
@@ -193,7 +174,7 @@ public class VentaControlador {
                 // --- LÓGICA DE CONVERSIÓN (Gramos a Kilos si es PESO) ---
                 BigDecimal cantidadOriginal = detalle.getCantidad();
                 BigDecimal cantidadProcesada = "PESO".equals(productoCompleto.getTipoVenta().name())
-                        ? cantidadOriginal.divide(new BigDecimal("1000"))
+                        ? cantidadOriginal.divide(new BigDecimal("1000")).setScale(3, RoundingMode.HALF_UP)
                         : cantidadOriginal;
 
                 // --- VALIDACIONES DE STOCK ---
@@ -221,11 +202,12 @@ public class VentaControlador {
 
                 // Cálculo de Impuesto de la fila (Subtotal * %Impuesto / 100)
                 BigDecimal porcentajeImp = productoCompleto.getImpuesto() != null ? productoCompleto.getImpuesto() : BigDecimal.ZERO;
-                BigDecimal impuestoFila = subtotalFila.multiply(porcentajeImp).divide(new BigDecimal("100"));
+                BigDecimal impuestoFila = subtotalFila.multiply(porcentajeImp).divide(new BigDecimal("100"))
+                        .setScale(2, RoundingMode.HALF_UP);
 
                 // --- ACUMULACIÓN DE TOTALES ---
                 subtotalGeneral = subtotalGeneral.add(subtotalFila);
-                totalImpuestosAcumulado = totalImpuestosAcumulado.add(impuestoFila);
+                totalImpuestosAcumulado = totalImpuestosAcumulado.add(impuestoFila).setScale(2, RoundingMode.HALF_UP);
 
                 detallesValidos.add(detalle);
             }
@@ -237,9 +219,19 @@ public class VentaControlador {
 
             // 3. Finalización de la Venta
             venta.setDetalles(detallesValidos);
-            venta.setSubtotal(subtotalGeneral);
-            venta.setImpuesto(totalImpuestosAcumulado); // Ahora es el valor total en dinero
-            venta.setTotal(subtotalGeneral.add(totalImpuestosAcumulado));
+            venta.setSubtotal(subtotalGeneral.setScale(2, RoundingMode.HALF_UP));
+            
+            // CORRECCIÓN: Guardar el PORCENTAJE de impuesto global (puedes tomarlo del primer producto o un promedio)
+            // Si manejas un IVA estándar (ej. 19%), guárdalo como valor fijo.
+            // Aquí lo calculamos de forma segura basándonos en los productos vendidos:
+            BigDecimal porcentajeGlobal = BigDecimal.ZERO;
+            if (!detallesValidos.isEmpty()) {
+                porcentajeGlobal = detallesValidos.get(0).getProducto().getImpuesto();
+            }
+            venta.setImpuesto(porcentajeGlobal != null ? porcentajeGlobal : BigDecimal.ZERO); 
+
+            // El Total sigue siendo Subtotal + Dinero del Impuesto Acumulado
+            venta.setTotal(subtotalGeneral.add(totalImpuestosAcumulado).setScale(2, RoundingMode.HALF_UP));
 
             // 4. Gestión de Usuario y Stock
             Usuario usuarioVendedor = servicioUsuario.findByEmail(userDetails.getUsername());

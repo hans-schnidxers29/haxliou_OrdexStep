@@ -134,11 +134,17 @@
                         </a>
                     </li>
 
-
                     <li class="nav-item">
                         <a th:href="@{/ventas/listar}" class="nav-link">
                             <i class="fas fa-file-invoice-dollar nav-icon"></i>
                             <p>Historial de Ventas</p>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a th:href="@{/cierre/resumen}" class="nav-link">
+                            <i class="nav-icon fas fa-calendar-check"></i>
+                            <p>Tu Mes - Resumen</p>
                         </a>
                     </li>
 
@@ -260,19 +266,20 @@
                         </a>
                         <ul class="nav nav-treeview">
                             <li class="nav-item">
-                                <a href="#" class="nav-link">
+                                <a th:href="@{/compras/listar}" class="nav-link">
                                     <i class="fas fa-list nav-icon"></i>
                                     <p>Lista de Compras</p>
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a href="#" class="nav-link">
+                                <a th:href="@{/compras/crear}" class="nav-link">
                                     <i class="fas fa-plus-circle nav-icon"></i>
                                     <p>Crear Compra</p>
                                 </a>
                             </li>
                         </ul>
                     </li>
+
 
                     <li class="nav-item has-treeview" sec:authorize="isAuthenticated()">
                         <a href="#" class="nav-link">

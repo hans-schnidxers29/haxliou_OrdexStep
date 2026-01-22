@@ -53,7 +53,7 @@
                 </div>
                 <div class="col-lg-3 col-6">
                     <div class="small-box bg-gradient-success elevation-2">
-                        <div class="inner"><h3>$<span th:text="${totalRecaudado}"></span></h3><p>Recaudación Hoy</p></div>
+                        <div class="inner"><h3>$<span th:text="${#numbers.formatDecimal(totalRecaudado, 1, 'COMMA', 2, 'POINT')}"></span></h3><p>Recaudación Hoy</p></div>
                         <div class="icon"><i class="fas fa-dollar-sign"></i></div>
                     </div>
                 </div>
@@ -103,41 +103,31 @@
                                     <td th:text="${venta.id}" class="font-weight-bold"></td>
                                     <td><span th:text="${venta.cliente.nombre}"></span><br><small class="text-muted">[[${venta.cliente.email}]]</small></td>
                                     <td><span th:text="${#temporals.format(venta.fechaVenta,'dd/MM/yyyy')}"></span><small class="text-muted ml-1">[[${#temporals.format(venta.fechaVenta,'HH:mm')}]]</small></td>
-                                    <td><span class="badge badge-info" th:text="${venta.detalles.size()} + ' Items'"></span>
-                                        <small class="text-muted d-block text-truncate" style="max-width: 200px;">
-                                            <span th:each="detalle, iterStat : ${venta.detalles}">[[${detalle.cantidad}]]x [[${detalle.producto.nombre}]]<span th:if="${!iterStat.last}">, </span></span>
+                                    <td>
+                                        <span class="badge badge-info shadow-sm" th:text="${venta.detalles.size()} + ' Items'"></span>
+                                        <small class="text-muted d-block mt-1" style="max-width: 250px; line-height: 1.2;">
+                                        <span th:each="detalle, iterStat : ${venta.detalles}">
+                                            <span th:if="${detalle.producto.tipoVenta.name() == 'UNIDAD'}"
+                                                  th:text="${#numbers.formatDecimal(detalle.cantidad, 1, 0)} + ' und'"></span>
+
+                                            <span th:if="${detalle.producto.tipoVenta.name() == 'PESO'}"
+                                                  th:text="${#numbers.formatDecimal(detalle.cantidad, 1, 2)} + ' kg'"></span>
+
+                                            x <span th:text="${detalle.producto.nombre}"></span>
+                                            <span th:if="${!iterStat.last}">, </span>
+                                        </span>
                                         </small>
                                     </td>
                                     <td><span class="badge" th:classappend="${venta.metodoPago == 'Efectivo' ? 'badge-success' : 'badge-primary'}" th:text="${venta.metodoPago}"></span></td>
-                                    <td><span class="font-weight-bold text-success">$[[${#numbers.formatDecimal(venta.total, 1, 3)}]]</span></td>
+                                    <td><span class="font-weight-bold text-success">$[[${#numbers.formatDecimal(venta.total,1, 'COMMA', 2, 'POINT')}]]</span></td>
                                     <td class="text-center">
                                         <div class="btn-group shadow-sm">
                                             <a th:href="@{/ventas/ticket/{id}(id=${venta.id})}" class="btn btn-xs btn-info" title="Ver Ticket"><i class="fas fa-print"></i></a>
-                                            <a href="#" th:onclick="'confirmarEliminacionVenta(' + ${venta.id} + ')'" class="btn btn-xs btn-danger" title="Anular Venta"><i class="fas fa-trash-alt"></i></a>
                                         </div>
                                     </td>
                                 </tr>
                                 </tbody>
                             </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row mt-3">
-                <div class="col-md-6">
-                    <div class="card card-outline card-info shadow">
-                        <div class="card-header"><h3 class="card-title"><i class="fas fa-chart-line mr-1"></i> Rendimiento por Mes</h3></div>
-                        <div class="card-body">
-                            <div class="chart-wrapper"><canvas id="ventasChart"></canvas></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card card-outline card-teal shadow">
-                        <div class="card-header"><h3 class="card-title"><i class="fas fa-box-open mr-1"></i> Top Productos Vendidos</h3></div>
-                        <div class="card-body">
-                            <div class="chart-wrapper"><canvas id="productosChart"></canvas></div>
                         </div>
                     </div>
                 </div>
@@ -171,44 +161,6 @@
                     "oPaginate": { "sNext": "Siguiente", "sPrevious": "Anterior" }
                 },
                 "order": [ [ 0, "desc" ] ]
-            });
-
-            // Gráfica Lineal
-            new Chart(document.getElementById('ventasChart').getContext('2d'), {
-                type: 'line',
-                data: {
-                    labels: [[${labelsGrafica}]],
-                    datasets: [{
-                        label: 'Ventas ($)',
-                        data: [[${datosGrafica}]],
-                        borderColor: '#007bff',
-                        backgroundColor: 'rgba(0, 123, 255, 0.1)',
-                        fill: true,
-                        tension: 0.3,
-                        borderWidth: 2
-                    }]
-                },
-                options: { maintainAspectRatio: false }
-            });
-
-            // Gráfica Barras
-            new Chart(document.getElementById('productosChart').getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: [[${nombresProductos}]],
-                    datasets: [{
-                        label: 'Cant. Vendida',
-                        data: [[${conteoProductos}]],
-                        backgroundColor: 'rgba(32, 201, 151, 0.8)',
-                        borderColor: '#20c997',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    maintainAspectRatio: false,
-                    legend: { display: false },
-                    scales: { yAxes: [{ ticks: { beginAtZero: true, stepSize: 1 } }] }
-                }
             });
         });
 

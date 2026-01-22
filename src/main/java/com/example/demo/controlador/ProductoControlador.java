@@ -77,27 +77,32 @@ public class ProductoControlador {
                 return "redirect:/listarproductos";
             }
 
-            // 1. Validar Categoría (Obligatoria)
+            // 1. Validar Categoría
             Categoria categoria = serviceCate.Buscarbyid(producto.getCategoria().getId());
             if (categoria == null) {
                 redirectAttributes.addFlashAttribute("error", "Categoría no encontrada");
                 return "redirect:/producto/actualizar/" + id;
             }
 
-            // 2. Validar Proveedor (Opcional)
-            // Verificamos si el objeto proveedor y su ID existen en lo que viene del form
+            // 2. Validar Proveedor
             if (producto.getProveedor() != null && producto.getProveedor().getId() != null) {
-                // Buscamos el proveedor en la BD (asumiendo que tienes un proveedorService)
                 Proveedores proveedorBD = proveedorServicio.proveedorById(producto.getProveedor().getId());
                 productoActual.setProveedor(proveedorBD);
             } else {
-                // Si no se seleccionó nada, lo dejamos nulo
                 productoActual.setProveedor(null);
+            }
+
+            if(producto.getPrecioCompra()== null && productoActual.getPrecioCompra()!=null){
+                producto.setPrecioCompra(productoActual.getPrecioCompra());
             }
 
             // --- ACTUALIZACIÓN DE CAMPOS ---
             productoActual.setNombre(producto.getNombre());
-            productoActual.setPrecio(producto.getPrecio());
+            productoActual.setPrecio(producto.getPrecio()); // Precio de Venta
+
+            // NUEVO: Seteamos el precio de compra desde el formulario
+            productoActual.setPrecioCompra(producto.getPrecioCompra());
+
             productoActual.setCantidad(producto.getCantidad());
             productoActual.setDescripcion(producto.getDescripcion());
             productoActual.setCategoria(categoria);
@@ -118,6 +123,7 @@ public class ProductoControlador {
             return "redirect:/producto/actualizar/" + id;
         }
     }
+
     @GetMapping("/productos/delete/{id}")
     public String EliminarProdutos(@PathVariable Long id, RedirectAttributes redirectAttributes){
         service.deleteProductoById(id);
@@ -134,7 +140,9 @@ public class ProductoControlador {
     @PostMapping("producto/stock-agregar/{id}")
     public String AgregarStock(@PathVariable Long id, @RequestParam BigDecimal cantidad, RedirectAttributes redirectAttributes){
         try{
-            service.AgregarStock(id,cantidad);
+            BigDecimal impuesto = BigDecimal.ZERO;
+            BigDecimal NewPrecioCompra = BigDecimal.ZERO;
+            service.AgregarStock(id,cantidad,impuesto,NewPrecioCompra);
             redirectAttributes.addFlashAttribute("success","Stock agregado correctamente");
             return "redirect:/listarproductos";
         }catch (Exception e){

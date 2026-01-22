@@ -18,10 +18,6 @@ public interface PedidoRepositorio extends JpaRepository<Pedidos,Long> {
     @Query("SELECT COUNT(p) FROM Pedidos p WHERE p.estado = :estado")
     long contarPorEstado(@Param("estado") EstadoPedido estado);
 
-    // Query para contar pedidos PENDIENTES
-    @Query("SELECT COUNT(p) FROM Pedidos p WHERE p.estado = :estado")
-    Long countByEstadoPendiente(@Param("estado") EstadoPedido estado);
-
     // Query para contar pedidos ENTREGADOS
     @Query("SELECT COUNT(p) FROM Pedidos p WHERE p.estado = :estado")
     Long countByEstadoEntregado(@Param("estado") EstadoPedido estado);
@@ -44,9 +40,11 @@ public interface PedidoRepositorio extends JpaRepository<Pedidos,Long> {
             @Param("fin") LocalDateTime fin, @Param("estado") EstadoPedido estado);
 
     @Query("SELECT COUNT(p) FROM Pedidos p " +
-            "WHERE p.fechaPedido BETWEEN :inicio AND :fin")
+            "WHERE p.fechaPedido BETWEEN :inicio AND :fin " +
+            "AND p.estado = :estado")
     Long cantidadPedidosPorRango(
             @Param("inicio") LocalDateTime inicio,
-            @Param("fin") LocalDateTime fin);
+            @Param("fin") LocalDateTime fin,
+            @Param("estado") EstadoPedido estado  );
 
 }

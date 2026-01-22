@@ -11,8 +11,7 @@ public interface ClienteService {
     Cliente clientdById(Long id);
     void deleteclienteById(Long id);
     void update(Cliente cliente);
-    List<Long>ListaCLientePedidos();
-    List<String>NombreListPedidos();
     boolean VerifcarCliente(String numeroIdentificacion);
-    List<Map<String, Object>> clienteSimple();
+    List<Map<String, Object>>clienteSimple();
+    Map<String,Object>CantidadPedidosPorPersonas();
 }

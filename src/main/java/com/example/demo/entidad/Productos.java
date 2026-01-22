@@ -22,20 +22,20 @@ public class Productos {
     private BigDecimal precio;
 
     @Column(name = "cantidad", nullable = false, scale = 2, precision = 10)
-    private BigDecimal cantidad = BigDecimal.ZERO;  // ✅ Cambiar a BigDecimal para soportar decimales
+    private BigDecimal cantidad = BigDecimal.ZERO;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo_venta", nullable = false)
-    private TipoVenta tipoVenta = TipoVenta.UNIDAD;  // ✅ Por defecto venta por unidad
+    private TipoVenta tipoVenta = TipoVenta.UNIDAD;
 
     @Column(name = "cantidad_minima", precision = 10, scale = 2)
-    private BigDecimal cantidadMinima;  // ✅ Para definir venta mínima (ej: 0.5 kg)
+    private BigDecimal cantidadMinima;
 
     @Column(name = "incremento", precision = 10, scale = 2)
-    private BigDecimal incremento;  // ✅ Para definir incrementos (ej: 0.25 kg)
+    private BigDecimal incremento;
 
     @Column(name = "stock_minimo", precision = 10, scale = 2)
-    private BigDecimal stockMinimo;  // ✅ Alerta de stock bajo
+    private BigDecimal stockMinimo;
 
     @ManyToOne
     @JoinColumn(name = "categoria_id")
@@ -44,7 +44,10 @@ public class Productos {
     @Column(name = "impuesto", precision = 10, scale = 2)
     private BigDecimal Impuesto = BigDecimal.ZERO;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @Column(name = "precio_compra", precision = 10, scale = 2)
+    private BigDecimal precioCompra;
+
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "proveedor_id", nullable = true)
     private Proveedores proveedor;
 
@@ -53,7 +56,8 @@ public class Productos {
     }
 
     public Productos(String nombre, String descripcion, BigDecimal precio,
-                     BigDecimal cantidad, Categoria categoria, TipoVenta tipoVenta, BigDecimal impuesto,Proveedores proveedor) {
+                     BigDecimal cantidad, Categoria categoria, TipoVenta tipoVenta,
+                     BigDecimal impuesto,Proveedores proveedor, BigDecimal precioCompra) {
         this.nombre = nombre;
         this.descripcion = descripcion;
         this.precio = precio;
@@ -62,6 +66,7 @@ public class Productos {
         this.tipoVenta = tipoVenta;
         this.Impuesto = impuesto;
         this.proveedor = proveedor;
+        this.precioCompra = precioCompra;
     }
 
     // Métodos útiles
@@ -181,5 +186,13 @@ public class Productos {
 
     public void setProveedor(Proveedores proveedor) {
         this.proveedor = proveedor;
+    }
+
+    public BigDecimal getPrecioCompra() {
+        return precioCompra;
+    }
+
+    public void setPrecioCompra(BigDecimal precioCompra) {
+        this.precioCompra = precioCompra;
     }
 }

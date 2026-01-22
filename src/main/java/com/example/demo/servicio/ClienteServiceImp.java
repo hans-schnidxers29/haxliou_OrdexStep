@@ -6,6 +6,7 @@ import com.example.demo.repositorio.ClienteRepositorio;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,17 +44,6 @@ public class ClienteServiceImp implements ClienteService {
         repositorio.save(cliente);
     }
 
-    @Override
-    public List<Long> ListaCLientePedidos() {
-        List<Object[]> resultado = repositorio.CantidadPorPedidos();
-        return resultado.stream().map(objeto -> (Long) objeto[1]).toList();
-    }
-
-    @Override
-    public List<String> NombreListPedidos() {
-        List<Object[]>Resultado= repositorio.CantidadPorPedidos();
-        return Resultado.stream().map(objeto -> (String) objeto[0]).toList();
-    }
 
     @Override
     public boolean VerifcarCliente(String numeroIdentificacion) {
@@ -73,5 +63,27 @@ public class ClienteServiceImp implements ClienteService {
             return map;
         }).collect(Collectors.toList());
         return  clientesSimplificados;
+    }
+    @Override
+    public Map<String, Object> CantidadPedidosPorPersonas() {
+        // 1. Obtenemos la lista de objetos del repositorio
+        List<Object[]> resultados = repositorio.CantidadPorPedidos();
+
+        // 2. Creamos las listas para separar los datos
+        List<String> nombres = new ArrayList<>();
+        List<Long> cantidades = new ArrayList<>();
+
+        // 3. Iteramos y extraemos la información por posición
+        for (Object[] fila : resultados) {
+            nombres.add((String) fila[0]);               // Posición 0: nombre
+            cantidades.add(((Number) fila[1]).longValue()); // Posición 1: cantidad_pedidos
+        }
+
+        // 4. Retornamos el mapa con las listas separadas
+        Map<String, Object> respuesta = new HashMap<>();
+        respuesta.put("nombres", nombres);
+        respuesta.put("cantidades", cantidades);
+
+        return respuesta;
     }
 }

@@ -21,13 +21,13 @@ public class ProveedorControlador {
     @GetMapping("/listar")
     public String Listar(Model model){
         model.addAttribute("proveedores",proveedorServicio.listarproveedores());
-        return "viewProveedor/listarProveedor";
+        return "ViewProveedor/listarProveedor";
     }
 
     @GetMapping("/crear")
     public String mostrarFormulario(Model model) {
         model.addAttribute("proveedor", new Proveedores());
-        return "viewProveedor/crearProveedor";
+        return "ViewProveedor/crearProveedor";
     }
 
     @PostMapping("/crear")
@@ -48,31 +48,25 @@ public class ProveedorControlador {
     @GetMapping("/eliminar/{id}")
     public String eliminarProveedor(@PathVariable Long id,
                                     RedirectAttributes redirect) {
-
         proveedorServicio.deleteProveedorById(id);
-
         redirect.addFlashAttribute("success",
                 "Proveedor eliminado correctamente");
-
         return "redirect:/proveedores/listar";
     }
 
     @GetMapping("/editar/{id}")
     public String editarProveedorForm(@PathVariable Long id, Model model){
         model.addAttribute("proveedor",proveedorServicio.proveedorById(id));
-        return "viewProveedor/editarProveedor";
+        return "ViewProveedor/editarProveedor";
     }
 
     @PostMapping("/editar")
     public String actualizarProveedor(
             @ModelAttribute("proveedor") Proveedores proveedor,
             RedirectAttributes redirect) {
-
         proveedorServicio.save(proveedor);
-
         redirect.addFlashAttribute("success",
                 "Proveedor actualizado correctamente");
-
         return "redirect:/proveedores/listar";
     }
 
