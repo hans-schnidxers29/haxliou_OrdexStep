@@ -12,8 +12,9 @@ public class Servicioempresaimp implements ServicioEmpresa{
     private EmpresaRepositorio empresaRepositorio;
 
     @Override
-    public void saveEmpresa(Empresa empresa) {
+    public Empresa saveEmpresa(Empresa empresa) {
         empresaRepositorio.save(empresa);
+        return empresa;
     }
 
     @Override

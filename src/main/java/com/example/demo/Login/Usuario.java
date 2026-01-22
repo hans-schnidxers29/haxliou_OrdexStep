@@ -1,6 +1,9 @@
 package com.example.demo.Login;
 
 import java.util.Collection;
+import java.util.List;
+
+import com.example.demo.entidad.UsuarioEmpresa;
 import jakarta.persistence.*;
 
 @Entity
@@ -38,6 +41,10 @@ public class Usuario {
             inverseJoinColumns = @JoinColumn(name = "rol_id", referencedColumnName = "id")
     )
     private Collection<Rol> roles;
+
+    @OneToMany(mappedBy = "usuario")
+    private List<UsuarioEmpresa> empresa;
+
 
     // --- CONSTRUCTORES ---
     public Usuario() {
@@ -116,5 +123,13 @@ public class Usuario {
 
     public void setRoles(Collection<Rol> roles) {
         this.roles = roles;
+    }
+
+    public List<UsuarioEmpresa> getEmpresa() {
+        return empresa;
+    }
+
+    public void setEmpresa(List<UsuarioEmpresa> empresa) {
+        this.empresa = empresa;
     }
 }

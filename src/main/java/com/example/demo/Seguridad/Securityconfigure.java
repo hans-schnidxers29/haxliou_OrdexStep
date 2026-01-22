@@ -40,7 +40,8 @@ public class Securityconfigure {
                                 "/js/**",
                                 "/images/**",
                                 "/adminlte/**",
-                                "/plugins/**"
+                                "/plugins/**",
+                                "/api/admin/empresas"
                         ).permitAll()
                         .requestMatchers(
                                 "/registro**",

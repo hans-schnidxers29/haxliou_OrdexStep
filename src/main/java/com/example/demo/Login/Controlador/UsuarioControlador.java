@@ -6,13 +6,21 @@ import com.example.demo.Login.Servicio.ServicioEmpresa;
 import com.example.demo.Login.Usuario;
 import com.example.demo.Login.Servicio.RolServicio;
 import com.example.demo.Login.Servicio.ServicioUsuario;
+import com.example.demo.entidad.UsuarioEmpresa;
+import com.example.demo.entidad.Enum.RolEmpresa;
+import com.example.demo.repositorio.UsuarioEmpresaRepositorio;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.Comparator;
+import java.util.List;
 
 @Controller
 @RequestMapping("registro")
@@ -25,6 +33,9 @@ public class UsuarioControlador {
     @Autowired
     private RolServicio rolServicio;
 
+    @Autowired
+    private UsuarioEmpresaRepositorio usuarioEmpresaRepositorio;
+
     // Ya no necesitamos el método @ModelAttribute de UsuarioDTO.
     // Usaremos directamente la entidad Usuario para todo.
 
@@ -36,35 +47,31 @@ public class UsuarioControlador {
         return "Login/registro";
     }
 
-    @Transactional // Si falla la empresa, no se crea el usuario (Rollback)
+    @Transactional
     @PostMapping("/nuevo")
     public String RegistrarUsuario(
             @ModelAttribute("usuario") Usuario usuario,
-            @ModelAttribute("empresa") Empresa empresa, // Recibe los campos 'name' del HTML
+            @ModelAttribute("empresa") Empresa empresa,
             RedirectAttributes flash) {
         try {
-            // 1. Guardar el usuario (Esto genera su ID)
-            // Asegúrate de que usuarioservico.saveUser(usuario) devuelva el usuario guardado
-            Usuario usuarioGuardado = usuarioservico.saveUser(usuario);
+            Usuario usuarioGuardado = usuarioservico.saveUserRolADmin(usuario);
 
-            // 2. Validar si se enviaron datos de empresa (NIT es buen indicador)
             if (empresa.getNit() != null && !empresa.getNit().isBlank()) {
+                Empresa empresaGuardada = servicioEmpresa.saveEmpresa(empresa);
 
-                // 3. Vincular la empresa con el usuario creado (ManyToOne)
-                empresa.setPropietario(usuarioGuardado);
+                UsuarioEmpresa ue = new UsuarioEmpresa();
+                ue.setUsuario(usuarioGuardado);
+                ue.setEmpresa(empresaGuardada);
+                ue.setRol(RolEmpresa.PROPIETARIO);
 
-                // 4. Guardar la empresa (Necesitas el servicio de empresa inyectado)
-                servicioEmpresa.saveEmpresa(empresa);
+                usuarioEmpresaRepositorio.save(ue);
             }
 
             flash.addFlashAttribute("success", "Registro exitoso. Ya puede iniciar sesión.");
             return "redirect:/login";
 
         } catch (Exception e) {
-            System.out.println("Error en el registro: " + e.getMessage());
             flash.addFlashAttribute("error", "Error al registrar: " + e.getMessage());
-            // Importante: No uses redirect si quieres mostrar errores de validación,
-            // pero para un catch de excepción general está bien.
             return "redirect:/registro";
         }
     }
@@ -77,19 +84,55 @@ public class UsuarioControlador {
     }
 
     @PostMapping("/usuario/nuevo")
-    public String RegistraNuevoUsuario(@ModelAttribute("usuario") Usuario usuario, RedirectAttributes redirectAttributes) {
+    @Transactional
+    public String RegistraNuevoUsuario(@ModelAttribute("usuario") Usuario usuario,
+                                       @AuthenticationPrincipal UserDetails userDetails,
+                                       RedirectAttributes redirectAttributes) {
         try {
             int MaximosUsuarios = usuarioservico.ListarUSer().size();
             if (MaximosUsuarios >= 3) {
                 redirectAttributes.addFlashAttribute("error", "Solo se permiten 3 usuarios");
                 return "redirect:/registro/usuario";
             }
-            // Usamos saveUser para que procese todos los campos nuevos
-            usuarioservico.saveUser(usuario);
-            redirectAttributes.addFlashAttribute("success", "Usuario creado exitosamente");
+
+            // 1) Usuario que está registrando (logueado)
+            Usuario creador = usuarioservico.findByEmail(userDetails.getUsername());
+            if (creador == null) {
+                redirectAttributes.addFlashAttribute("error", "No se pudo identificar el usuario actual.");
+                return "redirect:/registro/usuario";
+            }
+
+            // 2) Obtener la empresa del creador desde usuario_empresa
+            List<UsuarioEmpresa> relaciones = usuarioEmpresaRepositorio.findByUsuarioId(creador.getId());
+            if (relaciones == null || relaciones.isEmpty()) {
+                redirectAttributes.addFlashAttribute("error", "Tu usuario no tiene empresa asignada. No puedes crear usuarios.");
+                return "redirect:/registro/usuario";
+            }
+
+            // Preferimos la relación PROPIETARIO si existe; si no, tomamos la primera
+            UsuarioEmpresa relacionPrincipal = relaciones.stream()
+                    .sorted(Comparator.comparing((UsuarioEmpresa ue) -> ue.getRol() == RolEmpresa.PROPIETARIO ? 0 : 1))
+                    .findFirst()
+                    .orElseThrow();
+
+            Long empresaId = relacionPrincipal.getEmpresa().getId();
+            Empresa empresa = servicioEmpresa.DatosEmpresa(empresaId);
+
+            // 3) Crear el usuario nuevo (esto asigna ROLE_USER por tu ServicioUsuarioImp.saveUser)
+            Usuario usuarioGuardado = usuarioservico.saveUser(usuario);
+
+            // 4) Crear la relación usuario_empresa para el usuario nuevo dentro de LA MISMA empresa
+            UsuarioEmpresa ueNuevo = new UsuarioEmpresa();
+            ueNuevo.setUsuario(usuarioGuardado);
+            ueNuevo.setEmpresa(empresa);
+            ueNuevo.setRol(RolEmpresa.EMPLEADO); // o PROPIETARIO si lo decides por UI
+
+            usuarioEmpresaRepositorio.save(ueNuevo);
+
+            redirectAttributes.addFlashAttribute("success", "Usuario creado y asignado a tu empresa exitosamente");
             return "redirect:/perfil";
+
         } catch (Exception e) {
-            System.err.println("Error al guardar Usuario: " + e.getMessage());
             redirectAttributes.addFlashAttribute("error", "Error al guardar: " + e.getMessage());
             return "redirect:/registro/usuario";
         }

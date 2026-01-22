@@ -1,7 +1,8 @@
 package com.example.demo.entidad;
 
-import com.example.demo.Login.Usuario;
 import jakarta.persistence.*;
+
+import java.util.List;
 
 @Entity
 @Table(name = "empresa")
@@ -10,6 +11,7 @@ public class Empresa {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     // --- DATOS DE LA EMPRESA ---
     @Column(name = "nit", unique = true)
     private String nit;
@@ -30,17 +32,18 @@ public class Empresa {
     private String tipoOperacion;
 
     @Column(name = "numero_telefono")
-    private Integer numeroTelefono;
+    private String numeroTelefono;
 
-    @ManyToOne
-    @JoinColumn(name = "usuario_id")
-    private Usuario Propietario;
+    @OneToMany(mappedBy ="empresa" )
+    private List<UsuarioEmpresa> usuario;   
 
     public Empresa() {
 
     }
 
-    public Empresa(Long id, String nit,String nombre,Integer numeroTelefono, String razonSocial, String direccionEmpresa, String actividadEconomica, String tipoOperacion, Usuario propietario) {
+    public Empresa(Long id, String nit, String nombre, String numeroTelefono, String razonSocial,
+                   String direccionEmpresa, String actividadEconomica, String tipoOperacion,
+                   List<UsuarioEmpresa> user) {
         this.id = id;
         this.nit = nit;
         this.nombre = nombre;
@@ -49,12 +52,20 @@ public class Empresa {
         this.direccionEmpresa = direccionEmpresa;
         this.actividadEconomica = actividadEconomica;
         this.tipoOperacion = tipoOperacion;
-        Propietario = propietario;
+        this.usuario = user;
     }
 
-    public Long getId() {
-        return id;
+    // ... existing code ...
+
+    public String getNumeroTelefono() {
+        return numeroTelefono;
     }
+
+    public void setNumeroTelefono(String numeroTelefono) {
+        this.numeroTelefono = numeroTelefono;
+    }
+
+    // ... existing code ...
 
     public void setId(Long id) {
         this.id = id;
@@ -100,12 +111,12 @@ public class Empresa {
         this.tipoOperacion = tipoOperacion;
     }
 
-    public Usuario getPropietario() {
-        return Propietario;
+    public List<UsuarioEmpresa> getUsuario() {
+        return usuario;
     }
 
-    public void setPropietario(Usuario propietario) {
-        Propietario = propietario;
+    public void setUsuario(List<UsuarioEmpresa> usuario) {
+        this.usuario = usuario;
     }
 
     public String getNombre() {
@@ -116,12 +127,8 @@ public class Empresa {
         this.nombre = nombre;
     }
 
-    public Integer getNumeroTelefono() {
-        return numeroTelefono;
-    }
-
-    public void setNumeroTelefono(Integer numeroTelefono) {
-        this.numeroTelefono = numeroTelefono;
+    public Long getId() {
+        return id;
     }
 }
 
