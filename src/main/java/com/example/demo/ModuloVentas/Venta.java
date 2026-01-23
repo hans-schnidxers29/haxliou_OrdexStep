@@ -45,6 +45,9 @@ public class Venta {
     @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL)
     private List<DetalleVenta> detalles = new ArrayList<>();
 
+    @Column(name = "venta_al_por_mayor")
+    private Boolean VentaAlPorMayor = false;
+
     public Venta() {
     }
 
@@ -132,4 +135,13 @@ public class Venta {
     public void setVendedor(Usuario vendedor) {
         Vendedor = vendedor;
     }
+
+    public void setVentaAlPorMayor(Boolean ventaAlPorMayor) {
+        VentaAlPorMayor = ventaAlPorMayor;
+    }
+
+    public Boolean getVentaAlPorMayor() {
+        return VentaAlPorMayor;
+    }
+
 }

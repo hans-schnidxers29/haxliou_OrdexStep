@@ -51,6 +51,12 @@ public class Productos {
     @JoinColumn(name = "proveedor_id", nullable = true)
     private Proveedores proveedor;
 
+    @Column(name = "precio_por_mayor", precision = 10, scale = 2)
+    private BigDecimal PrecioPorMayor = BigDecimal.ZERO;
+
+    @Column(name = "estado")
+    private Boolean Estado = true;
+
     // Constructores
     public Productos() {
     }
@@ -194,5 +200,21 @@ public class Productos {
 
     public void setPrecioCompra(BigDecimal precioCompra) {
         this.precioCompra = precioCompra;
+    }
+
+    public BigDecimal getPrecioPorMayor() {
+        return PrecioPorMayor;
+    }
+
+    public void setPrecioPorMayor(BigDecimal precioPorMayor) {
+        PrecioPorMayor = precioPorMayor;
+    }
+
+    public Boolean getEstado() {
+        return Estado;
+    }
+
+    public void setEstado(Boolean estado) {
+        Estado = estado;
     }
 }

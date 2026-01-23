@@ -159,6 +159,7 @@
                                                         th:text="${p.nombre}"
                                                         th:data-categoria="${p.categoria.id}"
                                                         th:data-precio="${p.precio}"
+                                                        th:data-preciomayor="${p.precioPorMayor}"
                                                         th:data-impuesto="${p.impuesto}"
                                                         th:data-tipo="${p.tipoVenta.name()}"></option>
                                             </select>
@@ -191,6 +192,15 @@
                                 <h3 class="card-title font-weight-bold">Datos de Facturación</h3>
                             </div>
                             <div class="card-body">
+                                <div class="form-group mb-3 text-center border-bottom pb-3">
+                                    <label class="d-block small font-weight-bold text-primary mb-2 text-uppercase">Tipo de Operación</label>
+                                    <div class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
+                                        <input type="checkbox" th:field="*{ventaAlPorMayor}" class="custom-control-input" id="switchVentaMayor" onchange="alternarPreciosGlobal()">
+                                        <label class="custom-control-label" for="switchVentaMayor">
+                                            <span id="labelVenta" class="font-weight-bold">VENTA AL DETAL</span>
+                                        </label>
+                                    </div>
+                                </div>
                                 <div class="form-group">
                                     <label>Método de Pago <span class="text-danger">*</span></label>
                                     <select class="form-control" th:field="*{metodoPago}" id="metodoPagoSelect" required>
@@ -506,30 +516,37 @@
             calcularTotal();
         }
 
-        // Función corregida para usar el elemento directamente
+        // Función corregida para usar el elemento directamente e integrar Venta al por Mayor
         function actualizarPrecioFila(select) {
             const option = select.options[select.selectedIndex];
             const fila = select.closest('tr');
             const labelUnidad = fila.querySelector('.unidad-medida');
             const inputCantidad = fila.querySelector('.cantidad-input');
 
+            // Detectar si el switch global de venta al por mayor está activo
+            const isMayor = document.getElementById('switchVentaMayor').checked;
+
             if (select.value === "") {
                 fila.querySelector('.precio-unitario').value = "";
                 fila.querySelector('.impuesto-producto').value = "";
                 labelUnidad.innerText = "Unidad: Und";
             } else {
-                const precio = option.getAttribute("data-precio") || 0;
+                // LÓGICA DE PRECIO: Seleccionar entre normal y mayorista
+                const pNormal = option.getAttribute("data-precio") || 0;
+                const pMayor = option.getAttribute("data-preciomayor") || pNormal;
+                const precioFinal = isMayor ? pMayor : pNormal;
+
                 const impuesto = option.getAttribute("data-impuesto") || 0;
                 const tipoVenta = option.getAttribute("data-tipo");
 
-                fila.querySelector('.precio-unitario').value = parseFloat(precio).toFixed(2);
+                fila.querySelector('.precio-unitario').value = parseFloat(precioFinal).toFixed(2);
                 fila.querySelector('.impuesto-producto').value = impuesto;
 
-                // Lógica de etiquetas y pasos de cantidad
+                // Lógica de etiquetas y pasos de cantidad (Sin cambios)
                 if (tipoVenta === 'PESO') {
                     labelUnidad.innerText = "Unidad: Gramos";
                     labelUnidad.className = "badge badge-warning unidad-medida";
-                    inputCantidad.step = "1"; // El usuario ingresa 500 para 500g
+                    inputCantidad.step = "1";
                 } else {
                     labelUnidad.innerText = "Unidad: Und";
                     labelUnidad.className = "text-muted small unidad-medida";
@@ -624,7 +641,21 @@
                 if(requiereObs) requiereObs.style.display = 'none';
             }
         }
+        function alternarPreciosGlobal() {
+            const isMayor = document.getElementById('switchVentaMayor').checked;
+            const label = document.getElementById('labelVenta');
 
+            label.innerText = isMayor ? "VENTA AL POR MAYOR" : "VENTA AL DETAL";
+            label.className = isMayor ? "font-weight-bold text-success" : "font-weight-bold text-danger";
+
+            // Actualiza todas las filas existentes con el nuevo modo de precio
+            document.querySelectorAll('.detalle-item').forEach(fila => {
+                const select = fila.querySelector('.producto-select');
+                if (select && select.value !== "") {
+                    actualizarPrecioFila(select);
+                }
+            });
+        }
         // Vincular el primer elemento manualmente (ya que no se crea por JS)
         document.querySelector('.producto-select').setAttribute('onchange', 'actualizarPrecioFila(this)');
         document.querySelector('.cantidad-input').setAttribute('onchange', 'calcularSubtotalFila(this)');

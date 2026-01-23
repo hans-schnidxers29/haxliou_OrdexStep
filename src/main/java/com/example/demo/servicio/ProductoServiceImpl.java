@@ -57,6 +57,10 @@ public class ProductoServiceImpl implements ProductoServicio{
         if (producto.getCategoria() != null) {
             p1.setCategoria(producto.getCategoria());
         }
+        if (producto.getPrecioPorMayor() != null) {
+            p1.setPrecioPorMayor(producto.getPrecioPorMayor());
+        }
+
     }
 
     @Override
