@@ -54,6 +54,9 @@ public class Pedidos {
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DetallePedido> detalles = new ArrayList<>();
 
+
+    private Boolean VentaPorMayor = false;
+
     public Pedidos() {
     }
 
@@ -81,7 +84,13 @@ public class Pedidos {
         }
     }
 
+    public Boolean getVentaPorMayor() {
+        return VentaPorMayor;
+    }
 
+    public void setVentaPorMayor(Boolean ventaPorMayor) {
+        VentaPorMayor = ventaPorMayor;
+    }
 
     public BigDecimal getFlete() {
         return Flete;

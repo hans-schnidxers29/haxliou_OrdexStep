@@ -118,40 +118,41 @@
                                     </div>
                                 </div>
 
-                                <div class="row">
-                                    <div class="col-md-7">
-                                        <div class="form-group mb-2">
-                                            <label class="small">Cambiar Cliente (Opcional)</label>
-                                            <div class="input-group input-group-sm">
-                                                <input type="text" id="buscarNumeroId" class="form-control" placeholder="Buscar por cédula o NIT...">
-                                                <div class="input-group-append">
-                                                    <button type="button" class="btn btn-primary" onclick="buscarCliente()">
-                                                        <i class="fas fa-search"></i>
+                                    <div class="row">
+                                        <div class="col-md-7">
+                                            <div class="form-group mb-2">
+                                                <label class="small">Cambiar Cliente (Opcional)</label>
+                                                <div class="input-group input-group-sm">
+                                                    <input type="text" id="buscarNumeroId" class="form-control" placeholder="Buscar por cédula o NIT...">
+                                                    <div class="input-group-append">
+                                                        <button type="button" class="btn btn-primary" onclick="buscarCliente()">
+                                                            <i class="fas fa-search"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group mb-0">
+                                                <label class="small">Fecha de Entrega <span class="text-danger">*</span></label>
+                                                <input type="datetime-local" th:field="*{fechaEntrega}" class="form-control form-control-sm" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-5">
+                                            <div class="cliente-card" id="clienteCard" style="display: none;">
+                                                <div class="cliente-info show" id="clienteInfo">
+                                                    <p class="mb-1 font-weight-bold text-success small">
+                                                        <i class="fas fa-user-check"></i> Nuevo Cliente:
+                                                    </p>
+                                                    <div id="clienteNombre" class="font-weight-bold"></div>
+                                                    <div id="clienteTelefono" class="small text-muted"></div>
+                                                    <div id="clienteEmail" class="small text-muted"></div>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger btn-block mt-2" onclick="cancelarCambioCliente()">
+                                                        <i class="fas fa-times"></i> Cancelar
                                                     </button>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div class="form-group mb-0">
-                                            <label class="small">Fecha de Entrega <span class="text-danger">*</span></label>
-                                            <input type="datetime-local" th:field="*{fechaEntrega}" class="form-control form-control-sm" required>
+                                            <input type="hidden" th:field="*{cliente.id}" id="clienteIdHidden">
                                         </div>
                                     </div>
-                                    <div class="col-md-5">
-                                        <div class="cliente-card" id="clienteCard" style="display: none;">
-                                            <div class="cliente-info show" id="clienteInfo">
-                                                <p class="mb-1 font-weight-bold text-success small">
-                                                    <i class="fas fa-user-check"></i> Nuevo Cliente:
-                                                </p>
-                                                <div id="clienteNombre" class="font-weight-bold"></div>
-                                                <div id="clienteTelefono" class="small text-muted"></div>
-                                                <button type="button" class="btn btn-sm btn-outline-danger btn-block mt-2" onclick="cancelarCambioCliente()">
-                                                    <i class="fas fa-times"></i> Cancelar
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <input type="hidden" th:field="*{cliente.id}" id="clienteIdHidden">
-                                    </div>
-                                </div>
                             </div>
                         </div>
 
@@ -200,6 +201,7 @@
                                                             th:text="${p.nombre}"
                                                             th:data-categoria="${p.categoriaId}"
                                                             th:data-precio="${p.precio}"
+                                                            th:data-preciomayor="${p.precioPorMayor}"
                                                             th:data-impuesto="${p.impuesto}"
                                                             th:data-tipo="${p.tipoVenta}"
                                                             th:selected="${p.id == detalle.producto.id}"></option>
@@ -209,16 +211,17 @@
                                                 <div class="input-group input-group-sm">
                                                     <input type="number"
                                                            th:name="'detalles[' + ${iterStat.index} + '].cantidad'"
-                                                           th:value="${detalle.cantidad}"
-                                                           class="form-control cantidad-input"
-                                                           min="0.01"
-                                                           step="any"
-                                                           required
-                                                           onchange="calcularSubtotalByElement(this)">
+                                                        th:value="${detalle.producto.tipoVenta.name() == 'PESO' ? detalle.cantidad * 1000 : detalle.cantidad}"
+                                                        class="form-control cantidad-input"
+                                                        min="0.01"
+                                                        step="any"
+                                                        required
+                                                        onchange="calcularSubtotalByElement(this)">
                                                     <div class="input-group-append">
-                                                            <span class="input-group-text unidad-label p-1"
-                                                                  style="font-size: 0.7rem;"
-                                                                  th:text="${detalle.producto.tipoVenta.name() == 'PESO' ? 'kg' : (detalle.producto.tipoVenta.name() == 'LIQUIDO' ? 'ml' : 'un')}"></span>
+                                                    <span class="input-group-text unidad-label p-1"
+                                                          style="font-size: 0.7rem;"
+                                                          th:text="${detalle.producto.tipoVenta.name() == 'PESO' ? 'gr' : (detalle.producto.tipoVenta.name() == 'LIQUIDO' ? 'ml' : 'un')}">
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </td>
@@ -260,6 +263,17 @@
                                     <h3 class="card-title float-none font-weight-bold" style="font-size: 0.9rem;">Resumen</h3>
                                 </div>
                                 <div class="card-body">
+                                    <div class="form-group mb-3 text-center border-bottom pb-2">
+                                        <label class="d-block small font-weight-bold text-primary mb-1 text-uppercase">Tipo de Precio</label>
+                                        <div class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
+                                            <input type="checkbox" th:field="*{ventaPorMayor}" class="custom-control-input" id="switchVentaMayor" onchange="alternarPreciosGlobal()">
+                                            <label class="custom-control-label" for="switchVentaMayor">
+                                            <span id="labelVenta" class="small font-weight-bold"
+                                                  th:text="${pedido.ventaPorMayor ? 'Precio MAYORISTA' : 'Precio DETAL'}"
+                                                  th:classappend="${pedido.ventaPorMayor ? 'text-success' : 'text-danger'}"></span>
+                                            </label>
+                                        </div>
+                                    </div>
                                     <div class="d-flex justify-content-between mb-1">
                                         <span class="text-muted small">Subtotal:</span>
                                         <span class="small font-weight-bold">$ <span id="totalSubtotalLabel" th:text="${#numbers.formatDecimal(pedido.subtotal, 1, 'POINT', 2, 'COMMA')}">0.00</span></span>
@@ -420,7 +434,7 @@
 
         function agregarDetalle() {
             const container = document.getElementById('detallesContainer');
-            
+
             // Obtenemos el HTML de las opciones de los selectores existentes
             const opcionesCat = document.querySelector('.categoria-filter').innerHTML;
             const opcionesProd = document.querySelector('.producto-select').innerHTML;
@@ -457,6 +471,37 @@
             calcularSubtotal(rowIndex);
         }
 
+        // NUEVO: faltaba esta función y por eso se rompía el cálculo
+        function calcularSubtotal(index) {
+            const row = document.querySelectorAll('#detallesContainer tr')[index];
+            if (!row) return;
+
+            const select = row.querySelector('.producto-select');
+            if (!select || !select.value) {
+                row.querySelector('.subtotal-display').value = "";
+                calcularTotal();
+                return;
+            }
+
+            const isMayor = document.getElementById('switchVentaMayor').checked;
+
+            const pNormal = parseFloat(select.options[select.selectedIndex].getAttribute('data-precio')) || 0;
+            const pMayor = parseFloat(select.options[select.selectedIndex].getAttribute('data-preciomayor')) || pNormal;
+            const precioAEjercer = isMayor ? pMayor : pNormal;
+
+            const cantidadRaw = parseFloat(row.querySelector('.cantidad-input')?.value) || 0;
+
+            const tipo = select.options[select.selectedIndex].getAttribute('data-tipo');
+            const cantidadCalculo = (tipo === 'PESO') ? (cantidadRaw / 1000) : cantidadRaw;
+
+            const subItem = cantidadCalculo * precioAEjercer;
+
+            row.querySelector('.subtotal-display').value =
+                subItem.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            calcularTotal();
+        }
+
         function eliminarDetalle(btn) {
             const totalFilas = document.querySelectorAll('#detallesContainer tr').length;
             if (totalFilas <= 1) {
@@ -482,11 +527,14 @@
             });
         }
 
+        // DEJAR SOLO 1: se elimina la función duplicada actualizarPrecio(index)
         function actualizarPrecio(index) {
             const row = document.querySelectorAll('#detallesContainer tr')[index];
             if(!row) return;
 
             const select = row.querySelector('.producto-select');
+            const isMayor = document.getElementById('switchVentaMayor').checked;
+
             if (!select.value) {
                 row.querySelector('.precio-unitario-display').value = "";
                 row.querySelector('.impuesto-display').value = "";
@@ -495,46 +543,43 @@
                 return;
             }
 
-            const precio = parseFloat(select.options[select.selectedIndex].getAttribute('data-precio')) || 0;
+            // Obtener precios
+            const pNormal = parseFloat(select.options[select.selectedIndex].getAttribute('data-precio')) || 0;
+            const pMayor = parseFloat(select.options[select.selectedIndex].getAttribute('data-preciomayor')) || pNormal;
+            const precioAEjercer = isMayor ? pMayor : pNormal;
+
             const impuesto = parseFloat(select.options[select.selectedIndex].getAttribute('data-impuesto')) || 0;
             const tipo = select.options[select.selectedIndex].getAttribute('data-tipo');
 
             const label = row.querySelector('.unidad-label');
             label.textContent = (tipo === 'PESO') ? "kg" : (tipo === 'LIQUIDO' ? "ml" : "un");
 
-            row.querySelector('.precio-unitario-display').value = precio.toLocaleString('es-CO', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            row.querySelector('.precio-unitario-display').value = precioAEjercer.toLocaleString('es-CO', {minimumFractionDigits: 2});
             row.querySelector('.impuesto-display').value = impuesto.toFixed(2) + '%';
 
             calcularSubtotal(index);
         }
 
-        function calcularSubtotal(index) {
-            const row = document.querySelectorAll('#detallesContainer tr')[index];
-            const select = row.querySelector('.producto-select');
-            if (!select || !select.value) return;
-
-            const cantidad = parseFloat(row.querySelector('input[name*="cantidad"]').value) || 0;
-            const precio = parseFloat(select.options[select.selectedIndex].getAttribute('data-precio')) || 0;
-
-            const subtotalVista = cantidad * precio;
-            row.querySelector('.subtotal-display').value = subtotalVista.toLocaleString('es-CO', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-
-            calcularTotal();
-        }
-
         function calcularTotal() {
             let subtotalVista = 0;
             let impuestoVista = 0;
+            const isMayor = document.getElementById('switchVentaMayor').checked;
 
             document.querySelectorAll('.detalle-item').forEach(fila => {
                 const select = fila.querySelector('.producto-select');
                 if (!select || !select.value) return;
 
-                const cantidad = parseFloat(fila.querySelector('input[name*="cantidad"]').value) || 0;
-                const precio = parseFloat(select.options[select.selectedIndex].getAttribute('data-precio')) || 0;
-                const tasaImpuesto = parseFloat(select.options[select.selectedIndex].getAttribute('data-impuesto')) || 0;
+                const pNormal = parseFloat(select.options[select.selectedIndex].getAttribute('data-precio')) || 0;
+                const pMayor = parseFloat(select.options[select.selectedIndex].getAttribute('data-preciomayor')) || pNormal;
+                const precioAEjercer = isMayor ? pMayor : pNormal;
 
-                const subItem = cantidad * precio;
+                const cantidad = parseFloat(fila.querySelector('input[name*="cantidad"]').value) || 0;
+                const tasaImpuesto = parseFloat(select.options[select.selectedIndex].getAttribute('data-impuesto')) || 0;
+                const tipo = select.options[select.selectedIndex].getAttribute('data-tipo');
+
+                let cantidadCalculo = (tipo === 'PESO') ? cantidad / 1000 : cantidad;
+
+                const subItem = cantidadCalculo * precioAEjercer;
                 subtotalVista += subItem;
                 impuestoVista += (subItem * tasaImpuesto) / 100;
             });
@@ -542,11 +587,22 @@
             const flete = parseFloat(document.querySelector('input[name="flete"]').value) || 0;
             const totalVista = subtotalVista + impuestoVista + flete;
 
-            document.getElementById('totalSubtotalLabel').innerText = subtotalVista.toLocaleString('es-CO', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            document.getElementById('totalImpuestosLabel').innerText = impuestoVista.toLocaleString('es-CO', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            document.getElementById('totalPedidoLabel').innerText = totalVista.toLocaleString('es-CO', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('totalSubtotalLabel').innerText = subtotalVista.toLocaleString('es-CO', {minimumFractionDigits: 2});
+            document.getElementById('totalImpuestosLabel').innerText = impuestoVista.toLocaleString('es-CO', {minimumFractionDigits: 2});
+            document.getElementById('totalPedidoLabel').innerText = totalVista.toLocaleString('es-CO', {minimumFractionDigits: 2});
         }
+        function alternarPreciosGlobal() {
+            const isMayor = document.getElementById('switchVentaMayor').checked;
+            const label = document.getElementById('labelVenta');
 
+            label.innerText = isMayor ? "Precio MAYORISTA" : "Precio DETAL";
+            label.className = isMayor ? "small font-weight-bold text-success" : "small font-weight-bold text-danger";
+
+            // Forzar actualización de todas las filas
+            document.querySelectorAll('#detallesContainer tr').forEach((fila, index) => {
+                actualizarPrecio(index);
+            });
+        }
         $(document).ready(function () {
             calcularTotal();
 

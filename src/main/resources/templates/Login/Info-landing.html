@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OrdexStep - Sistema ERP Integral</title>
+    <link rel="icon" type="image/png" href="/adminlte/img/RDEX%20_CON.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        .header {
+            padding: 20px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            /* GRADIENTE BLANCO */
+            background: linear-gradient(
+                    135deg,
+                    rgba(255, 255, 255, 0.95),
+                    rgba(245, 247, 250, 0.90)
+            );
+
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+        }
+
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+        }
+
+        .logo-text {
+            font-size: 28px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #2196F3, #FF9800);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-login {
+            background: transparent;
+            color: #1a1a2e;
+            border: 2px solid rgba(33, 150, 243, 0.6);
+        }
+
+        .btn-login:hover {
+            background: #2196F3;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(33, 150, 243, 0.4);
+        }
+
+        .btn-register {
+            background: linear-gradient(135deg, #FF9800, #FF6B00);
+            color: white;
+            border: none;
+        }
+
+        .btn-register:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(255, 152, 0, 0.45);
+        }
+
+        .hero {
+            margin-top: 100px;
+            padding: 80px 50px;
+            text-align: center;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero h1 {
+            font-size: 56px;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #2196F3, #FF9800);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 22px;
+            color: #b0b0b0;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        .features {
+            padding: 60px 50px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .features h2 {
+            text-align: center;
+            font-size: 42px;
+            margin-bottom: 50px;
+            color: #2196F3;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 30px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.08);
+            border-color: #2196F3;
+            box-shadow: 0 10px 30px rgba(33, 150, 243, 0.2);
+        }
+
+        .feature-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .feature-card h3 {
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: #FF9800;
+        }
+
+        .feature-card p {
+            color: #b0b0b0;
+            line-height: 1.6;
+        }
+
+        .cta-section {
+            text-align: center;
+            padding: 80px 50px;
+            background: linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(255, 152, 0, 0.1));
+            margin: 50px;
+            border-radius: 20px;
+        }
+
+        .cta-section h2 {
+            font-size: 42px;
+            margin-bottom: 20px;
+        }
+
+        .cta-section p {
+            font-size: 20px;
+            color: #b0b0b0;
+            margin-bottom: 40px;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-large {
+            padding: 18px 45px;
+            font-size: 18px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px;
+            background: rgba(0, 0, 0, 0.3);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #808080;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 15px 20px;
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .hero h1 {
+                font-size: 36px;
+            }
+
+            .hero p {
+                font-size: 18px;
+            }
+
+            .features {
+                padding: 40px 20px;
+            }
+
+            .cta-section {
+                margin: 20px;
+                padding: 50px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+<header class="header">
+    <div class="logo-container">
+        <img src="/adminlte/img/RDEX%20_CON.png" alt="OrdexStep Logo" class="logo">
+        <span class="logo-text">OrdexStep</span>
+    </div>
+    <nav class="nav-buttons">
+        <a href="#login" class="btn btn-login">Iniciar Sesión</a>
+        <a href="#register" class="btn btn-register">Registrarse</a>
+    </nav>
+</header>
+
+<section class="hero">
+    <h1>Sistema ERP Integral</h1>
+    <p>Optimiza tu negocio con OrdexStep, la solución ERP completa desarrollada por Haxliou. Gestiona todos los procesos de tu empresa desde una sola plataforma potente e intuitiva.</p>
+</section>
+
+<section class="features">
+    <h2>Soluciones Diseñadas para Tu Empresa</h2>
+    <div class="feature-grid">
+        <div class="feature-card">
+            <div class="feature-icon">📊</div>
+            <h3>Gestión Financiera</h3>
+            <p>Control total de contabilidad, facturación, cuentas por cobrar y pagar. Reportes financieros en tiempo real para tomar decisiones informadas.</p>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon">📦</div>
+            <h3>Inventario y Almacén</h3>
+            <p>Administra tu inventario con precisión. Control de stock, trazabilidad de productos y gestión de múltiples almacenes desde un solo sistema.</p>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon">🤝</div>
+            <h3>CRM y Ventas</h3>
+            <p>Mejora la relación con tus clientes. Gestiona leads, oportunidades de venta, cotizaciones y pedidos de manera eficiente.</p>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon">👥</div>
+            <h3>Recursos Humanos</h3>
+            <p>Administra nómina, asistencias, permisos y evaluaciones de desempeño. Mantén organizado todo lo relacionado con tu equipo.</p>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon">🏭</div>
+            <h3>Producción</h3>
+            <p>Planifica y controla tus procesos de manufactura. Ordenes de producción, materiales, calidad y tiempos de entrega optimizados.</p>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon">📈</div>
+            <h3>Business Intelligence</h3>
+            <p>Dashboards interactivos y reportes personalizables. Analiza métricas clave y visualiza el rendimiento de tu negocio.</p>
+        </div>
+    </div>
+
+    <h2>Desarrollado por Haxliou</h2>
+    <div class="feature-grid">
+        <div class="feature-card">
+            <div class="feature-icon">⚡</div>
+            <h3>Tecnología de Vanguardia</h3>
+            <p>Construido con las últimas tecnologías para garantizar rendimiento, seguridad y escalabilidad en cada operación.</p>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon">🔒</div>
+            <h3>Seguridad Garantizada</h3>
+            <p>Protección de datos con encriptación de nivel empresarial. Respaldos automáticos y recuperación ante desastres.</p>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon">🌐</div>
+            <h3>Acceso desde Cualquier Lugar</h3>
+            <p>Trabaja desde donde estés. Sistema basado en la nube con acceso desde cualquier dispositivo con conexión a internet.</p>
+        </div>
+    </div>
+</section>
+
+<section class="cta-section">
+    <h2>¿Listo para Transformar tu Empresa?</h2>
+    <p>Únete a las empresas que ya optimizan sus procesos con OrdexStep</p>
+    <div class="cta-buttons">
+        <a href="#register" class="btn btn-register btn-large">Comenzar Ahora</a>
+        <a href="#demo" class="btn btn-login btn-large">Solicitar Demo</a>
+    </div>
+</section>
+
+<footer>
+    <p>&copy; 2026 OrdexStep by Haxliou. Todos los derechos reservados.</p>
+</footer>
+
+<script>
+    // Smooth scrolling para los enlaces
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth'
+                });
+            }
+        });
+    });
+
+    // Animación de entrada para las tarjetas
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '0';
+                entry.target.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    entry.target.style.transition = 'all 0.6s ease';
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }, 100);
+                observer.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+
+    document.querySelectorAll('.feature-card').forEach(card => {
+        observer.observe(card);
+    });
+</script>
+</body>
+</html>

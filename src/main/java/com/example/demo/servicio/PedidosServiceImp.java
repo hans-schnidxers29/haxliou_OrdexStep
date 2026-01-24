@@ -54,7 +54,11 @@ public class PedidosServiceImp implements PedidoService{
         pedidos1.setEstado(pedidos.getEstado());
         pedidos1.setObservaciones(pedidos.getObservaciones());
         pedidos1.setFlete(pedidos.getFlete());
-
+        if(Boolean.TRUE.equals(pedidos.getVentaPorMayor())){
+            pedidos1.setVentaPorMayor(true);
+        }else{
+            pedidos1.setVentaPorMayor(false);
+        }
         pedidos1.setSubtotal(pedidos.getSubtotal());
         pedidos1.setImpuesto(pedidos.getImpuesto());
         pedidos1.setTotal(pedidos.getTotal());
