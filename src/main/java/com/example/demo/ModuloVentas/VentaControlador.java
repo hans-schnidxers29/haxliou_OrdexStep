@@ -195,9 +195,19 @@ public class VentaControlador {
                 if (detalle.getPrecioUnitario() == null) {
                     detalle.setPrecioUnitario(productoCompleto.getPrecio());
                 }
+                BigDecimal PrecioAProcesar = BigDecimal.ZERO;
+                BigDecimal subtotalFila = BigDecimal.ZERO;
 
-                // Subtotal de la fila (Precio x Cantidad)
-                BigDecimal subtotalFila = detalle.getPrecioUnitario().multiply(cantidadProcesada);
+                if(Boolean.TRUE.equals(venta.getVentaAlPorMayor()) && productoCompleto.getPrecioPorMayor() != null){
+                    PrecioAProcesar = productoCompleto.getPrecioPorMayor();
+                    venta.setVentaAlPorMayor(true);
+                }else{
+                    // Subtotal de la fila (Precio x Cantidad)
+                    PrecioAProcesar = productoCompleto.getPrecio();
+                }
+
+                detalle.setPrecioUnitario(PrecioAProcesar);
+                subtotalFila = PrecioAProcesar.multiply(cantidadProcesada);
                 detalle.setSubtotal(subtotalFila);
 
                 // Cálculo de Impuesto de la fila (Subtotal * %Impuesto / 100)
@@ -220,7 +230,7 @@ public class VentaControlador {
             // 3. Finalización de la Venta
             venta.setDetalles(detallesValidos);
             venta.setSubtotal(subtotalGeneral.setScale(2, RoundingMode.HALF_UP));
-            
+
             // CORRECCIÓN: Guardar el PORCENTAJE de impuesto global (puedes tomarlo del primer producto o un promedio)
             // Si manejas un IVA estándar (ej. 19%), guárdalo como valor fijo.
             // Aquí lo calculamos de forma segura basándonos en los productos vendidos:

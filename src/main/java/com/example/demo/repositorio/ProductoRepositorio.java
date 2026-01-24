@@ -57,9 +57,6 @@ public interface ProductoRepositorio extends JpaRepository<Productos,Long> {
             "ORDER BY productos_vendidos DESC LIMIT 5", nativeQuery = true)
     List<Object[]> ListarTopProductosMes(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin);
 
-    @Query(value = "SELECT nombre, cantidad from productos WHERE cantidad <= 10 ",nativeQuery = true)
-    List<Object[]>StockBajo();
-
     @Query("SELECT SUM(dv.cantidad * p.precioCompra) " +
             "FROM DetalleVenta dv " +
             "JOIN dv.producto p " +
@@ -79,4 +76,7 @@ public interface ProductoRepositorio extends JpaRepository<Productos,Long> {
     // En ProductoRepository.java
     @Query("SELECT SUM(p.cantidad * p.precioCompra) FROM Productos p")
     BigDecimal calcularValorInventarioTotal();
+
+    @Query(value = "select p FROM Productos p where p.cantidad<= p.stockMinimo")
+    List<Productos>StockBajoList();
 }

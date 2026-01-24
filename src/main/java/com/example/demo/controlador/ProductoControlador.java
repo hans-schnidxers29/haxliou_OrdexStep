@@ -95,6 +95,9 @@ public class ProductoControlador {
             if(producto.getPrecioCompra()== null && productoActual.getPrecioCompra()!=null){
                 producto.setPrecioCompra(productoActual.getPrecioCompra());
             }
+            if(producto.getPrecioPorMayor() == null ){
+                productoActual.setPrecioPorMayor(BigDecimal.ZERO);
+            }
 
             // --- ACTUALIZACIÓN DE CAMPOS ---
             productoActual.setNombre(producto.getNombre());

@@ -57,8 +57,7 @@ public class ControldorInicio {
         modelo.addAttribute("metodosPagoLabels", ventaServicio.ListaMetodosPago());
         modelo.addAttribute("metodosPagoValores", ventaServicio.ListaMetodosPagoValores());
         modelo.addAttribute("productosAlerta", productoServicio.verificarStock());
-        modelo.addAttribute("totalProductosBajoStock", productoServicio.verificarStock().stream()
-                .map(bajo -> (Number) bajo[1]).toList().size());
+        modelo.addAttribute("totalProductosBajoStock", productoServicio.verificarStock().size());
         return "Home/Home";
     }
 
@@ -74,6 +73,11 @@ public class ControldorInicio {
         model.addAttribute("productos",productoServicio.listarProductos());
         model.addAttribute("proveedores",proveedorServicio.listarproveedores());
         return "pdf/reportes";
+    }
+
+    @GetMapping("/")
+    public String Page_Info(){
+        return"Login/Info-landing";
     }
 
 }

@@ -112,7 +112,7 @@ public class PedidosControlador {
                 model.addAttribute("clientes", clienteService.clienteSimple());
                 model.addAttribute("categorias", categoriaService.Listarcategoria());
                 model.addAttribute("pedido", pedido);
-                return "viewPedidos/crearPedidos";
+                return "redirect:/pedidos/nuevo";
             }
 
             // Validar que tenga detalles
@@ -122,7 +122,7 @@ public class PedidosControlador {
                 model.addAttribute("clientes", clienteService.clienteSimple());
                 model.addAttribute("categorias",categoriaService.Listarcategoria());
                 model.addAttribute("pedido", pedido);
-                return "viewPedidos/crearPedidos";
+                return "redirect:/pedidos/nuevo";
             }
 
             // Validar cliente
@@ -132,7 +132,7 @@ public class PedidosControlador {
                 model.addAttribute("clientes", clienteService.clienteSimple());
                 model.addAttribute("categorias",categoriaService.Listarcategoria());
                 model.addAttribute("pedido", pedido);
-                return "viewPedidos/crearPedidos";
+                return "redirect:/pedidos/nuevo";
             }
 
             // ✅ BUSCAR CLIENTE COMPLETO DESDE LA BD
@@ -143,7 +143,7 @@ public class PedidosControlador {
                 model.addAttribute("clientes", clienteService.clienteSimple());
                 model.addAttribute("categorias",categoriaService.Listarcategoria());
                 model.addAttribute("pedido", pedido);
-                return "viewPedidos/crearPedidos";
+                return "redirect:/pedidos/nuevo";
             }
             pedido.setCliente(clienteCompleto);
 
@@ -162,12 +162,12 @@ public class PedidosControlador {
                     Productos productoCompleto = productoService.productoById(detalle.getProducto().getId());
 
                     if (productoCompleto == null) {
-                        model.addAttribute("info", "Producto no encontrado");
+                        redirectAttributes.addFlashAttribute("info", "Producto no encontrado");
                         model.addAttribute("productos", productoService.listarProductos());
                         model.addAttribute("clientes", clienteService.listarcliente());
                         model.addAttribute("categorias",categoriaService.Listarcategoria());
                         model.addAttribute("pedido", pedido);
-                        return "viewPedidos/crearPedidos";
+                        return "redirect:/pedidos/nuevo";
                     }
 
                     // --- LÓGICA DE CONVERSIÓN (USA VARIABLE TEMPORAL) ---
@@ -176,7 +176,7 @@ public class PedidosControlador {
 
                     // Solo convertimos si es PESO, si no, se queda igual (UNIDAD/LIQUIDO)
                     if ("PESO".equals(productoCompleto.getTipoVenta().name())) {
-                        cantidadParaCalculo = cantidadOriginal.divide(new BigDecimal("1000"), 2, RoundingMode.HALF_UP);
+                        cantidadParaCalculo = cantidadOriginal.divide(new BigDecimal("1000"), 3, RoundingMode.HALF_UP);
                     } else {
                         cantidadParaCalculo = cantidadOriginal;
                     }
@@ -184,7 +184,7 @@ public class PedidosControlador {
                     // ✅ VALIDACIÓN 1: Cantidad mínima
                     if (productoCompleto.getCantidadMinima() != null &&
                             cantidadParaCalculo.compareTo(productoCompleto.getCantidadMinima()) < 0) {
-                        model.addAttribute("info", String.format("La cantidad mínima para '%s' es %s",
+                        redirectAttributes.addFlashAttribute("info", String.format("La cantidad mínima para '%s' es %s",
                                 productoCompleto.getNombre(), productoCompleto.getCantidadMinima()));
                         model.addAttribute("productos", productoService.listarProductos());
                         model.addAttribute("clientes", clienteService.listarcliente());
@@ -194,18 +194,24 @@ public class PedidosControlador {
 
                     // ✅ VALIDACIÓN 2: Stock suficiente
                     if (productoCompleto.getCantidad().compareTo(cantidadParaCalculo) < 0) {
-                        model.addAttribute("info", String.format("Stock insuficiente para '%s'. Disponible: %s",
+                        redirectAttributes.addFlashAttribute("info", String.format("Stock insuficiente para '%s'. Disponible: %s",
                                 productoCompleto.getNombre(), productoCompleto.getCantidad()));
                         model.addAttribute("productos", productoService.listarProductos());
                         model.addAttribute("clientes", clienteService.listarcliente());
                         model.addAttribute("pedido", pedido);
-                        return "viewPedidos/crearPedidos";
+                        return "redirect:/pedidos/nuevo";
                     }
-
+                    BigDecimal precioAprocesar=BigDecimal.ZERO;
+                    if(Boolean.TRUE.equals(pedido.getVentaPorMayor()) && productoCompleto.getPrecioPorMayor() != null){
+                        precioAprocesar=productoCompleto.getPrecioPorMayor();
+                        pedido.setVentaPorMayor(true);
+                    }else{
+                        precioAprocesar=productoCompleto.getPrecio();
+                    }
                     // Asignar producto y precio real de la BD
                     detalle.setProducto(productoCompleto);
                     detalle.setPedido(pedido);
-                    detalle.setPrecioUnitario(productoCompleto.getPrecio());
+                    detalle.setPrecioUnitario(precioAprocesar);
 
                     // Impuestos
                     BigDecimal tasaImpuesto = (productoCompleto.getImpuesto() != null)
@@ -237,11 +243,11 @@ public class PedidosControlador {
             }
 
             if (detallesValidos.isEmpty()) {
-                model.addAttribute("error", "Debes agregar al menos un producto válido");
+                redirectAttributes.addFlashAttribute("error", "Debes agregar al menos un producto válido");
                 model.addAttribute("productos", productoService.listarProductos());
                 model.addAttribute("clientes", clienteService.listarcliente());
                 model.addAttribute("pedido", pedido);
-                return "viewPedidos/crearPedidos";
+                return "redirect:/pedidos/nuevo";
             }
 
             pedido.setDetalles(detallesValidos);
@@ -298,7 +304,7 @@ public class PedidosControlador {
     @PostMapping("/actualizar/{id}")
     public String ActualizarPedido(@PathVariable Long id,
                                    @ModelAttribute("pedido") Pedidos pedido,
-                                   RedirectAttributes redirectAttributes,Model model) {
+                                   RedirectAttributes redirectAttributes, Model model) {
         try {
             // 1. Cargar el pedido real de la base de datos
             Pedidos pedidoExistente = pedidoService.pedidosByid(id);
@@ -307,6 +313,10 @@ public class PedidosControlador {
                 return "redirect:/pedidos/listarpedidos";
             }
 
+            // IMPORTANTE: sincronizar el flag desde el formulario
+            boolean ventaPorMayor = Boolean.TRUE.equals(pedido.getVentaPorMayor());
+            pedidoExistente.setVentaPorMayor(ventaPorMayor);
+
             BigDecimal subtotalProductos = BigDecimal.ZERO;
             BigDecimal montoTotalImpuestos = BigDecimal.ZERO;
             List<DetallePedido> detallesNuevos = new ArrayList<>();
@@ -314,17 +324,23 @@ public class PedidosControlador {
             // 2. Procesar los detalles que vienen del formulario
             if (pedido.getDetalles() != null) {
                 for (DetallePedido detalleForm : pedido.getDetalles()) {
-                    // Validar que el detalle tenga los datos mínimos necesarios
                     if (detalleForm.getProducto() != null && detalleForm.getProducto().getId() != null &&
                             detalleForm.getCantidad() != null && detalleForm.getCantidad().compareTo(BigDecimal.ZERO) > 0) {
 
                         Productos prod = productoService.productoById(detalleForm.getProducto().getId());
                         if (prod != null) {
-                            // Seteamos datos oficiales desde la DB (Seguridad)
                             detalleForm.setProducto(prod);
                             detalleForm.setPedido(pedidoExistente);
 
-                            BigDecimal precioUnit = prod.getPrecio();
+                            // Elegir precio correcto según ventaPorMayor
+                            BigDecimal precioUnit;
+                            if (ventaPorMayor && prod.getPrecioPorMayor() != null
+                                    && prod.getPrecioPorMayor().compareTo(BigDecimal.ZERO) > 0) {
+                                precioUnit = prod.getPrecioPorMayor();
+                            } else {
+                                precioUnit = prod.getPrecio();
+                            }
+
                             BigDecimal tasaImpuesto = (prod.getImpuesto() != null) ? prod.getImpuesto() : BigDecimal.ZERO;
 
                             detalleForm.setPrecioUnitario(precioUnit);
@@ -335,8 +351,7 @@ public class PedidosControlador {
                             BigDecimal cantTransformada;
 
                             if ("PESO".equals(prod.getTipoVenta().name())) {
-                                // Gramos a Kilos: 500gr -> 0.50kg (Usamos 4 decimales para el cálculo)
-                                cantTransformada = cantidadOriginal.divide(new BigDecimal("1000"), 4, RoundingMode.HALF_UP);
+                                cantTransformada = cantidadOriginal.divide(new BigDecimal("1000"), 3, RoundingMode.HALF_UP);
                             } else {
                                 cantTransformada = cantidadOriginal;
                             }
@@ -350,7 +365,6 @@ public class PedidosControlador {
 
                             detalleForm.setSubtotal(subtotalItem.setScale(2, RoundingMode.HALF_UP));
 
-                            // Acumuladores generales
                             subtotalProductos = subtotalProductos.add(detalleForm.getSubtotal());
                             montoTotalImpuestos = montoTotalImpuestos.add(impuestoItem);
 
@@ -359,6 +373,7 @@ public class PedidosControlador {
                     }
                 }
             }
+
             if (pedido.getFlete() == null) {
                 pedido.setFlete(BigDecimal.ZERO);
             }
@@ -375,8 +390,8 @@ public class PedidosControlador {
             BigDecimal flete = (pedido.getFlete() != null) ? pedido.getFlete() : BigDecimal.ZERO;
             BigDecimal totalFinal = subtotalProductos.add(flete).add(montoTotalImpuestos);
 
-            // 4. Sincronizar el objeto existente (Evita duplicados)
-            pedidoExistente.setFechaEntrega(pedido.getFechaEntrega()); // Actualizar fecha si cambió
+            // 4. Sincronizar el objeto existente
+            pedidoExistente.setFechaEntrega(pedido.getFechaEntrega());
             pedidoExistente.setFlete(flete);
             pedidoExistente.setSubtotal(subtotalProductos.setScale(2, RoundingMode.HALF_UP));
             pedidoExistente.setImpuesto(montoTotalImpuestos.setScale(2, RoundingMode.HALF_UP));

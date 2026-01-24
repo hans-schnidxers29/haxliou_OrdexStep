@@ -57,6 +57,10 @@ public class ProductoServiceImpl implements ProductoServicio{
         if (producto.getCategoria() != null) {
             p1.setCategoria(producto.getCategoria());
         }
+        if (producto.getPrecioPorMayor() != null) {
+            p1.setPrecioPorMayor(producto.getPrecioPorMayor());
+        }
+
     }
 
     @Override
@@ -75,8 +79,8 @@ public class ProductoServiceImpl implements ProductoServicio{
      * @return
      */
     @Override
-    public List<Object[]> verificarStock() {
-        return repositorio.StockBajo();
+    public List<Productos> verificarStock() {
+        return repositorio.StockBajoList().stream().toList();
     }
 
     @Transactional
@@ -111,6 +115,7 @@ public class ProductoServiceImpl implements ProductoServicio{
             map.put("impuesto", p.getImpuesto());
             map.put("tipoVenta", p.getTipoVenta().name());
             map.put("categoriaId", p.getCategoria().getId() != null ? p.getCategoria().getId() : null);
+            map.put("precioPorMayor", p.getPrecioPorMayor());
             return map;
         }).collect(Collectors.toList());
         return productosJson;
