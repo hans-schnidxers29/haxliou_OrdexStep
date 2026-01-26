@@ -126,7 +126,7 @@ public class CajaControlador {
         data.put("caja", cajaCerrada);
         data.put("usuario", cajaCerrada.getUsuario());
         data.put("titulo", "Reporte de Cierre Definitivo");
-        data.put("montoRealContado", montoReal); // Valor físico reportado
+        data.put("montoRealContado", montoReal);// Valor físico reportado
 
         byte[] pdf = pdfService.generarPdf("pdf/ticketFinal", data);
 

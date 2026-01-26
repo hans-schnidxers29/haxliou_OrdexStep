@@ -2,6 +2,8 @@ package com.example.demo.controlador;
 
 
 import com.example.demo.Login.Servicio.ServicioEmpresa;
+import com.example.demo.Login.Servicio.ServicioUsuario;
+import com.example.demo.Login.Usuario;
 import com.example.demo.entidad.*;
 import com.example.demo.entidad.Enum.EstadoPedido;
 import com.example.demo.pdf.PdfServicio;
@@ -13,6 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -49,6 +53,9 @@ public class PedidosControlador {
 
     @Autowired
     private CategoriaService categoriaService;
+
+    @Autowired
+    private ServicioUsuario servicoUser;
 
     /**
      * Listar todos los pedidos
@@ -175,7 +182,7 @@ public class PedidosControlador {
                     BigDecimal cantidadParaCalculo;
 
                     // Solo convertimos si es PESO, si no, se queda igual (UNIDAD/LIQUIDO)
-                    if ("PESO".equals(productoCompleto.getTipoVenta().name())) {
+                    if ("KGM".equals(productoCompleto.getTipoVenta().getCode())) {
                         cantidadParaCalculo = cantidadOriginal.divide(new BigDecimal("1000"), 3, RoundingMode.HALF_UP);
                     } else {
                         cantidadParaCalculo = cantidadOriginal;
@@ -350,7 +357,7 @@ public class PedidosControlador {
                             BigDecimal cantidadOriginal = detalleForm.getCantidad();
                             BigDecimal cantTransformada;
 
-                            if ("PESO".equals(prod.getTipoVenta().name())) {
+                            if ("KGM".equals(prod.getTipoVenta().getCode())) {
                                 cantTransformada = cantidadOriginal.divide(new BigDecimal("1000"), 3, RoundingMode.HALF_UP);
                             } else {
                                 cantTransformada = cantidadOriginal;
@@ -512,11 +519,12 @@ public class PedidosControlador {
     }
 
     @GetMapping("/generarTicket/{id}")
-    public ResponseEntity<byte[]> generarTicket(@PathVariable Long id) throws Exception{
+    public ResponseEntity<byte[]> generarTicket(@PathVariable Long id, @AuthenticationPrincipal UserDetails user) throws Exception{
 
         Pedidos pedido = pedidoService.pedidosByid(id);
-
-        Empresa empresa = empresaService.DatosEmpresa(1L);
+        Usuario usuario = servicoUser.findByEmail(user.getUsername());
+        Long IdEmpresa = servicoUser.ObtenreIdEmpresa(usuario.getId());
+        Empresa empresa = empresaService.DatosEmpresa(IdEmpresa);
 
         BigDecimal Subtotal = pedido.getSubtotal();
         BigDecimal Impuesto = pedido.getImpuesto(); // Ahora simplemente usamos el campo impuesto del pedido

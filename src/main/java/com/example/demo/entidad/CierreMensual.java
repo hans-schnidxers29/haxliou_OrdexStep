@@ -70,6 +70,9 @@ public class CierreMensual {
     @Column(precision = 19, scale = 4)
     private BigDecimal margenBruto = BigDecimal.ZERO; // NUEVO: % de ganancia (Utilidad Bruta / Ventas Netas * 100)
 
+    @Column(precision = 19, scale = 4)
+    private BigDecimal totalVentasAlMayor ;
+
     // ==================== ESTADÍSTICAS ====================
     private Integer cantidadPedidos = 0;
     private Integer nuevosClientes = 0;
@@ -331,5 +334,13 @@ public class CierreMensual {
 
     public void setValorInventarioTotal(BigDecimal valorInventarioTotal) {
         this.valorInventarioTotal = valorInventarioTotal;
+    }
+
+    public BigDecimal getTotalVentasAlMayor() {
+        return totalVentasAlMayor;
+    }
+
+    public void setTotalVentasAlMayor(BigDecimal totalVentasAlMayor) {
+        this.totalVentasAlMayor = totalVentasAlMayor;
     }
 }

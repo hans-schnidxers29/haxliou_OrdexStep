@@ -161,7 +161,7 @@
                                                         th:data-precio="${p.precio}"
                                                         th:data-preciomayor="${p.precioPorMayor}"
                                                         th:data-impuesto="${p.impuesto}"
-                                                        th:data-tipo="${p.tipoVenta.name()}"></option>
+                                                        th:data-tipo="${p.tipoVenta.code}"></option>
                                             </select>
                                         </td>
                                         <td>
@@ -387,7 +387,6 @@
         </div>
     </div>
 </div>
-</div>
 
 <th:block layout:fragment="scripts">
     <script th:inline="javascript">
@@ -480,32 +479,16 @@
             const tr = document.createElement('tr');
             tr.className = 'detalle-item';
             tr.innerHTML = `
-                <td>
-                    <select class="form-control categoria-filter" onchange="filtrarProductos(this)">
-                        ${opcionesCat}
-                    </select>
-                </td>
-                <td>
-                    <select name="detalles[${detalleCount}].producto.id" class="form-control producto-select" required onchange="actualizarPrecioFila(this)">
-                        ${opcionesProd}
-                    </select>
-                </td>
+                <td><select class="form-control categoria-filter" onchange="filtrarProductos(this)">${opcionesCat}</select></td>
+                <td><select name="detalles[${detalleCount}].producto.id" class="form-control producto-select" required onchange="actualizarPrecioFila(this)">${opcionesProd}</select></td>
                 <td>
                     <input type="number" name="detalles[${detalleCount}].cantidad" class="form-control cantidad-input" min="0.01" value="1.00" step="0.01" required onchange="calcularSubtotalFila(this)">
                     <small class="text-muted unidad-medida">Unidad: Und</small>
                 </td>
-                <td>
-                    <input type="number" name="detalles[${detalleCount}].precioUnitario" class="form-control precio-unitario bg-light" readonly step="0.01">
-                </td>
-                <td>
-                    <input type="number" name="detalles[${detalleCount}].impuestoProducto" class="form-control impuesto-producto bg-light" readonly step="0.01">
-                </td>
-                <td>
-                    <input type="number" name="detalles[${detalleCount}].subtotal" class="form-control subtotal-item bg-light text-bold" readonly step="0.01">
-                </td>
-                <td class="text-center">
-                    <button type="button" class="btn btn-link text-danger" onclick="eliminarFila(this)"><i class="fas fa-trash-alt"></i></button>
-                </td>
+                <td><input type="number" name="detalles[${detalleCount}].precioUnitario" class="form-control precio-unitario bg-light" readonly step="0.01"></td>
+                <td><input type="number" name="detalles[${detalleCount}].impuestoProducto" class="form-control impuesto-producto bg-light" readonly step="0.01"></td>
+                <td><input type="number" name="detalles[${detalleCount}].subtotal" class="form-control subtotal-item bg-light text-bold" readonly step="0.01"></td>
+                <td class="text-center"><button type="button" class="btn btn-link text-danger" onclick="eliminarFila(this)"><i class="fas fa-trash-alt"></i></button></td>
             `;
             container.appendChild(tr);
             detalleCount++;
@@ -522,8 +505,6 @@
             const fila = select.closest('tr');
             const labelUnidad = fila.querySelector('.unidad-medida');
             const inputCantidad = fila.querySelector('.cantidad-input');
-
-            // Detectar si el switch global de venta al por mayor está activo
             const isMayor = document.getElementById('switchVentaMayor').checked;
 
             if (select.value === "") {
@@ -531,20 +512,21 @@
                 fila.querySelector('.impuesto-producto').value = "";
                 labelUnidad.innerText = "Unidad: Und";
             } else {
-                // LÓGICA DE PRECIO: Seleccionar entre normal y mayorista
                 const pNormal = option.getAttribute("data-precio") || 0;
                 const pMayor = option.getAttribute("data-preciomayor") || pNormal;
                 const precioFinal = isMayor ? pMayor : pNormal;
 
                 const impuesto = option.getAttribute("data-impuesto") || 0;
+
+                // --- CAMBIO AQUÍ: Ahora comparamos con código DIAN (KGM) ---
                 const tipoVenta = option.getAttribute("data-tipo");
 
                 fila.querySelector('.precio-unitario').value = parseFloat(precioFinal).toFixed(2);
                 fila.querySelector('.impuesto-producto').value = impuesto;
 
-                // Lógica de etiquetas y pasos de cantidad (Sin cambios)
-                if (tipoVenta === 'PESO') {
-                    labelUnidad.innerText = "Unidad: Gramos";
+                // Si el código es KGM (Kilogramo) o LTR (Litro)
+                if (tipoVenta === 'KGM' || tipoVenta === 'LTR') {
+                    labelUnidad.innerText = (tipoVenta === 'KGM') ? "Unidad: Gramos" : "Unidad: Mililitros";
                     labelUnidad.className = "badge badge-warning unidad-medida";
                     inputCantidad.step = "1";
                 } else {
@@ -555,7 +537,6 @@
             }
             calcularSubtotalFila(inputCantidad);
         }
-
         // Función corregida para calcular subtotal por fila
         function calcularSubtotalFila(input) {
             const fila = input.closest('tr');
@@ -564,12 +545,13 @@
 
             if (!option || select.value === "") return;
 
+            // --- CAMBIO AQUÍ: Lógica de conversión basada en códigos ---
             const tipoVenta = option.getAttribute("data-tipo");
             let cant = parseFloat(input.value) || 0;
             const precio = parseFloat(fila.querySelector('.precio-unitario').value) || 0;
 
-            // Si es PESO, el precio es por KG, por lo tanto: (gramos / 1000) * precio
-            if (tipoVenta === 'PESO') {
+            // KGM = Kilos, LTR = Litros. En ambos casos dividimos gramos/ml entre 1000
+            if (tipoVenta === 'KGM' || tipoVenta === 'LTR') {
                 cant = cant / 1000;
             }
 

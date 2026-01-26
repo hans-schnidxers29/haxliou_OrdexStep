@@ -79,6 +79,7 @@ public class CierreMensualImp implements CierreMensualServicio{
         // Utilidad Neta: Lo que queda después de pagar arriendo, servicios, etc (Egresos)
         BigDecimal utilidadNeta = utilidadBruta.subtract(totalEgresos);
 
+        BigDecimal TotalVentasPorMayor=nvl(ventaRepo.VentasTotalesAlMayor());
         // 7. Evitar duplicados
         cierreRepo.eliminarCierreExistente(mes, anio);
 
@@ -103,6 +104,7 @@ public class CierreMensualImp implements CierreMensualServicio{
         cierre.setNuevosClientes(nvlInt(clienteRepo.contarNuevosClientesPorRango(inicio, fin)));
         cierre.setTotalProductosEnStock(productoRepo.findAll().size());
         cierre.setValorInventarioTotal(valorInventario);
+        cierre.setTotalVentasAlMayor(TotalVentasPorMayor);
 
         return cierreRepo.save(cierre);
     }
@@ -138,10 +140,12 @@ public class CierreMensualImp implements CierreMensualServicio{
         }
 
         // 1. Inventarios
-        long stockTotalUnd = productoRepo.findAll().stream().filter(p -> p.getUnidadMedida().equalsIgnoreCase("unidad"))
+        long stockTotalUnd = productoRepo.findAll().stream().filter(p -> p.getTipoVenta().getCode()
+                        .equalsIgnoreCase("94"))
                 .mapToLong(p -> p.getCantidad().longValue()).sum();
 
-        BigDecimal stockTotalkg = productoRepo.findAll().stream().filter(p -> p.getUnidadMedida().equalsIgnoreCase("kg"))
+        BigDecimal stockTotalkg = productoRepo.findAll().stream().filter(p -> p.getTipoVenta().getCode()
+                        .equalsIgnoreCase("KGM"))
                 .map(Productos::getCantidad).reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal valorInventario = nvl(productoRepo.calcularValorInventarioTotal());
@@ -181,6 +185,8 @@ public class CierreMensualImp implements CierreMensualServicio{
             // El ticket promedio debe ser sobre el dinero TOTAL
             TicketPromedio = TotalIngresos.divide(TotalCantidades, 2, RoundingMode.HALF_UP);
         }
+        BigDecimal TotalVentasAlMAyor = nvl(ventaRepo.VentasTotalesAlMayor());
+        BigDecimal TotalVentasAlDetal = nvl(TotalIngresos.subtract(TotalVentasAlMAyor));
 
         BigDecimal egresos = nvl(egresoRepo.sumarEgresosPorDia(fechaInicio, fechaFin));
 
@@ -196,6 +202,8 @@ public class CierreMensualImp implements CierreMensualServicio{
         resumen.put("porcentajeMargen", MargenNeto); // Enviamos el Margen Neto calculado
         resumen.put("ticketPromedio", TicketPromedio);
         resumen.put("totalPedidos", TotalPedidos);
+        resumen.put("VentasDetal",TotalVentasAlDetal);
+        resumen.put("VentasMayor", TotalVentasAlMAyor);
 
         return resumen;
     }

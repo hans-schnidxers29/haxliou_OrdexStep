@@ -1,11 +1,13 @@
 package com.example.demo.entidad;
 
 import com.example.demo.entidad.Enum.TipoVenta;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 
 @Entity
 @Table(name = "productos")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Productos {
 
     @Id
@@ -24,9 +26,9 @@ public class Productos {
     @Column(name = "cantidad", nullable = false, scale = 2, precision = 10)
     private BigDecimal cantidad = BigDecimal.ZERO;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "tipo_venta", nullable = false)
-    private TipoVenta tipoVenta = TipoVenta.UNIDAD;
+    @ManyToOne
+    @JoinColumn(name = "unidad_medida_id")
+    private UnidadMedidas tipoVenta ;
 
     @Column(name = "cantidad_minima", precision = 10, scale = 2)
     private BigDecimal cantidadMinima;
@@ -49,6 +51,7 @@ public class Productos {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "proveedor_id", nullable = true)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Proveedores proveedor;
 
     @Column(name = "precio_por_mayor", precision = 10, scale = 2)
@@ -57,28 +60,15 @@ public class Productos {
     @Column(name = "estado")
     private Boolean Estado = true;
 
+    @ManyToOne
+    @JoinColumn(name = "tributo_id")
+    private Tributo tipo_Impuesto;
+
     // Constructores
     public Productos() {
     }
 
-    public Productos(String nombre, String descripcion, BigDecimal precio,
-                     BigDecimal cantidad, Categoria categoria, TipoVenta tipoVenta,
-                     BigDecimal impuesto,Proveedores proveedor, BigDecimal precioCompra) {
-        this.nombre = nombre;
-        this.descripcion = descripcion;
-        this.precio = precio;
-        this.cantidad = cantidad;
-        this.categoria = categoria;
-        this.tipoVenta = tipoVenta;
-        this.Impuesto = impuesto;
-        this.proveedor = proveedor;
-        this.precioCompra = precioCompra;
-    }
 
-    // Métodos útiles
-    public boolean esVentaPorPeso() {
-        return this.tipoVenta == TipoVenta.PESO;
-    }
 
     public boolean tieneStockDisponible(BigDecimal cantidadSolicitada) {
         return this.cantidad.compareTo(cantidadSolicitada) >= 0;
@@ -88,14 +78,7 @@ public class Productos {
         return stockMinimo != null && this.cantidad.compareTo(stockMinimo) <= 0;
     }
 
-    public String getUnidadMedida() {
-        switch (tipoVenta) {
-            case PESO: return "kg";
-            case VOLUMEN: return "L";
-            case METRO: return "m";
-            default: return "unidad";
-        }
-    }
+
 
     // Getters y Setters
     public Long getId() {
@@ -138,11 +121,11 @@ public class Productos {
         this.cantidad = cantidad;
     }
 
-    public TipoVenta getTipoVenta() {
+    public UnidadMedidas getTipoVenta() {
         return tipoVenta;
     }
 
-    public void setTipoVenta(TipoVenta tipoVenta) {
+    public void setTipoVenta(UnidadMedidas tipoVenta) {
         this.tipoVenta = tipoVenta;
     }
 
@@ -216,5 +199,13 @@ public class Productos {
 
     public void setEstado(Boolean estado) {
         Estado = estado;
+    }
+
+    public Tributo getTipo_Impuesto() {
+        return tipo_Impuesto;
+    }
+
+    public void setTipo_Impuesto(Tributo tipo_Impuesto) {
+        this.tipo_Impuesto = tipo_Impuesto;
     }
 }

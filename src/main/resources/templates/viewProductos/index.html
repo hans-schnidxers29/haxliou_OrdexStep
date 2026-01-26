@@ -62,12 +62,13 @@
                             <tbody>
                             <tr th:each="producto : ${productos}">
                                 <td class="font-weight-bold" th:text="${producto.nombre}"></td>
+
                                 <td>
                                     <span class="badge shadow-sm"
-                                          th:classappend="${producto.tipoVenta.name() == 'PESO' ? 'badge-peso' :
-                                                          (producto.tipoVenta.name() == 'VOLUMEN' ? 'badge-volumen' :
-                                                          (producto.tipoVenta.name() == 'METRO' ? 'badge-metro' : 'badge-unidad'))}"
-                                          th:text="${producto.tipoVenta.descripcion}">
+                                          th:classappend="${producto.tipoVenta.code == 'KGM' ? 'badge-peso' :
+                                                          (producto.tipoVenta.code == 'LTR' ? 'badge-volumen' :
+                                                          (producto.tipoVenta.code == 'MTR' ? 'badge-metro' : 'badge-unidad'))}"
+                                          th:text="${producto.tipoVenta.name}">
                                     </span>
                                 </td>
 
@@ -84,56 +85,51 @@
                                         </span>
 
                                         <small class="badge badge-light border mt-1"
-                                               th:with="margen=${producto.precio.subtract(producto.precioCompra)}"
-                                               th:classappend="${margen.compareTo(0) > 0 ? 'text-success' : 'text-danger'}"
+                                               th:with="margen=${producto.precio - producto.precioCompra}"
+                                               th:classappend="${margen > 0 ? 'text-success' : 'text-danger'}"
                                                title="Utilidad por unidad">
                                             <i class="fas fa-chart-line mr-1"></i>Margen:
                                             <span th:text="'$' + ${#numbers.formatDecimal(margen, 1, 'COMMA', 2, 'POINT')}"></span>
                                         </small>
 
                                         <small class="text-muted mt-1">
-                                            IVA: <span th:text="${producto.impuesto}"></span>%
+                                            <span th:text="${producto.tipo_Impuesto.name}"></span>: <span th:text="${producto.impuesto}"></span>%
                                         </small>
                                     </div>
                                 </td>
+
                                 <td>
                                     <span class="badge"
-                                          th:classappend="${producto.stockMinimo != null && producto.cantidad.compareTo(producto.stockMinimo) <= 0 ? 'badge-danger' :
-                                                          (producto.cantidad.compareTo(new java.math.BigDecimal('10')) > 0 ? 'badge-success' :
-                                                          (producto.cantidad.compareTo(new java.math.BigDecimal('0')) > 0 ? 'badge-warning' : 'badge-danger'))}"
-                                          th:title="${producto.stockMinimo != null && producto.cantidad.compareTo(producto.stockMinimo) <= 0 ?
-                                                     '¡Alerta! Stock por debajo del mínimo (' + producto.stockMinimo + ')' :
-                                                     'Stock disponible'}">
-                                        <span th:if="${producto.tipoVenta.name() == 'UNIDAD'}"
+                                          th:classappend="${producto.stockMinimo != null && producto.cantidad <= producto.stockMinimo ? 'badge-danger' :
+                                                          (producto.cantidad > 10 ? 'badge-success' :
+                                                          (producto.cantidad > 0 ? 'badge-warning' : 'badge-danger'))}">
+
+                                        <span th:if="${producto.tipoVenta.code == '94'}"
                                               th:text="${#numbers.formatInteger(producto.cantidad, 0)}">
                                         </span>
-                                        <span th:unless="${producto.tipoVenta.name() == 'UNIDAD'}"
-                                              th:text="${#numbers.formatDecimal(producto.cantidad,1, 'COMMA', 2, 'POINT')}">
+                                        <span th:unless="${producto.tipoVenta.code == '94'}"
+                                              th:text="${#numbers.formatDecimal(producto.cantidad, 1, 'COMMA', 2, 'POINT')}">
                                         </span>
                                     </span>
 
-                                    <small class="text-muted ml-1" th:text="${producto.getUnidadMedida()}"></small>
+                                    <small class="text-muted ml-1" th:text="${producto.tipoVenta.name}"></small>
 
                                     <a th:href="@{/producto/stock/{id}(id=${producto.id})}"
                                        class="btn btn-sm btn-outline-success ml-2"
                                        title="Agregar stock">
                                         <i class="fas fa-plus"></i>
                                     </a>
-
-                                    <i class="fas fa-exclamation-triangle text-danger ml-1"
-                                       th:if="${producto.stockMinimo != null && producto.cantidad.compareTo(producto.stockMinimo) <= 0}"
-                                       title="Stock bajo"></i>
                                 </td>
 
                                 <td>
                                     <span th:if="${producto.stockMinimo != null}">
-                                        <span th:if="${producto.tipoVenta.name() == 'UNIDAD'}"
+                                        <span th:if="${producto.tipoVenta.code == '94'}"
                                               th:text="${#numbers.formatInteger(producto.stockMinimo, 0)}">
                                         </span>
-                                        <span th:unless="${producto.tipoVenta.name() == 'UNIDAD'}"
-                                              th:text="${#numbers.formatDecimal(producto.stockMinimo, 1, 2)}">
+                                        <span th:unless="${producto.tipoVenta.code == '94'}"
+                                              th:text="${#numbers.formatDecimal(producto.stockMinimo, 1, 'COMMA', 2, 'POINT')}">
                                         </span>
-                                        <small class="text-muted" th:text="${producto.getUnidadMedida()}"></small>
+                                        <small class="text-muted" th:text="${producto.tipoVenta.name}"></small>
                                     </span>
                                     <span th:unless="${producto.stockMinimo != null}" class="text-muted">-</span>
                                 </td>
@@ -153,10 +149,10 @@
                                         <button type="button"
                                                 class="btn btn-sm btn-info"
                                                 th:data-nombre="${producto.nombre}"
-                                                th:data-tipo="${producto.tipoVenta.descripcion}"
+                                                th:data-tipo="${producto.tipoVenta.name}"
                                                 th:data-minima="${producto.cantidadMinima}"
                                                 th:data-incremento="${producto.incremento}"
-                                                th:data-unidad="${producto.getUnidadMedida()}"
+                                                th:data-unidad="${producto.tipoVenta.name}"
                                                 onclick="prepararDetalles(this)"
                                                 title="Ver detalles">
                                             <i class="fas fa-eye"></i>

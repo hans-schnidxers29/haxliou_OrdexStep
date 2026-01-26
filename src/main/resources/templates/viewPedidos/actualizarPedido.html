@@ -102,7 +102,7 @@
                             </div>
                             <div class="card-body">
                                 <!-- Cliente Actual -->
-                                <div class="alert alert-info py-2 mb-3">
+                                <div class="alert alert-light py-2 mb-3">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div>
                                             <strong><i class="fas fa-user-circle mr-1"></i> Cliente Actual:</strong>
@@ -211,7 +211,7 @@
                                                 <div class="input-group input-group-sm">
                                                     <input type="number"
                                                            th:name="'detalles[' + ${iterStat.index} + '].cantidad'"
-                                                        th:value="${detalle.producto.tipoVenta.name() == 'PESO' ? detalle.cantidad * 1000 : detalle.cantidad}"
+                                                        th:value="${detalle.producto.tipoVenta.code == 'KGM' ? detalle.cantidad * 1000 : detalle.cantidad}"
                                                         class="form-control cantidad-input"
                                                         min="0.01"
                                                         step="any"
@@ -220,7 +220,7 @@
                                                     <div class="input-group-append">
                                                     <span class="input-group-text unidad-label p-1"
                                                           style="font-size: 0.7rem;"
-                                                          th:text="${detalle.producto.tipoVenta.name() == 'PESO' ? 'gr' : (detalle.producto.tipoVenta.name() == 'LIQUIDO' ? 'ml' : 'un')}">
+                                                          th:text="${detalle.producto.tipoVenta.code == 'KGM' ? 'gr' : (detalle.producto.tipoVenta.code == 'LTR' ? 'ml' : 'un')}">
                                                         </span>
                                                     </div>
                                                 </div>
@@ -484,18 +484,18 @@
             }
 
             const isMayor = document.getElementById('switchVentaMayor').checked;
-
             const pNormal = parseFloat(select.options[select.selectedIndex].getAttribute('data-precio')) || 0;
             const pMayor = parseFloat(select.options[select.selectedIndex].getAttribute('data-preciomayor')) || pNormal;
             const precioAEjercer = isMayor ? pMayor : pNormal;
 
             const cantidadRaw = parseFloat(row.querySelector('.cantidad-input')?.value) || 0;
 
+            // --- CAMBIO AQUÍ: Conversión basada en KGM o LTR ---
             const tipo = select.options[select.selectedIndex].getAttribute('data-tipo');
-            const cantidadCalculo = (tipo === 'PESO') ? (cantidadRaw / 1000) : cantidadRaw;
+            const cantidadCalculo = (tipo === 'KGM' || tipo === 'LTR') ? (cantidadRaw / 1000) : cantidadRaw;
+            // -------------------------------------------------------
 
             const subItem = cantidadCalculo * precioAEjercer;
-
             row.querySelector('.subtotal-display').value =
                 subItem.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -527,7 +527,6 @@
             });
         }
 
-        // DEJAR SOLO 1: se elimina la función duplicada actualizarPrecio(index)
         function actualizarPrecio(index) {
             const row = document.querySelectorAll('#detallesContainer tr')[index];
             if(!row) return;
@@ -543,16 +542,17 @@
                 return;
             }
 
-            // Obtener precios
             const pNormal = parseFloat(select.options[select.selectedIndex].getAttribute('data-precio')) || 0;
             const pMayor = parseFloat(select.options[select.selectedIndex].getAttribute('data-preciomayor')) || pNormal;
             const precioAEjercer = isMayor ? pMayor : pNormal;
 
             const impuesto = parseFloat(select.options[select.selectedIndex].getAttribute('data-impuesto')) || 0;
-            const tipo = select.options[select.selectedIndex].getAttribute('data-tipo');
 
+            // --- CAMBIO AQUÍ: Ahora comparamos con códigos DIAN ---
+            const tipo = select.options[select.selectedIndex].getAttribute('data-tipo');
             const label = row.querySelector('.unidad-label');
-            label.textContent = (tipo === 'PESO') ? "kg" : (tipo === 'LIQUIDO' ? "ml" : "un");
+            label.textContent = (tipo === 'KGM') ? "gr" : (tipo === 'LTR' ? "ml" : "un");
+            // -------------------------------------------------------
 
             row.querySelector('.precio-unitario-display').value = precioAEjercer.toLocaleString('es-CO', {minimumFractionDigits: 2});
             row.querySelector('.impuesto-display').value = impuesto.toFixed(2) + '%';
@@ -575,9 +575,11 @@
 
                 const cantidad = parseFloat(fila.querySelector('input[name*="cantidad"]').value) || 0;
                 const tasaImpuesto = parseFloat(select.options[select.selectedIndex].getAttribute('data-impuesto')) || 0;
-                const tipo = select.options[select.selectedIndex].getAttribute('data-tipo');
 
-                let cantidadCalculo = (tipo === 'PESO') ? cantidad / 1000 : cantidad;
+                // --- CAMBIO AQUÍ: Consistencia en el cálculo total ---
+                const tipo = select.options[select.selectedIndex].getAttribute('data-tipo');
+                let cantidadCalculo = (tipo === 'KGM' || tipo === 'LTR') ? cantidad / 1000 : cantidad;
+                // -------------------------------------------------------
 
                 const subItem = cantidadCalculo * precioAEjercer;
                 subtotalVista += subItem;
@@ -591,6 +593,7 @@
             document.getElementById('totalImpuestosLabel').innerText = impuestoVista.toLocaleString('es-CO', {minimumFractionDigits: 2});
             document.getElementById('totalPedidoLabel').innerText = totalVista.toLocaleString('es-CO', {minimumFractionDigits: 2});
         }
+
         function alternarPreciosGlobal() {
             const isMayor = document.getElementById('switchVentaMayor').checked;
             const label = document.getElementById('labelVenta');

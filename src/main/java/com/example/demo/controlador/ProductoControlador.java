@@ -4,9 +4,12 @@ import com.example.demo.entidad.Categoria;
 import com.example.demo.entidad.Enum.TipoVenta;
 import com.example.demo.entidad.Productos;
 import com.example.demo.entidad.Proveedores;
+import com.example.demo.repositorio.TributoRepositorio;
+import com.example.demo.repositorio.UnidadesMedidasRepositorio;
 import com.example.demo.servicio.CategoriaService;
 import com.example.demo.servicio.ProductoServicio;
 import com.example.demo.servicio.ProveedorServicio;
+import com.example.demo.servicio.UnidadMedidaServicio;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -27,6 +30,13 @@ public class ProductoControlador {
     @Autowired
     private ProveedorServicio proveedorServicio;
 
+    @Autowired
+    private UnidadMedidaServicio unidadRepo;
+
+    @Autowired
+    private TributoRepositorio tributoRepositorio;
+
+
     @GetMapping("/listarproductos")
     public String listarProductos(Model model){
         model.addAttribute("productos",service.listarProductos());
@@ -38,8 +48,10 @@ public class ProductoControlador {
         Productos p = new Productos();
         model.addAttribute("categoria",serviceCate.Listarcategoria());
         model.addAttribute("producto",p);
-        model.addAttribute("tiposVenta", TipoVenta.values());
+        model.addAttribute("tiposVenta", unidadRepo.Listademedidas());
         model.addAttribute("proveedores", proveedorServicio.listarproveedores());
+        model.addAttribute("tributo",tributoRepositorio.findAll());
+
         return "viewProductos/crearProductos";
     }
 
@@ -60,8 +72,9 @@ public class ProductoControlador {
     public String MostrarafromEditar(@PathVariable Long id, Model model){
         model.addAttribute("producto",service.productoById(id));
         model.addAttribute("categoria",serviceCate.Listarcategoria());
-        model.addAttribute("tiposVenta", TipoVenta.values());
+        model.addAttribute("tiposVenta", unidadRepo.Listademedidas());
         model.addAttribute("proveedores", proveedorServicio.listarproveedores());
+        model.addAttribute("tributo",tributoRepositorio.findAll());
         return "viewProductos/actualizarProductos";
     }
 

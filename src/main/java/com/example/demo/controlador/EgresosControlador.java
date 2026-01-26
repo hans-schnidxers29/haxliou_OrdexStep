@@ -9,10 +9,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
@@ -72,6 +70,62 @@ public class EgresosControlador {
         LocalDateTime fin = primerDia.with(TemporalAdjusters.lastDayOfMonth()).atTime(LocalTime.MAX);
         model.addAttribute("datos",egresoServicio.DatosEgresos(inicio,fin));
         return "viewEgresos/index";
+    }
+    @GetMapping("eliminar/{id}")
+    public String Eliminar(@PathVariable Long id, RedirectAttributes flash){
+        try{
+            egresoServicio.deleteGasto(id);
+            flash.addFlashAttribute("success","eliminado Correctamente");
+            return "redirect:/egresos/listar";
+        }catch (Exception e){
+            flash.addFlashAttribute("error", "Error al eliminar");
+            return "redirect:/egresos/listar";
+        }
+    }
+
+    @GetMapping("/editar/{id}")
+    public String mostrarFormularioEditar(@PathVariable Long id, Model model) {
+        Egresos egreso = egresoServicio.ObtenerEgreso(id);
+        model.addAttribute("egreso", egreso);
+        return "viewEgresos/editarEgreso";
+    }
+
+    @PostMapping("/editar/{id}")
+    public String editarEgreso(@PathVariable Long id,
+                               @ModelAttribute("egreso") Egresos egreso,
+                               BindingResult result,
+                               RedirectAttributes redirectAttributes) {
+
+        if (result.hasErrors()) {
+            return "viewEgresos/editarEgreso";
+        }
+
+        try {
+            // 1. Buscamos el egreso existente para no perder datos que no están en el form (como la fecha original)
+            Egresos egresoExistente = egresoServicio.ObtenerEgreso(id);
+
+            if (egresoExistente == null) {
+                redirectAttributes.addFlashAttribute("error", "El egreso no existe.");
+                return "redirect:/egresos/listar";
+            }
+
+            // 2. Actualizamos solo los campos permitidos
+            egresoExistente.setTipoEgreso(egreso.getTipoEgreso());
+            egresoExistente.setMonto(egreso.getMonto());
+            egresoExistente.setDescripcion(egreso.getDescripcion());
+
+            // La fechaRegistro y el Usuario suelen mantenerse iguales a menos que decidas lo contrario
+
+            // 3. Guardamos los cambios
+            egresoServicio.UpdateEgreso(egresoExistente);
+
+            redirectAttributes.addFlashAttribute("success", "Egreso actualizado correctamente.");
+
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error al actualizar: " + e.getMessage());
+        }
+
+        return "redirect:/egresos/listar";
     }
 }
 

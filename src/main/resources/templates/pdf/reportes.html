@@ -189,7 +189,7 @@
     <table id="tabla-PRODUCTOS">
       <thead>
       <tr>
-        <th>ID</th><th>Nombre</th><th>Categoría</th><th>Stock Actual</th><th>Unidad</th><th>Precio Venta</th><th>Proveedor</th>
+        <th>ID</th><th>Nombre</th><th>Categoría</th><th>Stock Actual</th><th>Unidad</th><th>Precio Venta</th><th>Proveedor</th><th>Tipo de Impuesto</th>
       </tr>
       </thead>
       <tbody>
@@ -198,9 +198,10 @@
         <td th:text="${prod.nombre}"></td>
         <td th:text="${prod.categoria.nombrecategoria}"></td>
         <td th:text="${prod.cantidad}"></td>
-        <td th:text="${prod.unidadMedida}"></td>
+        <td th:text="${prod.tipoVenta.name}"></td>
         <td th:text="${prod.precio}"></td>
         <td th:text="${prod.proveedor}"></td>
+        <td th:text="${prod.tipo_Impuesto}"></td>
       </tr>
       </tbody>
     </table>

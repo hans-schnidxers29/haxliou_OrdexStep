@@ -177,72 +177,63 @@ public class CompraControlador {
         model.addAttribute("compras",compras);
         model.addAttribute("proveedores",proveedorServicio.listarproveedores());
         model.addAttribute("productos",productoServicio.listarProductos());
-        return "viewCompras/editarCompras";
+        return "viewCompras/editarCompra";
 
     }
 
 
     @PostMapping("/editar/compra/{id}")
     public String editarCompra(@PathVariable Long id,
-                               @Valid @ModelAttribute("compras") Compras compras, BindingResult result, RedirectAttributes redirectAttributes,
+                               @ModelAttribute("compras") Compras compras,
+                               BindingResult result,
+                               RedirectAttributes redirectAttributes,
                                @AuthenticationPrincipal UserDetails userDetails) {
 
-        if (result.hasErrors()) {
-            return "viewCompras/editarCompras";
-        }
-
-        Usuario user = servicioUsuario.findByEmail(userDetails.getUsername());
-        compras.setUsuario(user);
         try {
-            // 1. Verificar que la compra existe y que aún se puede editar (Solo si está en BORRADOR)
+            // 1. Cargar la compra original de la DB
             Compras compraExistente = compraServicio.compraById(id);
 
             if (compraExistente.getEstado() != EstadoCompra.BORRADOR) {
-                redirectAttributes.addFlashAttribute("error",
-                        "No se puede editar una compra que ya ha sido CONFIRMADA o ANULADA.");
+                redirectAttributes.addFlashAttribute("error", "Solo se pueden editar compras en BORRADOR.");
                 return "redirect:/compras/listar";
             }
 
-            // 2. Actualizar datos básicos
+            // 2. Datos básicos
             compraExistente.setProveedor(proveedorServicio.proveedorById(compras.getProveedor().getId()));
+            compraExistente.setMetodoPago(compras.getMetodoPago());
+            compraExistente.setObservaciones(compras.getObservaciones());
 
+            // 3. Gestionar Detalles
+            compraExistente.getDetalles().clear(); // Requiere orphanRemoval = true en la Entidad
 
-            // 3. Gestionar los Detalles: Limpiamos los anteriores y agregamos los nuevos
-            // (Esto funciona gracias al orphanRemoval = true en la entidad Compras)
-            compraExistente.getDetalles().clear();
+            if (compras.getDetalles() != null) {
+                BigDecimal acumulador = BigDecimal.ZERO;
+                for (DetalleCompra detalle : compras.getDetalles()) {
+                    if (detalle.getProductos() != null && detalle.getProductos().getId() != null) {
 
-            BigDecimal acumuladorSubtotales = BigDecimal.ZERO;
+                        Productos prod = productoServicio.productoById(detalle.getProductos().getId());
+                        detalle.setProductos(prod);
+                        detalle.setCompra(compraExistente); // Vínculo necesario para JPA
 
-            for (DetalleCompra nuevoDetalle : compras.getDetalles()) {
-                if (nuevoDetalle.getProductos() != null && nuevoDetalle.getProductos().getId() != null
-                        && nuevoDetalle.getCantidad() != null && nuevoDetalle.getCantidad().compareTo(BigDecimal.ZERO) > 0) {
+                        BigDecimal subtotal = detalle.getPrecioUnitario().multiply(detalle.getCantidad());
+                        detalle.setSubtotal(subtotal);
+                        acumulador = acumulador.add(subtotal);
 
-                    Productos prod = productoServicio.productoById(nuevoDetalle.getProductos().getId());
-                    nuevoDetalle.setProductos(prod);
-                    nuevoDetalle.setCompra(compraExistente); // Vinculamos al padre
-
-                    BigDecimal subtotal = nuevoDetalle.getPrecioUnitario().multiply(nuevoDetalle.getCantidad());
-                    nuevoDetalle.setSubtotal(subtotal);
-
-                    acumuladorSubtotales = acumuladorSubtotales.add(subtotal);
-                    compraExistente.getDetalles().add(nuevoDetalle);
+                        compraExistente.getDetalles().add(detalle);
+                    }
                 }
+                compraExistente.setTotal(acumulador);
             }
 
-            // 4. Recalcular Total Final
-            compraExistente.setTotal(acumuladorSubtotales);
-            // 5. Guardar cambios en Neon
-            compraServicio.updateCompra(id,compraExistente);
+            // 4. Guardar
+            compraServicio.updateCompra(id, compraExistente);
 
-            redirectAttributes.addFlashAttribute("success", "Compra actualizada correctamente");
-            return "redirect:/compras/listar";
-
+            redirectAttributes.addFlashAttribute("success", "Compra #" + id + " actualizada.");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Error al editar: " + e.getMessage());
-            return "redirect:/compras/listar";
+            redirectAttributes.addFlashAttribute("error", "Error: " + e.getMessage());
         }
+        return "redirect:/compras/listar";
     }
-
     @GetMapping("/compra/delete/{id}")
     public String deleteCompra(@PathVariable Long id,RedirectAttributes redirectAttributes){
         compraServicio.deleteCompraById(id);

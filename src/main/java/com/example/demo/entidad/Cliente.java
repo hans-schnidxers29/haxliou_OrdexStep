@@ -1,6 +1,8 @@
 package com.example.demo.entidad;
 
 
+import com.example.demo.PaisesAndCitys.Municipios;
+import com.example.demo.PaisesAndCitys.Paises;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import org.hibernate.annotations.Fetch;
@@ -40,11 +42,13 @@ public class Cliente {
     @Column(name="telefono", nullable = false)
     private String telefono;
 
-    @Column(name="ciudad", nullable = false)
-    private String ciudad;
+    @ManyToOne
+    @JoinColumn(name = "municipio_id")
+    private Municipios ciudad;
 
-    @Column(name="pais", nullable = false)
-    private String pais;
+    @ManyToOne
+    @JoinColumn(name = "pais_id")
+    private Paises pais;
 
     @Column(name="codigo_postal", nullable = false)
     private int codigoPostal;
@@ -62,34 +66,22 @@ public class Cliente {
     public Cliente() {
     }
 
-    public Cliente(Long id, String tipoidentificacion, String numeroIdentificacion, String nombre, String email, String apellido,
-                   String telefono, String ciudad, String pais, int codigoPostal, List<Pedidos> pedidos, String direccion
-                    , LocalDateTime fechaRegistro) {
-        this.id = id;
-        this.tipoidentificacion = tipoidentificacion;
-        this.numeroIdentificacion = numeroIdentificacion;
-        this.nombre = nombre;
-        this.email = email;
+    public Cliente(String apellido, Municipios ciudad, int codigoPostal, String direccion,
+                   String email, LocalDateTime fechaRegistro, Long id, String nombre, String numeroIdentificacion,
+                   Paises pais, List<Pedidos> pedidos, String telefono, String tipoidentificacion) {
         this.apellido = apellido;
-        this.telefono = telefono;
         this.ciudad = ciudad;
-        this.pais = pais;
         this.codigoPostal = codigoPostal;
-        this.pedidos = pedidos;
         this.direccion = direccion;
-        this.fechaRegistro = fechaRegistro;
-    }
-
-    public Cliente(String nombre, String email, String apellido, String telefono, String ciudad, String pais,
-                   int codigoPostal, LocalDateTime fechaRegistro) {
-        this.nombre = nombre;
         this.email = email;
-        this.apellido = apellido;
-        this.telefono = telefono;
-        this.ciudad = ciudad;
-        this.pais = pais;
-        this.codigoPostal = codigoPostal;
         this.fechaRegistro = fechaRegistro;
+        this.id = id;
+        this.nombre = nombre;
+        this.numeroIdentificacion = numeroIdentificacion;
+        this.pais = pais;
+        this.pedidos = pedidos;
+        this.telefono = telefono;
+        this.tipoidentificacion = tipoidentificacion;
     }
 
     public List<Pedidos> getPedidos() {
@@ -104,19 +96,19 @@ public class Cliente {
         this.telefono = telefono;
     }
 
-    public String getCiudad() {
+    public Municipios getCiudad() {
         return ciudad;
     }
 
-    public void setCiudad(String ciudad) {
+    public void setCiudad(Municipios ciudad) {
         this.ciudad = ciudad;
     }
 
-    public String getPais() {
+    public Paises getPais() {
         return pais;
     }
 
-    public void setPais(String pais) {
+    public void setPais(Paises pais) {
         this.pais = pais;
     }
 
@@ -190,7 +182,8 @@ public class Cliente {
 
     @Override
     public final int hashCode() {
-        return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
+        return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer()
+                .getPersistentClass().hashCode() : getClass().hashCode();
     }
 
     public LocalDateTime getFechaRegistro() {

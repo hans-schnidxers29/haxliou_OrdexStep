@@ -90,6 +90,8 @@ public class CierreMensualControlador {
         tablePagos.addCell("$ " + cierre.getTotalVentasTarjeta().setScale(2, RoundingMode.HALF_UP));
         tablePagos.addCell("Ventas Transferencia:");
         tablePagos.addCell("$ " + cierre.getTotalVentasTransferencia().setScale(2, RoundingMode.HALF_UP));
+        tablePagos.addCell("Total Recaudado En Ventas al Mayor:");
+        tablePagos.addCell("$" + cierre.getTotalVentasAlMayor().setScale(2,RoundingMode.HALF_UP));
         tablePagos.addCell("Recaudación Total (Bruta + Impuestos):");
         tablePagos.addCell("$ " + cierre.getRecaudacionTotal().setScale(2, RoundingMode.HALF_UP));
         document.add(tablePagos);
@@ -153,6 +155,7 @@ public class CierreMensualControlador {
                 {"Ingresos", "Ventas Efectivo", cierre.getTotalVentasEfectivo().doubleValue()},
                 {"Ingresos", "Ventas Tarjeta", cierre.getTotalVentasTarjeta().doubleValue()},
                 {"Ingresos", "Ventas Transferencia", cierre.getTotalVentasTransferencia().doubleValue()},
+                {"Ingresos Ventas Al Mayor", cierre.getTotalVentasAlMayor().setScale(2,RoundingMode.HALF_UP)},
                 {"Ingresos", "Recaudación Total (Con IVA)", cierre.getRecaudacionTotal().doubleValue()},
                 {"Ingresos", "Ventas Netas (Sin IVA)", cierre.getRecaudacionBruta().doubleValue()},
                 {"Impuestos", "Total Impuestos (IVA)", cierre.getTotalImpuestos().doubleValue()},

@@ -23,12 +23,13 @@ public interface ComprasRepositorio extends JpaRepository<Compras,Long> {
             "FROM detalle_compra d " +
             "JOIN compras c ON c.id = d.compras_id " +
             "JOIN productos p ON p.id = d.productos_id " +
-            "WHERE c.estado = :estado " + 
-            "AND p.tipo_venta = :tipoVenta " +
+            "JOIN unidad_medida um ON um.id = p.unidad_medida_id " +
+            "WHERE c.estado = :estado " +
+            "AND um.code = :tipoVenta " + // Filtramos por el código (String)
             "AND c.fecha_compra BETWEEN :inicio AND :fin",
             nativeQuery = true)
     BigDecimal sumarTotalEntrantePorTipoYRango(
-            @Param("tipoVenta") String tipoVenta, 
+            @Param("tipoVenta") String tipoVenta, // Aquí pasas 'UND', 'KG', etc.
             @Param("estado") String estado,
             @Param("inicio") LocalDateTime inicio,
             @Param("fin") LocalDateTime fin

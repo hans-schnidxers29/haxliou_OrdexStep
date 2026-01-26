@@ -113,10 +113,10 @@
                                     <span class="badge badge-info shadow-sm" th:text="${pedido.detalles.size()} + ' Items'"></span>
                                     <small class="text-muted d-block mt-1" style="max-width: 250px; line-height: 1.2;">
                                         <span th:each="detalle, iterStat : ${pedido.detalles}">
-                                            <span th:if="${detalle.producto.tipoVenta.name() == 'UNIDAD'}"
+                                            <span th:if="${detalle.producto.tipoVenta.code == '94'}"
                                                   th:text="${#numbers.formatDecimal(detalle.cantidad, 1, 0)} + ' und'"></span>
 
-                                            <span th:if="${detalle.producto.tipoVenta.name() == 'PESO'}"
+                                            <span th:if="${detalle.producto.tipoVenta.code == 'KGM'}"
                                                   th:text="${#numbers.formatDecimal(detalle.cantidad, 1, 2)} + ' kg'"></span>
 
                                             x <span th:text="${detalle.producto.nombre}"></span>

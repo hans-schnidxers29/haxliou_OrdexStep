@@ -1,6 +1,8 @@
 package com.example.demo.controlador;
 
 
+import com.example.demo.PaisesAndCitys.MunicipiosRepositorio;
+import com.example.demo.PaisesAndCitys.PaisesRepositorio;
 import com.example.demo.entidad.Cliente;
 import com.example.demo.servicio.ClienteService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +18,12 @@ public class ClienteControlador {
     @Autowired
     private ClienteService service;
 
+    @Autowired
+    private PaisesRepositorio paisesRepo;
+
+    @Autowired
+    private MunicipiosRepositorio municipiosRepo;
+
     @GetMapping("/home")
     public String home(){
         return "Home/Home";
@@ -24,6 +32,7 @@ public class ClienteControlador {
     @GetMapping("/listarclientes")
     public String listarclientes(Model model){
         model.addAttribute("clientes",service.listarcliente());
+
         return "viewCliente/index";
     }
 
@@ -32,6 +41,8 @@ public class ClienteControlador {
     public String Mostrarfrom(Model model){
         Cliente c = new Cliente();
         model.addAttribute("cliente",c);
+        model.addAttribute("paises",paisesRepo.findAll());
+        model.addAttribute("municipios",municipiosRepo.findAll());
         return "viewCliente/crearCliente";
     }
 
@@ -58,6 +69,8 @@ public class ClienteControlador {
     @GetMapping("/cliente/actualizar/{id}")
     public String actualizarclienteForm(@PathVariable Long id, Model model){
         model.addAttribute("clientes",service.clientdById(id));
+        model.addAttribute("paises",paisesRepo.findAll());
+        model.addAttribute("municipios",municipiosRepo.findAll());
         return "viewCliente/actualizarCliente";
     }
 
@@ -70,6 +83,8 @@ public class ClienteControlador {
         clienteNew.setNombre(cliente.getNombre());
         clienteNew.setApellido(cliente.getApellido());
         clienteNew.setEmail(cliente.getEmail());
+        clienteNew.setCiudad(cliente.getCiudad());
+        clienteNew.setPais(cliente.getPais());
         service.update(clienteNew);
         redirectAttributes.addFlashAttribute("success", "Cliente actualizado correctamente");
         return "redirect:/listarclientes";
