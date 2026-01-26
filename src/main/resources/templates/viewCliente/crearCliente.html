@@ -99,11 +99,24 @@
                                 <div class="row">
                                     <div class="col-md-3 form-group">
                                         <label for="pais"><i class="fas fa-globe mr-1"></i> País</label>
-                                        <input type="text" id="pais" th:field="*{pais}" class="form-control" placeholder="Ej: Colombia" required>
+                                        <select id="pais" th:field="*{pais}" class="form-control custom-select" onchange="filtrarMunicipiosJS()" required>
+                                            <option value="">Seleccione País...</option>
+                                            <option th:each="p : ${paises}"
+                                                    th:value="${p.id}"
+                                                    th:text="${p.nombre}"></option>
+                                        </select>
                                     </div>
+
                                     <div class="col-md-3 form-group">
-                                        <label for="ciudad"><i class="fas fa-city mr-1"></i> Ciudad</label>
-                                        <input type="text" id="ciudad" th:field="*{ciudad}" class="form-control" placeholder="Ej: Bogotá" required>
+                                        <label for="municipio"><i class="fas fa-city mr-1"></i> Municipio</label>
+                                        <select id="municipio" th:field="*{ciudad}" class="form-control custom-select" required disabled>
+                                            <option value="">Seleccione Municipio...</option>
+                                            <option th:each="m : ${municipios}"
+                                                    th:value="${m.id}"
+                                                    th:text="${m.name}"
+                                                    th:data-pais="${m.pais.id}"
+                                                    style="display: none;"></option>
+                                        </select>
                                     </div>
                                     <div class="col-md-4 form-group">
                                         <label for="direccion"><i class="fas fa-map-pin mr-1"></i> Dirección Exacta</label>
@@ -149,6 +162,45 @@
                 }
                 $(this).addClass('was-validated');
             });
+        });
+        function filtrarMunicipiosJS() {
+            const paisId = document.getElementById('pais').value;
+            const municipioSelect = document.getElementById('municipio');
+            const opciones = municipioSelect.querySelectorAll('option');
+
+            // Resetear el select de municipios
+            municipioSelect.value = "";
+
+            if (paisId === "") {
+                municipioSelect.disabled = true;
+            } else {
+                municipioSelect.disabled = false;
+
+                opciones.forEach(opt => {
+                    // La opción por defecto siempre se muestra
+                    if (opt.value === "") {
+                        opt.style.display = "block";
+                        return;
+                    }
+                    // Comparamos el data-pais del municipio con el ID del país seleccionado
+                    const municipioPaisId = opt.getAttribute('data-pais');
+
+                    if (municipioPaisId === paisId) {
+                        opt.style.display = "block";
+                        opt.disabled = false;
+                    } else {
+                        opt.style.display = "none";
+                        opt.disabled = true;
+                    }
+                });
+            }
+        }
+
+        $(document).ready(function() {
+            // Inicialización por si es una edición
+            if(document.getElementById('pais').value !== "") {
+                filtrarMunicipiosJS();
+            }
         });
     </script>
 </th:block>

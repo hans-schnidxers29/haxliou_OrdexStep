@@ -112,10 +112,10 @@
             <span th:text="${d.producto.nombre}">PRODUCTO</span>
         </td>
         <td>
-            <span th:if="${d.producto.tipoVenta.name() == 'PESO'}"
+            <span th:if="${d.producto.tipoVenta.code == 'KGM'}"
                   th:text="${#numbers.formatDecimal(d.cantidad * 1000, 1, 0)} + 'g'"></span>
 
-            <span th:unless="${d.producto.tipoVenta.name() == 'PESO'}"
+            <span th:unless="${d.producto.tipoVenta.code == 'KGM'}"
                   th:text="${#numbers.formatDecimal(d.cantidad, 1, 0)} + 'un'"></span>
         </td>
         <td class="text-right">

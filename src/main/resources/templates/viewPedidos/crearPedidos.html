@@ -157,7 +157,7 @@
                                                             th:data-precio="${p.precio}"
                                                             th:data-preciomayor="${p.precioPorMayor}"
                                                             th:data-impuesto="${p.impuesto}"
-                                                            th:data-tipo="${p.tipoVenta.name()}"></option>
+                                                            th:data-tipo="${p.tipoVenta.code}"></option>
                                                 </select>
                                             </td>
                                             <td>
@@ -165,7 +165,6 @@
                                                     <input type="number"
                                                            name="detalles[0].cantidad"
                                                            class="form-control cantidad-input"
-                                                           min="0.01"
                                                            value="1"
                                                            step="any"
                                                            required
@@ -314,33 +313,50 @@
             container.appendChild(tr);
             detalleCount++;
         }
-
         function actualizarPrecio(index) {
             const row = document.querySelectorAll('#detallesContainer tr')[index];
             if(!row) return;
 
             const select = row.querySelector('.producto-select');
-            const isMayor = document.getElementById('switchVentaMayor').checked; // Leer el switch
+            const isMayor = document.getElementById('switchVentaMayor').checked;
 
             if (!select.value) {
                 row.querySelector('.precio-unitario-display').value = "";
                 row.querySelector('.impuesto-display').value = "";
                 row.querySelector('.subtotal-display').value = "";
-                calcularTotal();
                 return;
             }
 
-            // Lógica de selección de precio
-            const precioNormal = parseFloat(select.options[select.selectedIndex].getAttribute('data-precio')) || 0;
-            const precioMayor = parseFloat(select.options[select.selectedIndex].getAttribute('data-preciomayor')) || precioNormal;
-
+            const opt = select.options[select.selectedIndex];
+            const precioNormal = parseFloat(opt.getAttribute('data-precio')) || 0;
+            const precioMayor = parseFloat(opt.getAttribute('data-preciomayor')) || precioNormal;
             const precioAEjercer = isMayor ? precioMayor : precioNormal;
+            const impuesto = parseFloat(opt.getAttribute('data-impuesto')) || 0;
 
-            const impuesto = parseFloat(select.options[select.selectedIndex].getAttribute('data-impuesto')) || 0;
-            const tipo = select.options[select.selectedIndex].getAttribute('data-tipo');
+            // CÓDIGOS DIAN: KGM = Kilos, LTR = Litros, 94 = Unidades
+            const unidadCodigo = opt.getAttribute('data-tipo');
 
             const label = row.querySelector('.unidad-label');
-            label.textContent = (tipo === 'PESO') ? "gr" : (tipo === 'LIQUIDO' ? "ml" : "un");
+            const inputCantidad = row.querySelector('.cantidad-input');
+
+            // Ajuste de etiquetas y pasos (steps) según la unidad
+            if (unidadCodigo === 'KGM') {
+                label.textContent = "gr";
+                inputCantidad.placeholder = "Gramos";
+                inputCantidad.step = "any";
+            } else if (unidadCodigo === 'LTR') {
+                label.textContent = "ml";
+                inputCantidad.placeholder = "Mililitros";
+                inputCantidad.step = "1";
+            } else if (unidadCodigo === '94'){
+                label.textContent.placeholder = "und";
+                inputCantidad.placeholder = "unidades";
+                inputCantidad.step = "1";
+            } else {
+                label.textContent = "un";
+                inputCantidad.placeholder = "Cantidad";
+                inputCantidad.step = "1";
+            }
 
             row.querySelector('.precio-unitario-display').value = precioAEjercer.toLocaleString('es-CO', {minimumFractionDigits: 2});
             row.querySelector('.impuesto-display').value = impuesto.toFixed(2) + '%';
@@ -351,23 +367,25 @@
         function calcularSubtotal(index) {
             const row = document.querySelectorAll('#detallesContainer tr')[index];
             if (!row) return;
+
             const select = row.querySelector('.producto-select');
             if (!select || !select.value) return;
-            // 1. Detectar el estado del switch
+
+            const opt = select.options[select.selectedIndex];
             const isMayor = document.getElementById('switchVentaMayor').checked;
-            // 2. Obtener ambos precios
-            const precioNormal = parseFloat(select.options[select.selectedIndex].getAttribute('data-precio')) || 0;
-            const precioMayor = parseFloat(select.options[select.selectedIndex].getAttribute('data-preciomayor')) || precioNormal;
-            // 3. Elegir el precio según el switch
+            const precioNormal = parseFloat(opt.getAttribute('data-precio')) || 0;
+            const precioMayor = parseFloat(opt.getAttribute('data-preciomayor')) || precioNormal;
             const precioAEjercer = isMayor ? precioMayor : precioNormal;
-            const tipo = select.options[select.selectedIndex].getAttribute('data-tipo');
-            const cantidadOriginal = parseFloat(row.querySelector('input[name*="cantidad"]').value) || 0;
-            // 4. Lógica de conversión para PESO (gr a kg)
-            let cantidadParaCalculo = cantidadOriginal;
-            if (tipo === 'PESO') {
-                cantidadParaCalculo = cantidadOriginal / 1000;
+
+            const unidadCodigo = opt.getAttribute('data-tipo');
+            const cantidadDigitada = parseFloat(row.querySelector('.cantidad-input').value) || 0;
+
+            // Lógica de conversión: Si es KGM o LTR, dividimos por 1000 (asumiendo que el usuario digita gr/ml)
+            let cantidadParaCalculo = cantidadDigitada;
+            if (unidadCodigo === 'KGM' || unidadCodigo === 'LTR') {
+                cantidadParaCalculo = cantidadDigitada / 1000;
             }
-            // 5. Calcular y mostrar el subtotal de la fila
+
             const subtotalVista = cantidadParaCalculo * precioAEjercer;
             row.querySelector('.subtotal-display').value = subtotalVista.toLocaleString('es-CO', {
                 minimumFractionDigits: 2,
@@ -378,32 +396,37 @@
         }
 
         function calcularTotal() {
-            let subtotalVista = 0;
-            let impuestoVista = 0;
+            let subtotalGeneral = 0;
+            let impuestoGeneral = 0;
             const isMayor = document.getElementById('switchVentaMayor').checked;
 
             document.querySelectorAll('.detalle-item').forEach(fila => {
                 const select = fila.querySelector('.producto-select');
                 if (!select || !select.value) return;
-                // Lógica de precio igual a la de la fila
-                const pNormal = parseFloat(select.options[select.selectedIndex].getAttribute('data-precio')) || 0;
-                const pMayor = parseFloat(select.options[select.selectedIndex].getAttribute('data-preciomayor')) || pNormal;
+
+                const opt = select.options[select.selectedIndex];
+                const pNormal = parseFloat(opt.getAttribute('data-precio')) || 0;
+                const pMayor = parseFloat(opt.getAttribute('data-preciomayor')) || pNormal;
                 const precioAEjercer = isMayor ? pMayor : pNormal;
-                const tipo = select.options[select.selectedIndex].getAttribute('data-tipo');
-                const cantidad = parseFloat(fila.querySelector('input[name*="cantidad"]').value) || 0;
-                const tasaImpuesto = parseFloat(select.options[select.selectedIndex].getAttribute('data-impuesto')) || 0;
-                let cantidadCalculo = (tipo === 'PESO') ? cantidad / 1000 : cantidad;
+
+                const unidadCodigo = opt.getAttribute('data-tipo');
+                const cantidad = parseFloat(fila.querySelector('.cantidad-input').value) || 0;
+                const tasaImpuesto = parseFloat(opt.getAttribute('data-impuesto')) || 0;
+
+                // Conversión consistente
+                let cantidadCalculo = (unidadCodigo === 'KGM' || unidadCodigo === 'LTR') ? cantidad / 1000 : cantidad;
+
                 const subItem = cantidadCalculo * precioAEjercer;
-                subtotalVista += subItem;
-                impuestoVista += (subItem * tasaImpuesto) / 100;
+                subtotalGeneral += subItem;
+                impuestoGeneral += (subItem * (tasaImpuesto / 100));
             });
 
-            const flete = parseFloat(document.querySelector('input[name="flete"]').value) || 0;
-            const totalVista = subtotalVista + impuestoVista + flete;
+            const flete = parseFloat(document.getElementById('flete').value) || 0;
+            const totalFinal = subtotalGeneral + impuestoGeneral + flete;
 
-            document.getElementById('totalSubtotalLabel').innerText = subtotalVista.toLocaleString('es-CO', {minimumFractionDigits: 2});
-            document.getElementById('totalImpuestosLabel').innerText = impuestoVista.toLocaleString('es-CO', {minimumFractionDigits: 2});
-            document.getElementById('totalPedidoLabel').innerText = totalVista.toLocaleString('es-CO', {minimumFractionDigits: 2});
+            document.getElementById('totalSubtotalLabel').innerText = subtotalGeneral.toLocaleString('es-CO', {minimumFractionDigits: 2});
+            document.getElementById('totalImpuestosLabel').innerText = impuestoGeneral.toLocaleString('es-CO', {minimumFractionDigits: 2});
+            document.getElementById('totalPedidoLabel').innerText = totalFinal.toLocaleString('es-CO', {minimumFractionDigits: 2});
         }
 
         function alternarPreciosGlobal() {

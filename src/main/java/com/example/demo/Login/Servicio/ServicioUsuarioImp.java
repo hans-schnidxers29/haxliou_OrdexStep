@@ -3,6 +3,7 @@ package com.example.demo.Login.Servicio;
 import com.example.demo.Login.Usuario;
 import com.example.demo.Login.Repositorio.RepositorioUsuario;
 import com.example.demo.Login.Rol;
+import com.example.demo.entidad.Empresa;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
@@ -132,6 +133,12 @@ public class ServicioUsuarioImp implements ServicioUsuario {
 
         // Guardamos el objeto completo con los campos de empresa
         return repositorioUsuario.save(usuario);
+    }
+    @Override
+    public Long ObtenreIdEmpresa(Long id) {
+        return repositorioUsuario.buscarIdEmpresaPorUsuarioId(id)
+                .map(Empresa::getId) // Extrae el ID de la Empresa
+                .orElseThrow(() -> new RuntimeException("Empresa no encontrada para el usuario: " + id));
     }
 
 

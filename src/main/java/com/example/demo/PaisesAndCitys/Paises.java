@@ -5,11 +5,11 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "paises")
 public class Paises {
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long id;
 
-    @Column(name = "codigo_iso",unique = true)
+    @Id
+    private Integer id;
+
+    @Column(name = "codigo",unique = true)
     private String codigo_iso;
 
     @Column(name = "nombre",unique = true)
@@ -19,17 +19,17 @@ public class Paises {
     public Paises() {
     }
 
-    public Paises(Long id, String codigo_iso, String nombre) {
+    public Paises(Integer id, String codigo_iso, String nombre) {
         this.id = id;
         this.codigo_iso = codigo_iso;
         this.nombre = nombre;
     }
 
-    public Long getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 

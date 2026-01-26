@@ -103,23 +103,39 @@
                                 <div class="row">
                                     <div class="col-md-3 form-group">
                                         <label for="pais"><i class="fas fa-globe mr-1"></i> País</label>
-                                        <input type="text" id="pais" th:field="*{pais}" class="form-control" placeholder="Ej: Colombia" required>
+                                        <select id="pais" th:field="*{pais}" class="form-control custom-select" onchange="filtrarMunicipiosJS()" required>
+                                            <option value="">Seleccione País...</option>
+                                            <option th:each="p : ${paises}"
+                                                    th:value="${p.id}"
+                                                    th:text="${p.nombre}"></option>
+                                        </select>
+                                        <div class="invalid-feedback">Seleccione un país.</div>
                                     </div>
+
                                     <div class="col-md-3 form-group">
-                                        <label for="ciudad"><i class="fas fa-city mr-1"></i> Ciudad</label>
-                                        <input type="text" id="ciudad" th:field="*{ciudad}" class="form-control" placeholder="Ej: Bogotá" required>
+                                        <label for="municipio"><i class="fas fa-city mr-1"></i> Ciudad/Municipio</label>
+                                        <select id="municipio" th:field="*{ciudad}" class="form-control custom-select" required>
+                                            <option value="">Seleccione Municipio...</option>
+                                            <option th:each="m : ${municipios}"
+                                                    th:value="${m.id}"
+                                                    th:text="${m.name}"
+                                                    th:data-pais="${m.pais.id}"></option>
+                                        </select>
+                                        <div class="invalid-feedback">Seleccione un municipio.</div>
                                     </div>
+
                                     <div class="col-md-4 form-group">
                                         <label for="direccion"><i class="fas fa-map-pin mr-1"></i> Dirección Exacta</label>
                                         <input type="text" id="direccion" th:field="*{direccion}" class="form-control" placeholder="Calle 123 #45..." required>
+                                        <div class="invalid-feedback">Ingrese la dirección.</div>
                                     </div>
+
                                     <div class="col-md-2 form-group">
                                         <label for="codigoPostal"><i class="fas fa-mail-bulk mr-1"></i> C. Postal</label>
                                         <input type="text" id="codigoPostal" th:field="*{codigoPostal}" class="form-control" placeholder="110111">
                                     </div>
                                 </div>
                             </div>
-
                             <div class="card-footer bg-white text-right">
                                 <a th:href="@{/listarclientes}" class="btn btn-default mr-2 border shadow-sm">
                                     <i class="fas fa-times mr-1"></i> Cancelar
@@ -139,6 +155,55 @@
 <th:block layout:fragment="scripts">
     <script th:inline="javascript">
         $(document).ready(function() {
+            // Validación de Bootstrap 4
+            $('.needs-validation').on('submit', function(event) {
+                if (this.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                $(this).addClass('was-validated');
+            });
+        });
+        function filtrarMunicipiosJS() {
+            const paisId = document.getElementById('pais').value;
+            const municipioSelect = document.getElementById('municipio');
+            const opciones = municipioSelect.querySelectorAll('option');
+
+            if (paisId === "") {
+                municipioSelect.value = "";
+                municipioSelect.disabled = true;
+            } else {
+                municipioSelect.disabled = false;
+
+                opciones.forEach(opt => {
+                    // La opción por defecto ("Seleccione...") siempre visible
+                    if (opt.value === "") {
+                        opt.style.display = "block";
+                        return;
+                    }
+
+                    // Obtenemos el ID del país asociado a este municipio
+                    const municipioPaisId = opt.getAttribute('data-pais');
+
+                    if (municipioPaisId === paisId) {
+                        opt.style.display = "block";
+                        opt.disabled = false;
+                    } else {
+                        opt.style.display = "none";
+                        opt.disabled = true;
+                        // Si el municipio seleccionado actualmente queda oculto, deseleccionarlo
+                        if(municipioSelect.value === opt.value) {
+                            municipioSelect.value = "";
+                        }
+                    }
+                });
+            }
+        }
+
+        $(document).ready(function() {
+            // Ejecutar al cargar para que coincida con el país guardado del cliente
+            filtrarMunicipiosJS();
+
             // Validación de Bootstrap 4
             $('.needs-validation').on('submit', function(event) {
                 if (this.checkValidity() === false) {

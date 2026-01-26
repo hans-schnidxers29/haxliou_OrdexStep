@@ -140,7 +140,7 @@
                                         <span class="info-box-icon bg-info"><i class="fas fa-user"></i></span>
                                         <div class="info-box-content">
                                             <span class="info-box-text">Registrado por</span>
-                                            <span class="info-box-number" th:text="${usuarioLogueado != null ? usuarioLogueado.nombre : 'Usuario'}">Usuario</span>
+                                            <span class="info-box-number" th:text="${#authentication.name}">Usuario</span>
                                         </div>
                                     </div>
                                 </div>

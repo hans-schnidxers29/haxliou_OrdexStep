@@ -107,18 +107,17 @@ public class ProductoServiceImpl implements ProductoServicio{
 
     @Override
     public List<Map<String, Object>> ProductoSimple() {
-        List<Map<String, Object>> productosJson = repositorio.findAll().stream().map(p -> {
+        return repositorio.findAll().stream().map(p -> {
             Map<String, Object> map = new HashMap<>();
             map.put("id", p.getId());
             map.put("nombre", p.getNombre());
             map.put("precio", p.getPrecio());
             map.put("impuesto", p.getImpuesto());
-            map.put("tipoVenta", p.getTipoVenta().name());
+            map.put("tipoVenta", p.getTipoVenta().getCode());
             map.put("categoriaId", p.getCategoria().getId() != null ? p.getCategoria().getId() : null);
             map.put("precioPorMayor", p.getPrecioPorMayor());
             return map;
         }).collect(Collectors.toList());
-        return productosJson;
     }
 
 

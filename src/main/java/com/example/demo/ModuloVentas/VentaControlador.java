@@ -173,7 +173,7 @@ public class VentaControlador {
 
                 // --- LÓGICA DE CONVERSIÓN (Gramos a Kilos si es PESO) ---
                 BigDecimal cantidadOriginal = detalle.getCantidad();
-                BigDecimal cantidadProcesada = "PESO".equals(productoCompleto.getTipoVenta().name())
+                BigDecimal cantidadProcesada = "KGM".equals(productoCompleto.getTipoVenta().getCode())
                         ? cantidadOriginal.divide(new BigDecimal("1000")).setScale(3, RoundingMode.HALF_UP)
                         : cantidadOriginal;
 
@@ -183,7 +183,7 @@ public class VentaControlador {
                             String.format("Stock insuficiente para '%s'. Disponible: %s %s",
                                     productoCompleto.getNombre(),
                                     productoCompleto.getCantidad(),
-                                    productoCompleto.getUnidadMedida()));
+                                    productoCompleto.getTipoVenta()));
                     return "redirect:/ventas/crear";
                 }
 
@@ -271,12 +271,14 @@ public class VentaControlador {
     // PDF TICKET DE VENTA
     // ============================
     @GetMapping("/ticket/{id}")
-    public ResponseEntity<byte[]> generarTicket(@PathVariable Long id) throws Exception {
+    public ResponseEntity<byte[]> generarTicket(@PathVariable Long id,@AuthenticationPrincipal UserDetails usuario) throws Exception {
 
+        Usuario user = servicioUsuario.findByEmail(usuario.getUsername());
+        Long IdEmpresa  = servicioUsuario.ObtenreIdEmpresa(user.getId());
         Venta venta = servicio.buscarVenta(id);
 
         // Usamos tu método DatosEmpresa con ID 1
-        Empresa empresa = servicioEmpresa.DatosEmpresa(1L);
+        Empresa empresa = servicioEmpresa.DatosEmpresa(IdEmpresa);
 
         BigDecimal subtotal = venta.getSubtotal();
         BigDecimal impuesto = venta.getTotal().subtract(subtotal);

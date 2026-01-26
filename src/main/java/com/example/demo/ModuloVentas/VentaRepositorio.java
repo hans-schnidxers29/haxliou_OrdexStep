@@ -27,12 +27,19 @@ public interface VentaRepositorio extends JpaRepository<Venta, Long> {
     @Query("SELECT COALESCE(SUM(v.total - (v.total / (1 + v.impuesto/100))), 0) FROM Venta v WHERE v.fechaVenta BETWEEN :inicio AND :fin")
     BigDecimal sumaImpuestosMes(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin);
 
-    @Query(value = "SELECT MIN(v.fechaVenta) FROM Venta v GROUP BY EXTRACT(MONTH FROM v.fechaVenta), " +
-            "EXTRACT(YEAR FROM v.fechaVenta) ORDER BY MIN(v.fechaVenta) ASC")
+    @Query("SELECT DISTINCT function('date_trunc', 'month', v.fechaVenta) " +
+            "FROM Venta v " +
+            "ORDER BY function('date_trunc', 'month', v.fechaVenta) ASC")
     List<LocalDateTime> listarFechasUnicasPorMes();
 
-    @Query(value = "SELECT SUM(v.total) FROM Venta v GROUP BY EXTRACT(MONTH FROM v.fechaVenta), " +
-            "EXTRACT(YEAR FROM v.fechaVenta) ORDER BY MIN(v.fechaVenta) ASC")
+    @Query(value = "SELECT SUM(total_mes) FROM (" +
+            "  SELECT SUM(total) as total_mes, date_trunc('month', fecha_venta) as mes " +
+            "  FROM venta GROUP BY mes " +
+            "  UNION ALL " +
+            "  SELECT SUM(p.total) as total_mes, date_trunc('month', p.fecha_pedido) as mes " +
+            "  FROM pedidos  p WHERE p.estado = 'ENTREGADO' GROUP BY mes " +
+            ") AS consolidad " +
+            "GROUP BY mes ORDER BY mes ASC", nativeQuery = true)
     List<BigDecimal> listarTotalesAgrupadosPorMes();
 
     @Query(value = "SELECT p.nombre, SUM(d.cantidad) as productos_vendidos \n" +
@@ -49,11 +56,12 @@ public interface VentaRepositorio extends JpaRepository<Venta, Long> {
     BigDecimal TotaVentasMes();
 
     @Query(value = "SELECT " +
-            "    COALESCE(SUM(CASE WHEN p.tipo_venta = 'UNIDAD' THEN d.cantidad ELSE 0 END), 0) as total_unidades, " +
-            "    COALESCE(SUM(CASE WHEN p.tipo_venta = 'PESO' THEN d.cantidad ELSE 0 END), 0) as total_gramos " +
+            "    COALESCE(SUM(CASE WHEN um.code = '94' THEN d.cantidad ELSE 0 END), 0) as total_unidades, " +
+            "    COALESCE(SUM(CASE WHEN um.code = 'KGM' THEN d.cantidad ELSE 0 END), 0) as total_gramos " +
             "FROM detalle_venta d " +
             "JOIN venta v ON d.venta_id = v.id " +
             "JOIN productos p ON d.producto_id = p.id " +
+            "JOIN unidad_medida um ON p.unidad_medida_id = um.id " + // Se une con la tabla de unidades
             "WHERE v.fecha_venta >= :inicio " +
             "  AND v.fecha_venta < :fin", nativeQuery = true)
     List<Object[]> obtenerVentasPorRango(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin);
@@ -76,6 +84,18 @@ public interface VentaRepositorio extends JpaRepository<Venta, Long> {
     @Query("SELECT COALESCE((COUNT(v)),0) FROM Venta v WHERE v.fechaVenta BETWEEN :inicio AND :fin ")
     BigDecimal CantidadDeVentas(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin);
 
-
-
+    @Query(value = "select sum(total_ventas_mayor) as total_mayor\n" +
+            "from(\n" +
+            "    select sum(v.total) as total_ventas_mayor,  date_trunc('month', fecha_venta) as mes\n" +
+            "    FROM venta v \n" +
+            "    WHERE v.venta_al_por_mayor  = 'TRUE' GROUP BY mes\n" +
+            "\n" +
+            "    UNION \n" +
+            "    SELECT SUM(p.total) as total_ventas_mayor, date_trunc('month', p.fecha_pedido) as mes\n" +
+            "    FROM pedidos p \n" +
+            "    WHERE p.estado = 'ENTREGADO' AND p.venta_por_mayor = 'TRUE' GROUP BY mes\n" +
+            "  \n" +
+            ") AS consolidado \n" +
+            "GROUP BY mes ORDER BY mes ASC", nativeQuery = true)
+    BigDecimal VentasTotalesAlMayor();
 }

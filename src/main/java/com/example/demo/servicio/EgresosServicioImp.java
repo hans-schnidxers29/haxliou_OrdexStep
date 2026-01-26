@@ -49,4 +49,20 @@ public class EgresosServicioImp implements EgresoServicio{
 
         return datos;
     }
+
+    @Override
+    public void deleteGasto(Long id) {
+        repositorio.existsById(id);
+        repositorio.deleteById(id);
+    }
+
+    @Override
+    public Egresos ObtenerEgreso(Long id) {
+        return repositorio.findById(id).orElseThrow(null);
+    }
+
+    @Override
+    public void UpdateEgreso(Egresos egresos) {
+        repositorio.save(egresos);
+    }
 }

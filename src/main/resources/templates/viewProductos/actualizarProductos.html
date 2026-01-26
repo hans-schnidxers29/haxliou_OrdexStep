@@ -37,103 +37,101 @@
 
                             <div class="card-body">
                                 <div class="row">
-                                    <div class="col-md-12 form-group">
+                                    <div class="col-md-6 form-group">
                                         <label>Nombre del Producto <span class="text-danger">*</span></label>
-                                        <input type="text" th:field="*{nombre}" class="form-control" placeholder="Ej: Arroz Diana 1kg" required>
+                                        <input type="text" th:field="*{nombre}" class="form-control" required>
                                     </div>
-
-                                    <div class="col-md-12 form-group">
+                                    <div class="col-md-6 form-group">
                                         <label>Descripción <span class="text-danger">*</span></label>
-                                        <textarea th:field="*{descripcion}" class="form-control" rows="2" required></textarea>
+                                        <input type="text" th:field="*{descripcion}" class="form-control" required>
                                     </div>
+                                </div>
 
-                                    <div class="col-md-6 form-group">
-                                        <label>Proveedor <span class="text-danger">*</span></label>
-                                        <select th:field="*{proveedor}" class="form-control select2" required>
-                                            <option th:each="prov : ${proveedores}" th:value="${prov.id}" th:text="${prov.nombre}"></option>
-                                        </select>
-                                    </div>
-
-                                    <div class="col-md-6 form-group">
+                                <div class="row">
+                                    <div class="col-md-4 form-group">
                                         <label>Categoría <span class="text-danger">*</span></label>
                                         <select th:field="*{categoria}" class="form-control select2" required>
                                             <option th:each="categ : ${categoria}" th:value="${categ.id}" th:text="${categ.nombrecategoria}"></option>
                                         </select>
                                     </div>
-
                                     <div class="col-md-4 form-group">
-                                        <label class="text-primary">Precio Compra (Costo)</label>
+                                        <label>Proveedor</label>
+                                        <select th:field="*{proveedor}" class="form-control select2">
+                                            <option th:each="prov : ${proveedores}" th:value="${prov.id}" th:text="${prov.nombre}"></option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4 form-group">
+                                        <label>Unidad de Medida (Tipo Venta) <span class="text-danger">*</span></label>
+                                        <select th:field="*{tipoVenta}" id="selectTipoVenta" class="form-control" required>
+                                            <option th:each="u : ${tiposVenta}"
+                                                    th:value="${u.id}"
+                                                    th:text="${u.name}"
+                                                    th:data-code="${u.code}"></option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-4 form-group">
+                                        <label class="text-primary font-weight-bold">Costo Compra</label>
                                         <div class="input-group">
                                             <div class="input-group-prepend"><span class="input-group-text">$</span></div>
                                             <input type="number" th:field="*{precioCompra}" step="0.01" class="form-control" required>
                                         </div>
                                     </div>
-
                                     <div class="col-md-4 form-group">
-                                        <label class="text-success">Precio Venta <span id="labelPrecio">Unitario</span></label>
+                                        <label class="text-success font-weight-bold">Precio Venta Público</label>
                                         <div class="input-group">
                                             <div class="input-group-prepend"><span class="input-group-text">$</span></div>
                                             <input type="number" th:field="*{precio}" step="0.01" class="form-control" required>
                                         </div>
                                     </div>
-
                                     <div class="col-md-4 form-group">
-                                        <label>Impuesto (IVA %)</label>
+                                        <label class="text-orange font-weight-bold">Precio Mayorista</label>
                                         <div class="input-group">
-                                            <input type="number" th:field="*{impuesto}" class="form-control" step="0.01" required>
-                                            <div class="input-group-append"><span class="input-group-text">%</span></div>
+                                            <div class="input-group-prepend"><span class="input-group-text">$</span></div>
+                                            <input type="number" th:field="*{precioPorMayor}" step="0.01" class="form-control">
                                         </div>
                                     </div>
+                                </div>
 
-                                    <div class="col-md-6 form-group">
-                                        <label>Tipo de Venta <span class="text-danger">*</span></label>
-                                        <select th:field="*{tipoVenta}" id="selectTipoVenta" class="form-control" required>
-                                            <option th:each="tipo : ${tiposVenta}" th:value="${tipo}" th:text="${tipo.descripcion}"></option>
+                                <div class="row">
+                                    <div class="col-md-4 form-group">
+                                        <label>Impuesto DIAN <span class="text-danger">*</span></label>
+                                        <select th:field="*{tipo_Impuesto}" class="form-control" required>
+                                            <option th:each="t : ${tributo}" th:value="${t.id}" th:text="${t.name}"></option>
                                         </select>
                                     </div>
-
+                                    <div class="col-md-2 form-group">
+                                        <label>Tarifa (%)</label>
+                                        <input type="number" th:field="*{impuesto}" step="0.01" class="form-control" required>
+                                    </div>
                                     <div class="col-md-3 form-group">
                                         <label>Stock Actual</label>
-                                        <div class="input-group">
-                                            <input type="number" th:field="*{cantidad}" id="inputStock" class="form-control" required>
-                                            <div class="input-group-append"><span class="input-group-text addon-medida">unidad</span></div>
-                                        </div>
+                                        <input type="number" th:field="*{cantidad}" id="inputStock" class="form-control" required>
                                     </div>
-
                                     <div class="col-md-3 form-group">
-                                        <label>Stock Alerta</label>
-                                        <div class="input-group">
-                                            <input type="number" th:field="*{stockMinimo}" id="inputStockMinimo" class="form-control">
-                                            <div class="input-group-append"><span class="input-group-text addon-medida">und</span></div>
+                                        <label>Stock Mínimo</label>
+                                        <input type="number" th:field="*{stockMinimo}" class="form-control">
+                                    </div>
+                                </div>
+
+                                <div class="col-md-12" id="contenedorCamposAdicionales" style="display: none;">
+                                    <div class="row border rounded p-3 bg-light shadow-sm">
+                                        <div class="col-md-6 form-group">
+                                            <label>Venta Mínima <span class="badge badge-info addon-unidad"></span></label>
+                                            <input type="number" th:field="*{cantidadMinima}" step="0.01" class="form-control">
+                                        </div>
+                                        <div class="col-md-6 form-group">
+                                            <label>Incremento <span class="badge badge-info addon-unidad"></span></label>
+                                            <input type="number" th:field="*{incremento}" step="0.01" class="form-control">
                                         </div>
                                     </div>
-
-                                    <div class="col-md-12" id="contenedorCamposAdicionales" style="display: none;">
-                                        <div class="row border rounded p-3 bg-light shadow-sm">
-                                            <div class="col-md-6 form-group">
-                                                <label>Cantidad Mínima de Venta <span class="text-danger">*</span></label>
-                                                <div class="input-group">
-                                                    <input type="number" th:field="*{cantidadMinima}" id="inputMinima" step="0.01" class="form-control">
-                                                    <div class="input-group-append"><span class="input-group-text addon-medida">kg</span></div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6 form-group">
-                                                <label>Incremento de Selección <span class="text-danger">*</span></label>
-                                                <div class="input-group">
-                                                    <input type="number" th:field="*{incremento}" id="inputIncremento" step="0.01" class="form-control">
-                                                    <div class="input-group-append"><span class="input-group-text addon-medida">kg</span></div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
                                 </div>
                             </div>
 
                             <div class="card-footer bg-white text-center">
-                                <button type="submit" class="btn btn-info btn-lg px-5 shadow-sm">
-                                    <i class="fas fa-sync-alt mr-2"></i> Guardar Cambios
-                                </button>
+                                <button type="submit" class="btn btn-primary btn-lg px-5 shadow"><i class="fas fa-save mr-2"></i> Guardar Cambios</button>
                                 <a th:href="@{/listarproductos}" class="btn btn-default btn-lg px-5 ml-2">Cancelar</a>
                             </div>
                         </form>
@@ -165,26 +163,18 @@
             }
 
             function actualizarInterfaz() {
-                const tipoVenta = $selectTipoVenta.val();
-                const unidad = obtenerUnidadMedida(tipoVenta);
+                // Buscamos el código técnico (94, KGM, etc) guardado en el data-code
+                const codigoDian = $selectTipoVenta.find('option:selected').data('code');
+                const nombreUnidad = $selectTipoVenta.find('option:selected').text();
 
-                // Actualiza todos los sufijos (kg, L, m, und)
-                $('.addon-medida').text(unidad);
-
-                if (tipoVenta === 'UNIDAD') {
-                    $contenedorAdicionales.hide();
-                    $inputStock.attr('step', '1');
-                    $inputStockMinimo.attr('step', '1');
-                    $labelPrecio.text('Unitario');
-                    $inputMinima.prop('required', false);
-                    $inputIncremento.prop('required', false);
+                // 94 es el código DIAN para "Unidad"
+                if (codigoDian === '94' || codigoDian === undefined) {
+                    $contenedorAdicionales.fadeOut();
+                    $('#inputStock').attr('step', '1');
                 } else {
-                    $contenedorAdicionales.show();
-                    $inputStock.attr('step', '0.001');
-                    $inputStockMinimo.attr('step', '0.001');
-                    $labelPrecio.text('por ' + unidad);
-                    $inputMinima.prop('required', true);
-                    $inputIncremento.prop('required', true);
+                    $contenedorAdicionales.fadeIn();
+                    $('.addon-unidad').text(nombreUnidad);
+                    $('#inputStock').attr('step', '0.001');
                 }
             }
 

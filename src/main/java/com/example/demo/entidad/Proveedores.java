@@ -1,5 +1,6 @@
 package com.example.demo.entidad;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Max;
@@ -8,6 +9,7 @@ import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "proveedores")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Proveedores {
 
     @Id

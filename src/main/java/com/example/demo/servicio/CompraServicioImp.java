@@ -58,17 +58,8 @@ public class CompraServicioImp implements CompraServicio{
         if (compraExistente.getEstado() != EstadoCompra.BORRADOR) {
             throw new RuntimeException("No se puede editar una compra que ya ha sido confirmada.");
         }
-        compraExistente.setProveedor(comprasNuevas.getProveedor());
-        compraExistente.setTotal(comprasNuevas.getTotal());
+         repositorio.save(comprasNuevas);
 
-        compraExistente.getDetalles().clear();
-
-        if (comprasNuevas.getDetalles() != null) {
-            for (DetalleCompra detalle : comprasNuevas.getDetalles()) {
-                detalle.setCompra(compraExistente);
-                compraExistente.getDetalles().add(detalle);
-            }
-        }
 
     }
 
@@ -126,14 +117,14 @@ public class CompraServicioImp implements CompraServicio{
 
         // Cantidades (usando los nombres de los Enums)
         BigDecimal unidades = repositorio.sumarTotalEntrantePorTipoYRango(
-                TipoVenta.UNIDAD.name(), // Convertir a String
+                "94", // Convertir a String
                 EstadoCompra.CONFIRMADA.name(), // Convertir a String
                 inicio,
                 fin
         );
 
         BigDecimal peso = repositorio.sumarTotalEntrantePorTipoYRango(
-                TipoVenta.PESO.name(), // O el nombre exacto de tu enum para peso
+                "KGM", // O el nombre exacto de tu enum para peso
                 EstadoCompra.CONFIRMADA.name(),
                 inicio,
                 fin
