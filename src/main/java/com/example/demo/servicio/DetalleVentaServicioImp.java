@@ -1,5 +1,7 @@
-package com.example.demo.ModuloVentas.DetalleVenta;
+package com.example.demo.servicio;
 
+import com.example.demo.entidad.DetalleVenta;
+import com.example.demo.repositorio.DetalleVentaRepositorio;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

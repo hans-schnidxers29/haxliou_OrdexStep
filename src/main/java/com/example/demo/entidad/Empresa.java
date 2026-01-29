@@ -1,11 +1,13 @@
 package com.example.demo.entidad;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 
 import java.util.List;
 
 @Entity
 @Table(name = "empresa")
+@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class Empresa {
 
     @Id

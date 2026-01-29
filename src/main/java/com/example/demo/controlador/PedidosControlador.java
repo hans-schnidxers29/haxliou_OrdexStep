@@ -1,9 +1,9 @@
 package com.example.demo.controlador;
 
 
-import com.example.demo.Login.Servicio.ServicioEmpresa;
-import com.example.demo.Login.Servicio.ServicioUsuario;
-import com.example.demo.Login.Usuario;
+import com.example.demo.servicio.ServicioEmpresa;
+import com.example.demo.servicio.ServicioUsuario;
+import com.example.demo.entidad.Usuario;
 import com.example.demo.entidad.*;
 import com.example.demo.entidad.Enum.EstadoPedido;
 import com.example.demo.pdf.PdfServicio;

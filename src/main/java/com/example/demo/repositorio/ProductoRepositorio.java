@@ -4,6 +4,7 @@ import com.example.demo.entidad.Enum.EstadoPedido;
 import com.example.demo.entidad.Productos;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -12,7 +13,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
+@EnableJpaRepositories
 public interface ProductoRepositorio extends JpaRepository<Productos,Long> {
+
+
+    List<Productos>findByEmpresaId(Long empresa_id);
+
+
 
     @Query(value = "SELECT nombre, SUM(total_cantidad) as productos_vendidos \n" +
             "FROM (\n" +

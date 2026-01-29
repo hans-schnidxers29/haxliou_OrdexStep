@@ -10,11 +10,16 @@ public class Categoria {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name="nombrecategoria")
+    @Column(name = "nombrecategoria")
     private String nombrecategoria;
 
     @Column(name = "decripcion")
     private String descripcion;
+
+
+    @ManyToOne
+    @JoinColumn(name = "empresa_id")
+    private Empresa empresa ;
 
     public Categoria() {
     }
@@ -46,5 +51,13 @@ public class Categoria {
 
     public void setDescripcion(String descripcion) {
         this.descripcion = descripcion;
+    }
+
+    public Empresa getEmpresa() {
+        return empresa;
+    }
+
+    public void setEmpresa(Empresa empresa) {
+        this.empresa = empresa;
     }
 }

@@ -1,8 +1,8 @@
-package com.example.demo.Login.Controlador;
+package com.example.demo.controlador;
 
 
-import com.example.demo.Login.Servicio.ServicioUsuario;
-import com.example.demo.ModuloVentas.VentaServicio;
+import com.example.demo.servicio.ServicioUsuario;
+import com.example.demo.servicio.VentaServicio;
 import com.example.demo.entidad.Enum.EstadoPedido;
 import com.example.demo.servicio.*;
 import org.springframework.beans.factory.annotation.Autowired;

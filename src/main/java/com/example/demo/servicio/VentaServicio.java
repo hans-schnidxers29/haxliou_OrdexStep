@@ -1,4 +1,6 @@
-package com.example.demo.ModuloVentas;
+package com.example.demo.servicio;
+
+import com.example.demo.entidad.Venta;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

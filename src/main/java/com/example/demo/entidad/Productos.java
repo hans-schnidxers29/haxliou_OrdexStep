@@ -1,6 +1,5 @@
 package com.example.demo.entidad;
 
-import com.example.demo.entidad.Enum.TipoVenta;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
@@ -63,6 +62,10 @@ public class Productos {
     @ManyToOne
     @JoinColumn(name = "tributo_id")
     private Tributo tipo_Impuesto;
+
+    @ManyToOne
+    @JoinColumn(name = "empresa_id")
+    private Empresa empresa ;
 
     // Constructores
     public Productos() {
@@ -207,5 +210,13 @@ public class Productos {
 
     public void setTipo_Impuesto(Tributo tipo_Impuesto) {
         this.tipo_Impuesto = tipo_Impuesto;
+    }
+
+    public Empresa getEmpresa() {
+        return empresa;
+    }
+
+    public void setEmpresa(Empresa empresa) {
+        this.empresa = empresa;
     }
 }

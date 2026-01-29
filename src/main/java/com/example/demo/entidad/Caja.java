@@ -1,6 +1,5 @@
 package com.example.demo.entidad;
 
-import com.example.demo.Login.Usuario;
 import com.example.demo.entidad.Enum.EstadoDeCaja;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -49,9 +48,9 @@ public class Caja {
     @JoinColumn(name = "usuario_id")
     private Usuario usuario;
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "usuario_id")
-//    private Usuario usuario;
+    @ManyToOne
+    @JoinColumn(name = "empresa_id")
+    private Empresa empresa ;
 
     @Column(length = 500)
     private String observaciones;
@@ -177,5 +176,13 @@ public class Caja {
 
     public void setFechaApertura(LocalDateTime fechaApertura) {
         this.fechaApertura = fechaApertura;
+    }
+
+    public Empresa getEmpresa() {
+        return empresa;
+    }
+
+    public void setEmpresa(Empresa empresa) {
+        this.empresa = empresa;
     }
 }

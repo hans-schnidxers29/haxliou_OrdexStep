@@ -1,8 +1,6 @@
 package com.example.demo.entidad;
 
 
-import com.example.demo.Login.Usuario;
-import com.example.demo.ModuloVentas.DetalleVenta.DetalleVenta;
 import com.example.demo.entidad.Enum.EstadoCompra;
 import com.example.demo.entidad.Enum.MetodoPago;
 import jakarta.persistence.*;

@@ -1,6 +1,6 @@
 package com.example.demo.repositorio;
 
-import com.example.demo.Login.Usuario;
+import com.example.demo.entidad.Usuario;
 import com.example.demo.entidad.Caja;
 import com.example.demo.entidad.Enum.EstadoDeCaja;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -22,10 +22,10 @@ public interface Cajarepositorio extends JpaRepository<Caja, Long> {
                                        @Param("estado") EstadoDeCaja estado);
 
       @Query("""
-    SELECT c
-    FROM Caja c
-    WHERE c.usuario = :usuario AND c.Estado = :estado
-    """)
+                SELECT c
+                FROM Caja c
+                WHERE c.usuario = :usuario AND c.Estado = :estado
+             """)
       Optional<Caja> findByUsuarioAndEstado(@Param("usuario") Usuario usuario,
                                             @Param("estado") EstadoDeCaja estado);
 }

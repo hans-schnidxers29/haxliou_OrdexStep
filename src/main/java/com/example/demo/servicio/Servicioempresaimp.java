@@ -1,7 +1,7 @@
-package com.example.demo.Login.Servicio;
+package com.example.demo.servicio;
 
 import com.example.demo.entidad.Empresa;
-import com.example.demo.Login.Repositorio.EmpresaRepositorio;
+import com.example.demo.repositorio.EmpresaRepositorio;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

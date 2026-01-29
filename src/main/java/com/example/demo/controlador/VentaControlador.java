@@ -1,13 +1,10 @@
-package com.example.demo.ModuloVentas;
+package com.example.demo.controlador;
 
-import com.example.demo.Login.Servicio.ServicioUsuario;
-import com.example.demo.Login.Usuario;
-import com.example.demo.entidad.Caja;
-import com.example.demo.entidad.Empresa;
-import com.example.demo.Login.Servicio.ServicioEmpresa;
-import com.example.demo.ModuloVentas.DetalleVenta.DetalleVenta;
-import com.example.demo.entidad.Cliente;
-import com.example.demo.entidad.Productos;
+import com.example.demo.servicio.VentaServicio;
+import com.example.demo.entidad.*;
+import com.example.demo.servicio.ServicioUsuario;
+import com.example.demo.servicio.ServicioEmpresa;
+import com.example.demo.entidad.DetalleVenta;
 import com.example.demo.pdf.PdfServicio;
 import com.example.demo.servicio.CajaServicio;
 import com.example.demo.servicio.CategoriaService;
@@ -28,7 +25,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/ventas")

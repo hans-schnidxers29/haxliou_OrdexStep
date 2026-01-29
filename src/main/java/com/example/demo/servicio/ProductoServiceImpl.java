@@ -1,5 +1,7 @@
 package com.example.demo.servicio;
 
+import com.example.demo.Seguridad.SecurityService;
+import com.example.demo.entidad.Empresa;
 import com.example.demo.entidad.Productos;
 import com.example.demo.repositorio.ProductoRepositorio;
 import jakarta.transaction.Transactional;
@@ -18,9 +20,13 @@ public class ProductoServiceImpl implements ProductoServicio{
     @Autowired
     private ProductoRepositorio repositorio;
 
+    @Autowired
+    private SecurityService obtenerIdEmpresa;
+
     @Override
     public List<Productos> listarProductos() {
-        return repositorio.findAll();
+        Long empresaId = obtenerIdEmpresa.obtenerEmpresaId();
+        return repositorio.findByEmpresaId(empresaId);
     }
 
     @Override

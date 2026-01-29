@@ -1,7 +1,5 @@
-package com.example.demo.ModuloVentas.DetalleVenta;
+package com.example.demo.entidad;
 
-import com.example.demo.ModuloVentas.Venta;
-import com.example.demo.entidad.Productos;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;

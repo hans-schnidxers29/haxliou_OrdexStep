@@ -1,7 +1,6 @@
 package com.example.demo.entidad;
 
 
-import com.example.demo.Login.Usuario;
 import com.example.demo.entidad.Enum.TipoEgreso;
 import jakarta.persistence.*;
 import java.math.BigDecimal;

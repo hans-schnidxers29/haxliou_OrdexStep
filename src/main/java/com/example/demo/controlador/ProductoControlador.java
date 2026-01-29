@@ -1,9 +1,8 @@
 package com.example.demo.controlador;
 
-import com.example.demo.entidad.Categoria;
+import com.example.demo.Seguridad.SecurityService;
+import com.example.demo.entidad.*;
 import com.example.demo.entidad.Enum.TipoVenta;
-import com.example.demo.entidad.Productos;
-import com.example.demo.entidad.Proveedores;
 import com.example.demo.repositorio.TributoRepositorio;
 import com.example.demo.repositorio.UnidadesMedidasRepositorio;
 import com.example.demo.servicio.CategoriaService;
@@ -11,6 +10,8 @@ import com.example.demo.servicio.ProductoServicio;
 import com.example.demo.servicio.ProveedorServicio;
 import com.example.demo.servicio.UnidadMedidaServicio;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -36,6 +37,8 @@ public class ProductoControlador {
     @Autowired
     private TributoRepositorio tributoRepositorio;
 
+    @Autowired
+    private SecurityService  securityService;
 
     @GetMapping("/listarproductos")
     public String listarProductos(Model model){
@@ -57,8 +60,15 @@ public class ProductoControlador {
 
     @PostMapping("/crearproducto")
     public String guardarproducto(@ModelAttribute("productos") Productos producto, RedirectAttributes redirectAttributes){
+        Empresa empresa = securityService.ObtenerEmpresa();
+
+        if (empresa == null) {
+            redirectAttributes.addFlashAttribute("error", "Sesión inválida o empresa no encontrada");
+            return "redirect:/login";
+        }
+        System.out.println("id empresa detectado " + empresa.getId());
+        producto.setEmpresa(empresa);
         try {
-            // Spring MVC mapeará automáticamente el campo 'impuesto' desde el formulario
             Productos productoGuardado = service.save(producto);
             redirectAttributes.addFlashAttribute("success", "Producto guardado correctamente");
             return "redirect:/listarproductos";

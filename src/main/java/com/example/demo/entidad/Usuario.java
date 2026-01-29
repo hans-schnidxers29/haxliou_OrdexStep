@@ -1,9 +1,8 @@
-package com.example.demo.Login;
+package com.example.demo.entidad;
 
 import java.util.Collection;
 import java.util.List;
 
-import com.example.demo.entidad.UsuarioEmpresa;
 import jakarta.persistence.*;
 
 @Entity
@@ -125,7 +124,7 @@ public class Usuario {
         this.roles = roles;
     }
 
-    public List<UsuarioEmpresa> getEmpresa() {
+    public List<UsuarioEmpresa>getEmpresa() {
         return empresa;
     }
 

@@ -1,9 +1,9 @@
-package com.example.demo.Login.Servicio;
+package com.example.demo.servicio;
 
-import com.example.demo.Login.Usuario;
-import com.example.demo.Login.Repositorio.RepositorioUsuario;
-import com.example.demo.Login.Rol;
 import com.example.demo.entidad.Empresa;
+import com.example.demo.entidad.Usuario;
+import com.example.demo.repositorio.RepositorioUsuario;
+import com.example.demo.entidad.Rol;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
@@ -136,9 +136,13 @@ public class ServicioUsuarioImp implements ServicioUsuario {
     }
     @Override
     public Long ObtenreIdEmpresa(Long id) {
-        return repositorioUsuario.buscarIdEmpresaPorUsuarioId(id)
-                .map(Empresa::getId) // Extrae el ID de la Empresa
-                .orElseThrow(() -> new RuntimeException("Empresa no encontrada para el usuario: " + id));
+        return repositorioUsuario.buscarIdEmpresaPorUsuarioId(id);
+    }
+
+    @Override
+    public Empresa ObtenerEmpresa(Long id) {
+        return repositorioUsuario.ObtenerEmpresaPorUsuarioId(id)
+                .orElseThrow( ()-> new UsernameNotFoundException( "empresa no encontrada"));
     }
 
 

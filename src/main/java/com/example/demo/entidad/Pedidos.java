@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +15,6 @@ import java.util.List;
 @Entity
 @Table(name = "pedidos")
 public class Pedidos {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -54,6 +52,9 @@ public class Pedidos {
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DetallePedido> detalles = new ArrayList<>();
 
+    @ManyToOne
+    @JoinColumn(name = "empresa_id")
+    private Empresa Empresa ;
 
     private Boolean VentaPorMayor = false;
 
@@ -179,5 +180,13 @@ public class Pedidos {
 
     public void setDetalles(List<DetallePedido> detalles) {
         this.detalles = detalles;
+    }
+
+    public Empresa getEmpresa() {
+        return Empresa;
+    }
+
+    public void setEmpresa(Empresa empresa) {
+        Empresa = empresa;
     }
 }

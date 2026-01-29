@@ -1,24 +1,22 @@
 package com.example.demo.servicio;
 
-import com.example.demo.Login.Usuario;
-import com.example.demo.ModuloVentas.VentaRepositorio;
+import com.example.demo.Seguridad.SecurityService;
+import com.example.demo.entidad.Empresa;
+import com.example.demo.entidad.Usuario;
+import com.example.demo.repositorio.VentaRepositorio;
 import com.example.demo.entidad.Caja;
 import com.example.demo.entidad.Enum.EstadoDeCaja;
 import com.example.demo.repositorio.Cajarepositorio;
 import com.example.demo.repositorio.ComprasRepositorio;
 import com.example.demo.repositorio.EgresoRepositorio;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 @Service
 public class CajaServicioImp implements CajaServicio{
@@ -35,10 +33,13 @@ public class CajaServicioImp implements CajaServicio{
     @Autowired
     private VentaRepositorio ventarepositorio;
 
+    @Autowired
+    private SecurityService securityService;
+
 
     @Override
     public Caja CajaAbierta(Usuario user) {
-    return cajaRepositorio.findByUsuarioAndEstado(user,EstadoDeCaja.EN_PROCESO).orElse(null);
+        return cajaRepositorio.findByUsuarioAndEstado(user,EstadoDeCaja.EN_PROCESO).orElse(null);
     }
 
     @Transactional
@@ -82,12 +83,16 @@ public class CajaServicioImp implements CajaServicio{
         if (CajaEnEjecucion) {
             throw new IllegalStateException("Ya existe una caja abierta para este usuario" + user.getEmail());
         }
-
+        Empresa empresa = securityService.ObtenerEmpresa();
+        if(empresa == null){
+            throw new IllegalStateException("error al abrir caja");
+        }
         Caja abrirCaja = new Caja();
         abrirCaja.setMontoInicial(MontoInicial);
         abrirCaja.setUsuario(user);
         abrirCaja.setFechaApertura(LocalDateTime.now());
         abrirCaja.setEstado(EstadoDeCaja.EN_PROCESO);
+        abrirCaja.setEmpresa(empresa);
         cajaRepositorio.save(abrirCaja);
     }
 

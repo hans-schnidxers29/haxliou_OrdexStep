@@ -1,4 +1,4 @@
-package com.example.demo.Login.Servicio;
+package com.example.demo.servicio;
 
 import com.example.demo.entidad.Empresa;
 
@@ -6,7 +6,6 @@ import com.example.demo.entidad.Empresa;
 public interface ServicioEmpresa {
 
     Empresa saveEmpresa(Empresa empresa);
-
     Empresa DatosEmpresa(Long id);
 
 }

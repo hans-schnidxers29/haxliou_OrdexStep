@@ -1,7 +1,7 @@
-package com.example.demo.Login.Controlador;
+package com.example.demo.controlador;
 
-import com.example.demo.Login.Servicio.ServicioUsuario;
-import com.example.demo.Login.Usuario;
+import com.example.demo.servicio.ServicioUsuario;
+import com.example.demo.entidad.Usuario;
 import org.springframework.beans.factory.annotation .Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;

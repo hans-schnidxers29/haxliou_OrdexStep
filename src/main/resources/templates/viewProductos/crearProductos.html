@@ -204,6 +204,12 @@
             $selectTipoVenta.on('change', actualizarInterfaz);
             actualizarInterfaz();
         });
+
+            const s = /*[[${success}]]*/ null;
+            const e = /*[[${error}]]*/ null;
+            const i = /*[[${info}]]*/ null;
+            const w = /*[[${warning}]]*/ null;
+            checkNotifications(s, e, i, w);
     </script>
 </th:block>
 
