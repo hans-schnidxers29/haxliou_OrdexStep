@@ -23,20 +23,20 @@ public class Productos {
     @Column(name = "precio", nullable = false, precision = 10, scale = 2)
     private BigDecimal precio;
 
-    @Column(name = "cantidad", nullable = false, scale = 2, precision = 10)
+    @Column(name = "cantidad", nullable = false, scale = 3, precision = 10)
     private BigDecimal cantidad = BigDecimal.ZERO;
 
     @ManyToOne
     @JoinColumn(name = "unidad_medida_id")
     private UnidadMedidas tipoVenta ;
 
-    @Column(name = "cantidad_minima", precision = 10, scale = 2)
+    @Column(name = "cantidad_minima", precision = 10, scale = 3)
     private BigDecimal cantidadMinima;
 
     @Column(name = "incremento", precision = 10, scale = 2)
     private BigDecimal incremento;
 
-    @Column(name = "stock_minimo", precision = 10, scale = 2)
+    @Column(name = "stock_minimo", precision = 10, scale = 3)
     private BigDecimal stockMinimo;
 
     @ManyToOne

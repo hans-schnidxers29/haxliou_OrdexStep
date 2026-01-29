@@ -108,7 +108,7 @@
                                               th:text="${#numbers.formatInteger(producto.cantidad, 0)}">
                                         </span>
                                         <span th:unless="${producto.tipoVenta.code == '94'}"
-                                              th:text="${#numbers.formatDecimal(producto.cantidad, 1, 'COMMA', 2, 'POINT')}">
+                                              th:text="${#numbers.formatDecimal(producto.cantidad, 1, 'COMMA', 3, 'POINT')}">
                                         </span>
                                     </span>
 
@@ -127,7 +127,7 @@
                                               th:text="${#numbers.formatInteger(producto.stockMinimo, 0)}">
                                         </span>
                                         <span th:unless="${producto.tipoVenta.code == '94'}"
-                                              th:text="${#numbers.formatDecimal(producto.stockMinimo, 1, 'COMMA', 2, 'POINT')}">
+                                              th:text="${#numbers.formatDecimal(producto.stockMinimo, 1, 'COMMA', 3, 'POINT')}">
                                         </span>
                                         <small class="text-muted" th:text="${producto.tipoVenta.name}"></small>
                                     </span>

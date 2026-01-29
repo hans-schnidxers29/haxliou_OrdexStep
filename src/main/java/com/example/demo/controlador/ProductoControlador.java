@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 @Controller
 public class ProductoControlador {
@@ -118,8 +119,15 @@ public class ProductoControlador {
 
             // NUEVO: Seteamos el precio de compra desde el formulario
             productoActual.setPrecioCompra(producto.getPrecioCompra());
+            BigDecimal  CantidadNueva = BigDecimal.ZERO;
+            if(producto.getTipoVenta().getCode().equalsIgnoreCase("KGM")){
+                 CantidadNueva = producto.getCantidad().setScale(3, RoundingMode.HALF_UP);
+            }else{
+                CantidadNueva = producto.getCantidad();
+            }
 
-            productoActual.setCantidad(producto.getCantidad());
+
+            productoActual.setCantidad(CantidadNueva);
             productoActual.setDescripcion(producto.getDescripcion());
             productoActual.setCategoria(categoria);
             productoActual.setTipoVenta(producto.getTipoVenta());
