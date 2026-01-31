@@ -54,7 +54,7 @@ public class Pedidos {
 
     @ManyToOne
     @JoinColumn(name = "empresa_id")
-    private Empresa Empresa ;
+    private Empresa empresa ;
 
     private Boolean VentaPorMayor = false;
 
@@ -183,10 +183,10 @@ public class Pedidos {
     }
 
     public Empresa getEmpresa() {
-        return Empresa;
+        return empresa;
     }
 
     public void setEmpresa(Empresa empresa) {
-        Empresa = empresa;
+        this.empresa = empresa;
     }
 }

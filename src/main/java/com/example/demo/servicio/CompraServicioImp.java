@@ -1,7 +1,9 @@
 package com.example.demo.servicio;
 
+import com.example.demo.Seguridad.SecurityService;
 import com.example.demo.entidad.Compras;
 import com.example.demo.entidad.DetalleCompra;
+import com.example.demo.entidad.Empresa;
 import com.example.demo.entidad.Enum.EstadoCompra;
 import com.example.demo.entidad.Enum.TipoVenta;
 import com.example.demo.repositorio.ComprasRepositorio;
@@ -29,14 +31,19 @@ public class CompraServicioImp implements CompraServicio{
     @Autowired
     private ProductoRepositorio ProductoRepositorio;
 
+    @Autowired
+    private SecurityService securityservice;
+
     @Override
     public void saveCompra(Compras compras) {
+        Empresa empresa = securityservice.ObtenerEmpresa();
+        compras.setEmpresa(empresa);
         repositorio.save(compras);
     }
 
     @Override
     public List<Compras> listarCompra() {
-        return repositorio.findAll().stream().toList();
+        return repositorio.findByEmpresaId(securityservice.obtenerEmpresaId()).stream().toList();
     }
 
     @Override
@@ -70,7 +77,7 @@ public class CompraServicioImp implements CompraServicio{
 
     @Override
     public String GenerarReferenciasDeCompras() {
-        Long siguienteReferencia = repositorio.obtenerNumeroSigReferencia();
+        Long siguienteReferencia = repositorio.obtenerNumeroSigReferencia(securityservice.obtenerEmpresaId());
         return "COMP-"+ String.format("%06d",siguienteReferencia);
     }
 
@@ -84,18 +91,18 @@ public class CompraServicioImp implements CompraServicio{
         for (DetalleCompra detalleCompra : compra.getDetalles()) {
             // Obtenemos los valores que el usuario editó en el formulario de compra
             BigDecimal nuevoImpuesto = detalleCompra.getProductos().getImpuesto();
-            BigDecimal nuevoPrecioCompra = detalleCompra.getProductos().getPrecioCompra(); // <-- CORREGIDO: Usar precioCompra
+            BigDecimal nuevoPrecioCompra = detalleCompra.getProductos().getPrecioCompra();
             
             productoServicio.AgregarStock(
                     detalleCompra.getProductos().getId(), 
                     detalleCompra.getCantidad(),
                     nuevoImpuesto,
                     nuevoPrecioCompra
-                );
-            }
-            
-            compra.setEstado(EstadoCompra.CONFIRMADA);
+            );
         }
+            
+        compra.setEstado(EstadoCompra.CONFIRMADA);
+    }
 
     @Override
     @Transactional

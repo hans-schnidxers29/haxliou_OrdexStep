@@ -1,5 +1,6 @@
 package com.example.demo.servicio;
 
+import com.example.demo.Seguridad.SecurityService;
 import com.example.demo.entidad.Egresos;
 import com.example.demo.entidad.Enum.TipoEgreso;
 import com.example.demo.repositorio.EgresoRepositorio;
@@ -20,15 +21,19 @@ public class EgresosServicioImp implements EgresoServicio{
     @Autowired
     private EgresoRepositorio repositorio;
 
+    @Autowired
+    private SecurityService securityService;
+
 
     @Override
     public void CrearGasto(Egresos egresos) {
+        egresos.setEmpresa(securityService.ObtenerEmpresa());
         repositorio.save(egresos);
     }
 
     @Override
     public List<Egresos> ListarGastos() {
-        return repositorio.findAll().stream().toList();
+        return repositorio.findByEmpresaId(securityService.obtenerEmpresaId());
     }
 
     @Override

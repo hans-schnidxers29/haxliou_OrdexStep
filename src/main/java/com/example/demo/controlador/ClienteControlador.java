@@ -52,7 +52,7 @@ public class ClienteControlador {
             if(service.VerifcarCliente(cliente.getNumeroIdentificacion())){
                 redirectAttributes.addFlashAttribute("info",
                         "Cliente con Identificacion " + cliente.getNumeroIdentificacion() + " ya Registrado");
-                model.addAttribute("cliente", cliente); // para no perder los datos ingresados
+                model.addAttribute("cliente", cliente);
                 return "redirect:/crearcliente/nuevo";
             }
             service.save(cliente);
@@ -60,9 +60,9 @@ public class ClienteControlador {
             return "redirect:/listarclientes";
         } catch (DataIntegrityViolationException e) {
             model.addAttribute("Error", "El correo electrónico ya está en uso.");
-            model.addAttribute("cliente", cliente); // para no perder los datos ingresados
+            model.addAttribute("cliente", cliente);
             redirectAttributes.addFlashAttribute("error","Error al Crear Cliente " + e.getMessage());
-            return "redirect:/crearcliente/nuevo"; // asegúrate que esta sea tu vista del formulario
+            return "redirect:/crearcliente/nuevo";
         }
     }
 

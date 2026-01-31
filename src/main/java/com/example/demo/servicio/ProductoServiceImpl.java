@@ -122,6 +122,8 @@ public class ProductoServiceImpl implements ProductoServicio{
             map.put("tipoVenta", p.getTipoVenta().getCode());
             map.put("categoriaId", p.getCategoria().getId() != null ? p.getCategoria().getId() : null);
             map.put("precioPorMayor", p.getPrecioPorMayor());
+            map.put("EmpresaId",p.getEmpresa().getId());
+            map.put("precioCompra", p.getPrecioCompra());
             return map;
         }).collect(Collectors.toList());
     }

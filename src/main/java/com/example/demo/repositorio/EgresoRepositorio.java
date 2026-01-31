@@ -9,15 +9,12 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Repository
 public interface EgresoRepositorio extends JpaRepository <Egresos, Long>{
 
-//    @Query(value = "SELECT COALESCE(SUM(e.monto), 0) FROM Egreso e " +
-//            "WHERE e.fechaRegistro >= :inicio AND e.fechaRegistro <= :fin",nativeQuery = true)
-//    BigDecimal sumarEgresosPorDia(@Param("inicio") LocalDateTime inicio,
-//                                        @Param("fin") LocalDateTime fin);
-
+    List<Egresos> findByEmpresaId(Long empresa_id);
 
     @Query(" SELECT COALESCE(SUM(e.monto), 0) FROM Egresos e WHERE e.fechaRegistro BETWEEN :inicio AND :fin")
     BigDecimal sumarEgresosPorDia(@Param("inicio") LocalDateTime inicio,

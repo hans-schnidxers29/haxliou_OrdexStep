@@ -1,7 +1,9 @@
 package com.example.demo.servicio;
 
 
+import com.example.demo.Seguridad.SecurityService;
 import com.example.demo.entidad.Cliente;
+import com.example.demo.entidad.Empresa;
 import com.example.demo.repositorio.ClienteRepositorio;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,14 +20,20 @@ public class ClienteServiceImp implements ClienteService {
     @Autowired
     private ClienteRepositorio repositorio;
 
+    @Autowired
+    private SecurityService securityService;
+
 
     @Override
     public List<Cliente> listarcliente() {
-        return repositorio.findAll();
+        Long EmpresaId = securityService.obtenerEmpresaId();
+        return repositorio.findByEmpresaId(EmpresaId);
     }
 
     @Override
     public Cliente save(Cliente cliente) {
+        Empresa empresa =  securityService.ObtenerEmpresa();
+        cliente.setEmpresa(empresa);
         return repositorio.save(cliente);
     }
 
@@ -47,12 +55,12 @@ public class ClienteServiceImp implements ClienteService {
 
     @Override
     public boolean VerifcarCliente(String numeroIdentificacion) {
-        return repositorio.existsByNumeroIdentificacion(numeroIdentificacion);
+        return repositorio.existsByNumeroIdentificacionAndEmpresaId(numeroIdentificacion,securityService.obtenerEmpresaId());
     }
 
     @Override
     public List<Map<String, Object>> clienteSimple() {
-        List<Map<String, Object>> clientesSimplificados = repositorio.findAll().stream().map(c -> {
+        return listarcliente().stream().map(c -> {
             Map<String, Object> map = new HashMap<>();
             map.put("id", c.getId());
             map.put("nombre", c.getNombre());
@@ -62,7 +70,6 @@ public class ClienteServiceImp implements ClienteService {
             map.put("telefono", c.getTelefono());
             return map;
         }).collect(Collectors.toList());
-        return  clientesSimplificados;
     }
     @Override
     public Map<String, Object> CantidadPedidosPorPersonas() {

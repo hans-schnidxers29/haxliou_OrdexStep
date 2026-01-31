@@ -1,5 +1,6 @@
 package com.example.demo.servicio;
 
+import com.example.demo.Seguridad.SecurityService;
 import com.example.demo.entidad.Proveedores;
 import com.example.demo.repositorio.ProveedorRepositorio;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,14 +15,18 @@ public class ProveedorServicoImp implements ProveedorServicio{
     @Autowired
     private ProveedorRepositorio repositorio;
 
+    @Autowired
+    private SecurityService securityService;
+
     @Override
     public void save(Proveedores proveedore) {
+        proveedore.setEmpresa(securityService.ObtenerEmpresa());
         repositorio.save(proveedore);
     }
 
     @Override
     public List<Proveedores> listarproveedores() {
-        return repositorio.findAll().stream()
+        return repositorio.findByEmpresaId(securityService.obtenerEmpresaId()).stream()
                 .filter(Proveedores::isEstado).toList();
     }
 

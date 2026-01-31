@@ -84,6 +84,10 @@ public class CierreMensual {
     @Column(precision = 19, scale = 4)
     private BigDecimal valorInventarioTotal = BigDecimal.ZERO;
 
+    @ManyToOne
+    @JoinColumn(name = "empresa_id")
+    private Empresa empresa ;
+
     // ==================== CONSTRUCTORES ====================
     public CierreMensual() {
     }
@@ -342,5 +346,13 @@ public class CierreMensual {
 
     public void setTotalVentasAlMayor(BigDecimal totalVentasAlMayor) {
         this.totalVentasAlMayor = totalVentasAlMayor;
+    }
+
+    public Empresa getEmpresa() {
+        return empresa;
+    }
+
+    public void setEmpresa(Empresa empresa) {
+        this.empresa = empresa;
     }
 }

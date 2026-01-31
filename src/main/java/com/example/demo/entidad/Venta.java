@@ -45,6 +45,10 @@ public class Venta {
     @Column(name = "venta_al_por_mayor")
     private Boolean VentaAlPorMayor = false;
 
+    @ManyToOne
+    @JoinColumn(name = "empresa_id")
+    private Empresa empresa ;
+
     public Venta() {
     }
 

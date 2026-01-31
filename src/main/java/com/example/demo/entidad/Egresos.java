@@ -31,6 +31,10 @@ public class Egresos {
     @Column(columnDefinition = "TEXT", name = "descripcion_gasto")
     private String descripcion;
 
+    @ManyToOne
+    @JoinColumn(name = "empresa_id")
+    private Empresa empresa ;
+
     public Egresos() {
     }
 
@@ -89,5 +93,13 @@ public class Egresos {
 
     public void setDescripcion(String descripcion) {
         this.descripcion = descripcion;
+    }
+
+    public Empresa getEmpresa() {
+        return empresa;
+    }
+
+    public void setEmpresa(Empresa empresa) {
+        this.empresa = empresa;
     }
 }

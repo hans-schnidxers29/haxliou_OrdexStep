@@ -44,6 +44,10 @@ public class Proveedores {
     @Column(name = "estado")
     private boolean estado = true;
 
+    @ManyToOne
+    @JoinColumn(name = "empresa_id", unique = true)
+    private Empresa empresa ;
+
     public Proveedores() {
     }
 
@@ -130,5 +134,13 @@ public class Proveedores {
 
     public void setEstado(boolean estado) {
         this.estado = estado;
+    }
+
+    public Empresa getEmpresa() {
+        return empresa;
+    }
+
+    public void setEmpresa(Empresa empresa) {
+        this.empresa = empresa;
     }
 }

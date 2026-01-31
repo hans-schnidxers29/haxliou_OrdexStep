@@ -1,5 +1,7 @@
 package com.example.demo.servicio;
 
+import com.example.demo.Seguridad.SecurityService;
+import com.example.demo.entidad.Empresa;
 import com.example.demo.repositorio.VentaRepositorio;
 import com.example.demo.entidad.CierreMensual;
 import com.example.demo.entidad.Enum.EstadoPedido;
@@ -28,7 +30,8 @@ public class CierreMensualImp implements CierreMensualServicio{
     @Autowired private ClienteRepositorio clienteRepo;
     @Autowired private ComprasRepositorio comprasRepo;
     @Autowired private PedidoRepositorio pedidoRepo;
-    @Autowired private DetalleCompraRepositorio detalleRepo;
+    @Autowired private SecurityService securityService;
+
 
 
     @Override
@@ -81,7 +84,7 @@ public class CierreMensualImp implements CierreMensualServicio{
         BigDecimal TotalVentasPorMayor=nvl(ventaRepo.VentasTotalesAlMayor());
         // 7. Evitar duplicados
         cierreRepo.eliminarCierreExistente(mes, anio);
-
+        Empresa empresa = securityService.ObtenerEmpresa();
         // 8. Construir objeto de cierre
         CierreMensual cierre = new CierreMensual();
         cierre.setMes(mes);
@@ -97,6 +100,7 @@ public class CierreMensualImp implements CierreMensualServicio{
         cierre.setTotalCompras(totalCompras);
         cierre.setUtilidadBruta(utilidadBruta);
         cierre.setUtilidadNeta(utilidadNeta);
+        cierre.setEmpresa(empresa);
 
         // Estadísticas adicionales
         cierre.setCantidadPedidos(pedidoRepo.cantidadPedidosPorRango(inicio, fin, EstadoPedido.ENTREGADO).intValue());

@@ -14,8 +14,9 @@ import java.util.List;
 @Repository
 public interface ClienteRepositorio  extends JpaRepository<Cliente,Long> {
 
-    boolean existsByNumeroIdentificacion(String numeroIdentificacion);
+    boolean existsByNumeroIdentificacionAndEmpresaId(String numeroIdentificacion, Long empresaId);
     Cliente findByNumeroIdentificacion(String numeroIdentificacion);
+    List<Cliente>findByEmpresaId(Long empresa_id);
 
     @Query(value = "SELECT \n" +
             "    nombre, \n" +

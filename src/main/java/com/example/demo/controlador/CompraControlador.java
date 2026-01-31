@@ -67,7 +67,7 @@ public class CompraControlador {
         Compras compras = new Compras();
         model.addAttribute("compras",compras);
         model.addAttribute("proveedores",proveedorServicio.listarproveedores());
-        model.addAttribute("productos",productoServicio.listarProductos());
+        model.addAttribute("productos",productoServicio.ProductoSimple());
         model.addAttribute("MetodoPago", MetodoPago.values());
 
         return "viewCompras/crearCompras";

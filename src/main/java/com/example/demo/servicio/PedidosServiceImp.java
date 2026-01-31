@@ -1,5 +1,6 @@
 package com.example.demo.servicio;
 
+import com.example.demo.Seguridad.SecurityService;
 import com.example.demo.entidad.DetallePedido;
 import com.example.demo.entidad.Enum.EstadoPedido;
 import com.example.demo.entidad.Pedidos;
@@ -13,7 +14,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Service
-public class PedidosServiceImp implements PedidoService{
+public class PedidosServiceImp implements PedidoService {
 
     @Autowired
     private PedidoRepositorio repositorio;
@@ -21,13 +22,18 @@ public class PedidosServiceImp implements PedidoService{
     @Autowired
     private ProductoServicio productoServicio;
 
+    @Autowired
+    private SecurityService securityService;
+
+
     @Override
     public List<Pedidos> listarpedidos() {
-        return repositorio.findAll();
+        return repositorio.findByEmpresaId(securityService.obtenerEmpresaId());
     }
 
     @Override
     public Pedidos guardarpedidos(Pedidos pedidos) {
+        pedidos.setEmpresa(securityService.ObtenerEmpresa());
         return repositorio.save(pedidos);
     }
 
@@ -54,9 +60,9 @@ public class PedidosServiceImp implements PedidoService{
         pedidos1.setEstado(pedidos.getEstado());
         pedidos1.setObservaciones(pedidos.getObservaciones());
         pedidos1.setFlete(pedidos.getFlete());
-        if(Boolean.TRUE.equals(pedidos.getVentaPorMayor())){
+        if (Boolean.TRUE.equals(pedidos.getVentaPorMayor())) {
             pedidos1.setVentaPorMayor(true);
-        }else{
+        } else {
             pedidos1.setVentaPorMayor(false);
         }
         pedidos1.setSubtotal(pedidos.getSubtotal());
@@ -65,11 +71,6 @@ public class PedidosServiceImp implements PedidoService{
 
         System.out.println("Pedido actualizado correctamente");
         repositorio.save(pedidos1);
-    }
-
-    @Override
-    public long ContarPorestados(EstadoPedido estadoPedido) {
-        return repositorio.contarPorEstado(EstadoPedido.PENDIENTE);
     }
 
     @Transactional
@@ -115,13 +116,18 @@ public class PedidosServiceImp implements PedidoService{
     }
 
     @Override
+    public long ContarPorestados(EstadoPedido estadoPedido) {
+        return repositorio.contarPorEstado(EstadoPedido.PENDIENTE,securityService.obtenerEmpresaId());
+    }
+
+    @Override
     public Long estadoCancelado(EstadoPedido estadoPedido) {
-        return repositorio.countByEstadoCancelado(EstadoPedido.CANCELADO);
+        return repositorio.contarPorEstado(EstadoPedido.CANCELADO,securityService.obtenerEmpresaId());
     }
 
     @Override
     public Long estadoCEntregado(EstadoPedido estadoPedido) {
-        return repositorio.countByEstadoEntregado(EstadoPedido.ENTREGADO);
+        return repositorio.contarPorEstado(EstadoPedido.ENTREGADO,securityService.obtenerEmpresaId());
     }
 
     @Override
@@ -147,14 +153,14 @@ public class PedidosServiceImp implements PedidoService{
     @Transactional
     @Override
     public void CancelarPedido(Long id) {
-     Pedidos pedido =   repositorio.findById(id).orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
+        Pedidos pedido = repositorio.findById(id).orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
 
-        if(pedido.getEstado()==EstadoPedido.CANCELADO){
+        if (pedido.getEstado() == EstadoPedido.CANCELADO) {
             throw new IllegalStateException("el Pedido ya fue Cancelado");
         }
 
-        if(pedido.getEstado()==EstadoPedido.ENTREGADO){
-            throw  new IllegalStateException("el Pedido ya fue Entregado");
+        if (pedido.getEstado() == EstadoPedido.ENTREGADO) {
+            throw new IllegalStateException("el Pedido ya fue Entregado");
         }
 
         pedido.setEstado(EstadoPedido.CANCELADO);
@@ -164,8 +170,6 @@ public class PedidosServiceImp implements PedidoService{
     @Override
     public void RestaurarStock(Pedidos pedidos) {
         for (DetallePedido detalle : pedidos.getDetalles()) {
-
-            // 1. Validaciones de seguridad (mismo patrón que Descontar)
             if (detalle.getProducto() == null || detalle.getProducto().getId() == null) {
                 continue;
             }
@@ -174,14 +178,10 @@ public class PedidosServiceImp implements PedidoService{
                 continue;
             }
 
-            // 2. Buscar el producto completo desde la BD
             Productos productoBD = productoServicio.productoById(detalle.getProducto().getId());
 
-            // 3. Guardar cantidad original para el registro
             BigDecimal cantidadAnterior = productoBD.getCantidad();
 
-            // 4. Sumar stock: productoBD.getCantidad() + detalle.getCantidad()
-            // Aquí no validamos stock insuficiente porque estamos devolviendo
             BigDecimal nuevaCantidad = productoBD.getCantidad().add(detalle.getCantidad());
             productoBD.setCantidad(nuevaCantidad);
 

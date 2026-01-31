@@ -26,7 +26,13 @@ public class CategoriaControlador {
     @PostMapping("/categoria/nueva")
     public String Crearcategoria(@ModelAttribute("categoria") Categoria categoria){
         service.savecategoria(categoria);
-        return "redirect:/crearproducto/nuevo";
+        return "redirect:/listar/categorias";
     }
-
+    @GetMapping("/listar/categorias")
+    public String listarCategorias(Model model){
+        Categoria c = new Categoria();
+        model.addAttribute("categorias",c);
+        model.addAttribute("listadoCategorias", service.Listarcategoria());
+        return "viewCategorias/CategoriasListar";
+    }
 }

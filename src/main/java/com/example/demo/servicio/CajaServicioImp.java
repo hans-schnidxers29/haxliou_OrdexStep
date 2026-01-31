@@ -53,6 +53,10 @@ public class CajaServicioImp implements CajaServicio{
             return caja; // Si ya está cerrada, solo la devolvemos para el PDF
         }
 
+        Empresa empresa = securityService.ObtenerEmpresa();
+        if(empresa == null){
+            throw new IllegalStateException("error al abrir caja");
+        }
         LocalDateTime inicio = caja.getFechaApertura();
         LocalDateTime fin = LocalDateTime.now();
 
@@ -61,7 +65,7 @@ public class CajaServicioImp implements CajaServicio{
         BigDecimal totalCompras = nvl(comprasRepositorio.sumTotalCompras(inicio, fin));
         BigDecimal totalVentas = nvl(ventarepositorio.sumaVentasRango(inicio, fin));
 
-        BigDecimal saldoTeorico = caja.getMontoInicial().add(totalVentas).subtract(totalEgresos).subtract(totalCompras);
+        BigDecimal saldoTeorico = caja.getMontoInicial().add(totalVentas).subtract(totalEgresos);
 
         // Actualización de la entidad
         caja.setIngresoTotal(totalVentas);
@@ -70,6 +74,7 @@ public class CajaServicioImp implements CajaServicio{
         caja.setMontoReal(montoEnCaja);
         caja.setDiferencia(montoEnCaja.subtract(saldoTeorico));
         caja.setFechaCierre(fin);
+        caja.setEmpresa(empresa);
         caja.setEstado(EstadoDeCaja.CERRADA);
 
          return cajaRepositorio.save(caja);

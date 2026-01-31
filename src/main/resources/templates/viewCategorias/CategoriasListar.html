@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/adminlte}">
+<head>
+    <title>Listado de Categorías</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1><i class="fas fa-tags mr-2"></i> Gestión de Categorías</h1>
+                </div>
+                <div class="col-sm-6 text-right">
+                    <button type="button" class="btn btn-success shadow-sm" data-toggle="modal" data-target="#modalNuevaCategoria">
+                        <i class="fas fa-plus-circle mr-1"></i> Nueva Categoría
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="content">
+        <div class="container-fluid">
+            <div th:if="${success}" class="alert alert-success alert-dismissible shadow">
+                <button type="button" class="close" data-dismiss="alert">×</button>
+                <i class="icon fas fa-check"></i> Categoría guardada correctamente.
+            </div>
+
+            <div class="card card-outline card-purple shadow">
+                <div class="card-body p-0">
+                    <table class="table table-hover table-striped mb-0">
+                        <thead class="bg-light">
+                        <tr>
+                            <th style="width: 10px">#</th>
+                            <th>Nombre</th>
+                            <th>Descripción</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="cat, iter : ${listadoCategorias}">
+                            <td th:text="${iter.count}">1</td>
+                            <td th:text="${cat.nombrecategoria}" class="font-weight-bold text-purple">Nombre</td>
+                            <td th:text="${cat.descripcion}">Descripción</td>
+                            <td class="text-center">
+                                <div class="btn-group">
+                                    <button class="btn btn-info btn-sm shadow-sm"><i class="fas fa-edit"></i></button>
+                                    <button class="btn btn-danger btn-sm shadow-sm"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(listadoCategorias)}">
+                            <td colspan="4" class="text-center text-muted py-4">No hay categorías registradas.</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="modal fade" id="modalNuevaCategoria" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-md shadow-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-purple text-white">
+                    <h5 class="modal-title" id="modalLabel">
+                        <i class="fas fa-folder-plus mr-2"></i> Registrar Nueva Categoría
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <form th:action="@{/categoria/nueva}" th:object="${categorias}" method="POST" class="needs-validation" novalidate>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label >Nombre de la Categoría <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="fas fa-tag"></i></span>
+                                </div>
+                                <input type="text" th:field="*{nombrecategoria}" class="form-control"
+                                       placeholder="Ej: Electrónica, Ropa..." required>
+                                <div class="invalid-feedback">El nombre es obligatorio.</div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Descripción <span class="text-danger">*</span></label>
+                            <textarea th:field="*{descripcion}" class="form-control" rows="3"
+                                      placeholder="Breve descripción de los productos..." required></textarea>
+                            <div class="invalid-feedback">Debe proporcionar una descripción.</div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer bg-light justify-content-between">
+                        <button type="button" class="btn btn-secondary shadow-sm" data-dismiss="modal">
+                            <i class="fas fa-times mr-1"></i> Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-primary shadow-sm">
+                            <i class="fas fa-save mr-1"></i> Guardar Categoría
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="scripts">
+    <script>
+        // Validación de Bootstrap 4 para el formulario del modal
+        (function() {
+            'use strict';
+            window.addEventListener('load', function() {
+                var forms = document.getElementsByClassName('needs-validation');
+                Array.prototype.filter.call(forms, function(form) {
+                    form.addEventListener('submit', function(event) {
+                        if (form.checkValidity() === false) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+                        form.classList.add('was-validated');
+                    }, false);
+                });
+            }, false);
+        })();
+
+        // Resetear formulario al cerrar el modal (opcional)
+        $('#modalNuevaCategoria').on('hidden.bs.modal', function () {
+            $(this).find('form').removeClass('was-validated');
+            $(this).find('form')[0].reset();
+        });
+    </script>
+</th:block>
+</body>
+</html>

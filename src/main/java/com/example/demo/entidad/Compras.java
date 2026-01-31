@@ -48,12 +48,16 @@ public class Compras {
     @Enumerated(EnumType.STRING)
     private MetodoPago metodoPago;
 
+    @ManyToOne
+    @JoinColumn(name="empresa_id")
+    private Empresa empresa ;
+
+
     // MÉTODO HELPER: Muy importante para que el cascade funcione
     public void agregarDetalle(DetalleCompra detalle) {
         detalles.add(detalle);
         detalle.setCompra(this);
     }
-
     public Compras() {
     }
 
@@ -150,5 +154,13 @@ public class Compras {
 
     public void setMetodoPago(MetodoPago metodoPago) {
         this.metodoPago = metodoPago;
+    }
+
+    public Empresa getEmpresa() {
+        return empresa;
+    }
+
+    public void setEmpresa(Empresa empresa) {
+        this.empresa = empresa;
     }
 }

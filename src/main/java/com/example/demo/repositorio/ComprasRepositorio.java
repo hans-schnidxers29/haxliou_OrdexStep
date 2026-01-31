@@ -9,12 +9,17 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Repository
 public interface ComprasRepositorio extends JpaRepository<Compras,Long> {
 
-    @Query(value = "SELECT nextval('referencia_compra_seq')",nativeQuery = true)
-    Long obtenerNumeroSigReferencia();
+
+    List<Compras>findByEmpresaId(Long empresa_id);
+
+    @Query(value = "SELECT COALESCE(MAX(CAST(SUBSTRING(referencia, 6) AS INTEGER)), 0) + 1 " +
+            "FROM compras WHERE empresa_id = :empresaId", nativeQuery = true)
+    Long obtenerNumeroSigReferencia(@Param("empresaId") Long empresaId);
 
     @Query("SELECT COALESCE(SUM(c.total), 0) FROM Compras c WHERE c.fechaCompra BETWEEN :inicio AND :fin")
     BigDecimal sumTotalCompras(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin);

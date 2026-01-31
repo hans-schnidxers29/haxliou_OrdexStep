@@ -16,9 +16,6 @@ import java.util.Objects;
 
 @Entity
 @Table(name = "cliente")
-@NamedQueries({
-        @NamedQuery(name = "contadorPedidos", query = "select count(c) from Cliente c where c.pedidos is not empty", lockMode = LockModeType.OPTIMISTIC_FORCE_INCREMENT)
-})
 public class Cliente {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,7 +30,7 @@ public class Cliente {
     @Column(name="nombre",nullable = false)
     private String nombre;
 
-    @Column(name="email",nullable = false, unique = true)
+    @Column(name="email",nullable = false)
     private String email;
 
     @Column(name="apellido",nullable = false)
@@ -62,6 +59,10 @@ public class Cliente {
 
     @Column(columnDefinition = "TEXT")
     private String direccion ;
+
+    @ManyToOne
+    @JoinColumn(name = "empresa_id")
+    private Empresa empresa;
 
     public Cliente() {
     }
@@ -192,6 +193,14 @@ public class Cliente {
 
     public void setFechaRegistro(LocalDateTime fechaRegistro) {
         this.fechaRegistro = fechaRegistro;
+    }
+
+    public Empresa getEmpresa() {
+        return empresa;
+    }
+
+    public void setEmpresa(Empresa empresa) {
+        this.empresa = empresa;
     }
 
     @Override
