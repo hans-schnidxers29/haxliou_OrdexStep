@@ -83,10 +83,10 @@
                                                         th:selected="${p.id == det.productos.id}"
                                                         th:data-precio="${p.precioCompra}"
                                                         th:data-iva="${p.impuesto}"
-                                                        th:data-proveedor="${p.proveedor != null ? p.proveedor.nombre : 'Sin Proveedor'}"></option>
+                                                        th:data-proveedor="${p.proveedor}"></option>
                                             </select>
                                             <div class="mt-1 small text-muted">
-                                                <i class="fas fa-truck mr-1"></i>Proveedor: <span class="nombre-proveedor" th:text="${det.productos.proveedor != null ? det.productos.proveedor.nombre : 'Sin Proveedor'}">---</span>
+                                                <i class="fas fa-truck mr-1"></i>Proveedor: <span class="nombre-proveedor" th:text="${det.productos.proveedor != null ? (det.productos.proveedor instanceof T(java.lang.String) ? det.productos.proveedor : det.productos.proveedor.nombre) : 'Sin Proveedor'}">---</span>
                                             </div>
                                         </td>
                                         <td><input type="number" th:name="|detalles[${stat.index}].cantidad|" class="form-control cantidad" step="0.01" th:value="${det.cantidad}" required></td>
