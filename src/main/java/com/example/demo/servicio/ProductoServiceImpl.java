@@ -86,7 +86,9 @@ public class ProductoServiceImpl implements ProductoServicio{
 
     @Override
     public List<Productos> verificarStock() {
-        return repositorio.StockBajoList().stream().toList();
+        return repositorio.StockBajoList().stream()
+                .filter(Productos::isEstado)
+                .collect(Collectors.toList());
     }
 
     @Transactional
