@@ -10,4 +10,5 @@ public interface CategoriaService {
     Categoria savecategoria(Categoria categoria);
     Categoria Buscarbyid(Long id);
     List<Map<String,Object>>Categorias();
+    void DeleteCategoria(Long id);
 }

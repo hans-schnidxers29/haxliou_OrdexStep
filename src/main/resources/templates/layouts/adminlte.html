@@ -6,7 +6,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title th:text="${title} ?: 'Gestor de Pedidos'">Ordex-Step</title>
+    <title th:text="${title} ?: 'Gestor de Pedidos'">OrdexStep</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- Google Font -->
     <link rel="stylesheet"
@@ -23,7 +23,7 @@
     <link rel="stylesheet" th:href="@{/plugins/chart.js/Chart.min.css}">
     <link rel="stylesheet" th:href="@{/plugins/sweetalert2/sweetalert2.min.css}">
     <!--ICONO -->
-    <link rel="icon" type="image/x-icon" th:href="@{/adminlte/img/IconoOrdex.ico}">
+    <link rel="icon" type="image/png" th:href="@{/adminlte/img/OrdexLogo.png}">
     <!-- CSS adicionales de cada página -->
     <th:block layout:fragment="css"></th:block>
     <style>
@@ -291,7 +291,7 @@
                             <li class="nav-item">
                                 <a th:href="@{/listarproductos}" class="nav-link">
                                     <i class="fas fa-clipboard-list nav-icon"></i>
-                                    <p>Listado de Productos</p>
+                                    <p>Listado Productos</p>
                                 </a>
                             </li>
                             <li class="nav-item">
@@ -301,9 +301,9 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a th:href="@{/categoria/crear}" class="nav-link">
+                                <a th:href="@{/listar/categorias}" class="nav-link">
                                     <i class="fas fa-tags nav-icon"></i>
-                                    <p>Crear Categoria</p>
+                                    <p>Listado Categoria</p>
                                 </a>
                             </li>
                         </ul>
