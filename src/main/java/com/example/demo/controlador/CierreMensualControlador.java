@@ -1,6 +1,6 @@
 package com.example.demo.controlador;
 
-import com.example.demo.ModuloVentas.VentaServicio;
+import com.example.demo.servicio.VentaServicio;
 import com.example.demo.entidad.CierreMensual;
 import com.example.demo.servicio.CierreMensualServicio;
 import com.example.demo.servicio.ClienteService;

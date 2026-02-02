@@ -119,6 +119,10 @@ public class ProductoControlador {
 
             // NUEVO: Seteamos el precio de compra desde el formulario
             productoActual.setPrecioCompra(producto.getPrecioCompra());
+
+            if(producto.getPrecioPorMayor()!=null) {
+                productoActual.setPrecioPorMayor(producto.getPrecioPorMayor());
+            }
             BigDecimal  CantidadNueva = BigDecimal.ZERO;
             if(producto.getTipoVenta().getCode().equalsIgnoreCase("KGM")){
                  CantidadNueva = producto.getCantidad().setScale(3, RoundingMode.HALF_UP);
@@ -149,7 +153,7 @@ public class ProductoControlador {
     }
 
     @GetMapping("/productos/delete/{id}")
-    public String EliminarProdutos(@PathVariable Long id, RedirectAttributes redirectAttributes){
+    public String EliminarProdutos(@PathVariable Long id, RedirectAttributes redirectAttributes) throws Exception {
         service.deleteProductoById(id);
         redirectAttributes.addFlashAttribute("success", "Producto eliminado correctamente");
         return "redirect:/listarproductos";

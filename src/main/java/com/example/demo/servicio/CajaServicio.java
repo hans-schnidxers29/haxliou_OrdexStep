@@ -1,6 +1,6 @@
 package com.example.demo.servicio;
 
-import com.example.demo.Login.Usuario;
+import com.example.demo.entidad.Usuario;
 import com.example.demo.entidad.Caja;
 
 import java.math.BigDecimal;

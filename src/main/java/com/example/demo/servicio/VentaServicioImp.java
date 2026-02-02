@@ -1,10 +1,11 @@
-package com.example.demo.ModuloVentas;
+package com.example.demo.servicio;
 
 
-import com.example.demo.ModuloVentas.DetalleVenta.DetalleVenta;
-import com.example.demo.ModuloVentas.DetalleVenta.DetalleVentaRepositorio;
+import com.example.demo.entidad.DetalleVenta;
+import com.example.demo.repositorio.DetalleVentaRepositorio;
 import com.example.demo.entidad.Productos;
-import com.example.demo.servicio.ProductoServicio;
+import com.example.demo.entidad.Venta;
+import com.example.demo.repositorio.VentaRepositorio;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

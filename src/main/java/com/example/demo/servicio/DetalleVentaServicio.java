@@ -1,4 +1,6 @@
-package com.example.demo.ModuloVentas.DetalleVenta;
+package com.example.demo.servicio;
+
+import com.example.demo.entidad.DetalleVenta;
 
 import java.util.List;
 

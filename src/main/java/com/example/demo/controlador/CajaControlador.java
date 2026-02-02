@@ -1,7 +1,7 @@
 package com.example.demo.controlador;
 
-import com.example.demo.Login.Servicio.ServicioUsuario;
-import com.example.demo.Login.Usuario;
+import com.example.demo.servicio.ServicioUsuario;
+import com.example.demo.entidad.Usuario;
 import com.example.demo.entidad.Caja;
 import com.example.demo.pdf.PdfServicio;
 import com.example.demo.servicio.CajaServicio;

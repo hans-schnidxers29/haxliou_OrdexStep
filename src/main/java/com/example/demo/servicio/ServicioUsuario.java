@@ -1,7 +1,8 @@
-package com.example.demo.Login.Servicio;
+package com.example.demo.servicio;
 
-import com.example.demo.Login.Rol;
-import com.example.demo.Login.Usuario;
+import com.example.demo.entidad.Empresa;
+import com.example.demo.entidad.Rol;
+import com.example.demo.entidad.Usuario;
 import org.springframework.security.core.userdetails.UserDetailsService;
 
 import java.util.List;
@@ -17,4 +18,5 @@ public interface ServicioUsuario extends UserDetailsService {
     void actualizarContrasena(Long idUser, String password);
     Usuario saveUserRolADmin(Usuario usuario);
     Long ObtenreIdEmpresa(Long id);
+    Empresa ObtenerEmpresa(Long id);
 }

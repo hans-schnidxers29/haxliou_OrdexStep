@@ -58,17 +58,22 @@ public class Productos {
     private BigDecimal PrecioPorMayor = BigDecimal.ZERO;
 
     @Column(name = "estado")
-    private Boolean Estado = true;
+    private boolean estado = true;
 
     @ManyToOne
     @JoinColumn(name = "tributo_id")
     private Tributo tipo_Impuesto;
 
+    @ManyToOne
+    @JoinColumn(name = "empresa_id")
+    private Empresa empresa;
+
+    @Column(name = "codigo")
+    private String Codigo;
+
     // Constructores
     public Productos() {
     }
-
-
 
     public boolean tieneStockDisponible(BigDecimal cantidadSolicitada) {
         return this.cantidad.compareTo(cantidadSolicitada) >= 0;
@@ -77,8 +82,6 @@ public class Productos {
     public boolean necesitaReabastecimiento() {
         return stockMinimo != null && this.cantidad.compareTo(stockMinimo) <= 0;
     }
-
-
 
     // Getters y Setters
     public Long getId() {
@@ -193,12 +196,12 @@ public class Productos {
         PrecioPorMayor = precioPorMayor;
     }
 
-    public Boolean getEstado() {
-        return Estado;
+    public boolean isEstado() {
+        return estado;
     }
 
-    public void setEstado(Boolean estado) {
-        Estado = estado;
+    public void setEstado(boolean estado) {
+        this.estado = estado;
     }
 
     public Tributo getTipo_Impuesto() {
@@ -207,5 +210,21 @@ public class Productos {
 
     public void setTipo_Impuesto(Tributo tipo_Impuesto) {
         this.tipo_Impuesto = tipo_Impuesto;
+    }
+
+    public Empresa getEmpresa() {
+        return empresa;
+    }
+
+    public void setEmpresa(Empresa empresa) {
+        this.empresa = empresa;
+    }
+
+    public String getCodigo() {
+        return Codigo;
+    }
+
+    public void setCodigo(String codigo) {
+        Codigo = codigo;
     }
 }

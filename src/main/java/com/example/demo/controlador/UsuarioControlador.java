@@ -1,11 +1,11 @@
-package com.example.demo.Login.Controlador;
+package com.example.demo.controlador;
 
-import com.example.demo.Login.Rol;
+import com.example.demo.entidad.Rol;
 import com.example.demo.entidad.Empresa;
-import com.example.demo.Login.Servicio.ServicioEmpresa;
-import com.example.demo.Login.Usuario;
-import com.example.demo.Login.Servicio.RolServicio;
-import com.example.demo.Login.Servicio.ServicioUsuario;
+import com.example.demo.servicio.ServicioEmpresa;
+import com.example.demo.entidad.Usuario;
+import com.example.demo.servicio.RolServicio;
+import com.example.demo.servicio.ServicioUsuario;
 import com.example.demo.entidad.UsuarioEmpresa;
 import com.example.demo.entidad.Enum.RolEmpresa;
 import com.example.demo.repositorio.UsuarioEmpresaRepositorio;

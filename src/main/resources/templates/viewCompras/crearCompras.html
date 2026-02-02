@@ -28,18 +28,21 @@
             <form th:action="@{/compras/crear}" th:object="${compras}" method="post" id="compraForm">
 
                 <input type="hidden" th:field="*{numeroReferencia}">
-
                 <div class="row">
                     <div class="col-md-3">
                         <div class="card card-primary card-outline shadow">
-                            <div class="card-header"><h3 class="card-title font-weight-bold">Proveedor y Pago</h3></div>
+                            <div class="card-header"><h3 class="card-title font-weight-bold">Información de Pago</h3></div>
                             <div class="card-body">
                                 <div class="form-group">
                                     <label>Proveedor</label>
-                                    <select th:field="*{proveedor.id}" class="form-control" required>
-                                        <option value="" disabled selected>Seleccione...</option>
-                                        <option th:each="prov : ${proveedores}" th:value="${prov.id}" th:text="${prov.nombre}"></option>
+                                    <select th:field="*{proveedor.id}" class="form-control select2" required>
+                                        <option value="">Seleccione un proveedor</option>
+                                        <option th:each="proveedor : ${proveedores}"
+                                                th:value="${proveedor.id}"
+                                                th:text="${proveedor.nombre}">
+                                        </option>
                                     </select>
+                                    <div th:if="${#fields.hasErrors('proveedor.id')}" th:errors="*{proveedor.id}" class="text-danger"></div>
                                 </div>
                                 <div class="form-group">
                                     <label>Método de Pago</label>
@@ -51,7 +54,6 @@
                                         </option>
                                     </select>
                                 </div>
-
                             </div>
                         </div>
                     </div>
@@ -70,7 +72,7 @@
                                 <table class="table table-striped" id="detalleTable">
                                     <thead>
                                     <tr>
-                                        <th style="width: 30%">Producto</th>
+                                        <th style="width: 30%">Producto / Proveedor</th>
                                         <th style="width: 12%">Cant.</th>
                                         <th style="width: 15%">Precio U.</th>
                                         <th style="width: 20%">¿Cambiar IVA?</th>
@@ -122,8 +124,11 @@
             <td>
                 <select name="detalles[${contador}].productos.id" class="form-control select-producto" required>
                     <option value="">Seleccione...</option>
-                    ${productos.map(p => `<option value="${p.id}" data-precio="${p.precioCompra || 0}" data-iva="${p.impuesto || 0}">${p.nombre}</option>`).join('')}
+                    ${productos.map(p => `<option value="${p.id}" data-precio="${p.precioCompra || 0}" data-iva="${p.impuesto || 0}" data-proveedor="${p.proveedor || 'Sin Proveedor'}">${p.nombre}</option>`).join('')}
                 </select>
+                <div class="mt-1 small text-muted">
+                    <i class="fas fa-truck mr-1"></i>Proveedor: <span class="nombre-proveedor">---</span>
+                </div>
             </td>
             <td><input type="number" name="detalles[${contador}].cantidad" class="form-control cantidad" step="0.01" value="1" required></td>
             <td>
@@ -146,7 +151,7 @@
                     <label class="custom-control-label font-weight-normal small" for="switchIVA_${contador}">¿Cambiar IVA?</label>
                 </div>
                 <div class="div-nuevo-iva" style="display: none;">
-                    <input type="number" name="detalles[${contador}].productos.Impuesto" class="form-control form-control-sm border-info iva-val" placeholder="%" step="0.01" value="0">
+                    <input type="number" name="detalles[${contador}].productos.impuesto" class="form-control form-control-sm border-info iva-val" placeholder="%" step="0.01" value="0">
                     <small class="text-info font-italic">Nuevo IVA ficha</small>
                 </div>
             </td>
@@ -161,6 +166,7 @@
             const select = fila.querySelector('.select-producto');
             const inputPrecioActual = fila.querySelector('.precio-compra-actual');
             const inputIvaFicha = fila.querySelector('.iva-val');
+            const displayProveedor = fila.querySelector('.nombre-proveedor');
 
             // --- LÓGICA SWITCH PRECIO ---
             const swPrecio = fila.querySelector('.switch-precio');
@@ -202,9 +208,12 @@
                 if(option.value) {
                     inputPrecioActual.value = option.getAttribute('data-precio');
                     inputIvaFicha.value = option.getAttribute('data-iva');
-                    // Si están activos los switches, actualizar también los campos de ficha
+                    displayProveedor.innerText = option.getAttribute('data-proveedor');
+
                     if(swPrecio.checked) inputPrecioFicha.value = inputPrecioActual.value;
                     calcular();
+                } else {
+                    displayProveedor.innerText = "---";
                 }
             });
 
@@ -213,7 +222,9 @@
                 if(swPrecio.checked) inputPrecioFicha.value = this.value;
                 calcular();
             });
-            inputIvaFicha.addEventListener('input', calcular);
+            inputPrecioFicha.addEventListener('input', function() {
+                // Ya no afecta el total
+            });
 
             fila.querySelector('.eliminarFila').addEventListener('click', () => {
                 fila.remove();
@@ -228,13 +239,10 @@
             let totalCompra = 0;
             document.querySelectorAll('.fila-detalle').forEach(fila => {
                 let c = parseFloat(fila.querySelector('.cantidad').value || 0);
+                
                 let p = parseFloat(fila.querySelector('.precio-compra-actual').value || 0);
-                // El cálculo de la compra siempre usa el valor del IVA que esté en el input (sea el de la ficha o el nuevo)
-                let iva = parseFloat(fila.querySelector('.iva-val').value || 0);
 
-                let neto = c * p;
-                let impuesto = neto * (iva / 100);
-                let totalLinea = neto + impuesto;
+                let totalLinea = c * p;
 
                 fila.querySelector('.subtotal-display').innerText = totalLinea.toFixed(2);
                 totalCompra += totalLinea;
@@ -247,13 +255,11 @@
                 f.querySelector('.select-producto').name = `detalles[${i}].productos.id`;
                 f.querySelector('.cantidad').name = `detalles[${i}].cantidad`;
                 f.querySelector('.precio-compra-actual').name = `detalles[${i}].precioUnitario`;
-
-                // Mapeo exacto solicitado: productos.Impuesto y productos.precioCompra
-                f.querySelector('.div-nuevo-iva input').name = `detalles[${i}].productos.Impuesto`;
+                f.querySelector('.div-nuevo-iva input').name = `detalles[${i}].productos.impuesto`;
                 f.querySelector('.div-nuevo-precio input').name = `detalles[${i}].productos.precioCompra`;
-
                 f.querySelector('.val-switch-precio').name = `detalles[${i}].actualizarPrecio`;
                 f.querySelector('.val-switch-iva').name = `detalles[${i}].actualizarImpuesto`;
+
 
                 let swIva = f.querySelector('.switch-iva');
                 let lblIva = f.querySelector('label[for^="switchIVA"]');

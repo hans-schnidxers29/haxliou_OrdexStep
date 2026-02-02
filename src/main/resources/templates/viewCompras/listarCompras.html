@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es"
       xmlns:th="http://www.thymeleaf.org"
@@ -173,7 +174,7 @@
                                     <span th:unless="${compra.estado.name() == 'BORRADOR'}" class="text-primary"
                                           th:text="${compra.numeroReferencia}"></span>
                                 </td>
-                                <td th:text="${compra.proveedor.nombre}"></td>
+                                <td th:text="${compra.proveedor != null ? compra.proveedor.nombre : 'Sin Proveedor'}"></td>
                                 <td>
                                     <span class="badge badge-info shadow-sm" th:text="${compra.detalles.size()} + ' Items'"></span>
                                     <small class="text-muted d-block mt-1" style="max-width: 250px; line-height: 1.2;">
@@ -233,7 +234,7 @@
                                                     <div class="row mb-3">
                                                         <div class="col-md-4">
                                                             <label class="text-muted small uppercase d-block">Proveedor</label>
-                                                            <strong th:text="${compra.proveedor.nombre}"></strong>
+                                                            <strong th:text="${compra.proveedor != null ? compra.proveedor.nombre : 'Sin Proveedor'}"></strong>
                                                         </div>
                                                         <div class="col-md-4">
                                                             <label class="text-muted small d-block">Fecha de Compra</label>

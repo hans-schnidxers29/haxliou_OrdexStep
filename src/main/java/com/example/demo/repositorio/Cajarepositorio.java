@@ -1,6 +1,6 @@
 package com.example.demo.repositorio;
 
-import com.example.demo.Login.Usuario;
+import com.example.demo.entidad.Usuario;
 import com.example.demo.entidad.Caja;
 import com.example.demo.entidad.Enum.EstadoDeCaja;
 import org.springframework.data.jpa.repository.JpaRepository;

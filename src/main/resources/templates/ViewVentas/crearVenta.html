@@ -152,7 +152,7 @@
                                             </select>
                                         </td>
                                         <td>
-                                            <select name="detalles[0].producto.id" class="form-control producto-select" required onchange="actualizarPrecio(0)">
+                                            <select name="detalles[0].producto.id" class="form-control producto-select" required onchange="actualizarPrecioFila(this)">
                                                 <option value="" disabled selected>-- Seleccionar --</option>
                                                 <option th:each="p : ${productos}"
                                                         th:value="${p.id}"
@@ -165,11 +165,15 @@
                                             </select>
                                         </td>
                                         <td>
-                                            <input type="number" name="detalles[0].cantidad" class="form-control cantidad-input" min="0.01" value="1.00" step="0.01" required onchange="calcularSubtotal(0)">
+                                            <input type="number" name="detalles[0].cantidad" class="form-control cantidad-input" min="0.01" value="1.00" step="0.01" required onchange="calcularSubtotalFila(this)">
                                             <small class="text-muted unidad-medida">Unidad: Und</small>
                                         </td>
                                         <td>
                                             <input type="number" name="detalles[0].precioUnitario" class="form-control precio-unitario bg-light" step="0.01" readonly>
+                                            <div class="custom-control custom-switch mt-1">
+                                                <input type="checkbox" class="custom-control-input switch-mayor" id="switchMayor_0" onchange="actualizarPrecioFila(this)">
+                                                <label class="custom-control-label small font-weight-normal" for="switchMayor_0">¿P. Mayor?</label>
+                                            </div>
                                         </td>
                                         <td>
                                             <input type="number" name="detalles[0].impuestoProducto" class="form-control impuesto-producto bg-light" step="0.01" readonly>
@@ -485,7 +489,13 @@
                     <input type="number" name="detalles[${detalleCount}].cantidad" class="form-control cantidad-input" min="0.01" value="1.00" step="0.01" required onchange="calcularSubtotalFila(this)">
                     <small class="text-muted unidad-medida">Unidad: Und</small>
                 </td>
-                <td><input type="number" name="detalles[${detalleCount}].precioUnitario" class="form-control precio-unitario bg-light" readonly step="0.01"></td>
+                <td>
+                    <input type="number" name="detalles[${detalleCount}].precioUnitario" class="form-control precio-unitario bg-light" readonly step="0.01">
+                    <div class="custom-control custom-switch mt-1">
+                    <input type="checkbox" class="custom-control-input switch-mayor" id="switchMayor_${detalleCount}" onchange="actualizarPrecioFila(this)">
+                    <label class="custom-control-label small font-weight-normal" for="switchMayor_${detalleCount}">¿P. Mayor?</label>
+                    </div>
+                </td>
                 <td><input type="number" name="detalles[${detalleCount}].impuestoProducto" class="form-control impuesto-producto bg-light" readonly step="0.01"></td>
                 <td><input type="number" name="detalles[${detalleCount}].subtotal" class="form-control subtotal-item bg-light text-bold" readonly step="0.01"></td>
                 <td class="text-center"><button type="button" class="btn btn-link text-danger" onclick="eliminarFila(this)"><i class="fas fa-trash-alt"></i></button></td>
@@ -500,41 +510,47 @@
         }
 
         // Función corregida para usar el elemento directamente e integrar Venta al por Mayor
-        function actualizarPrecioFila(select) {
+        function actualizarPrecioFila(element) {
+            const fila = element.closest('tr');
+            const select = fila.querySelector('.producto-select');
             const option = select.options[select.selectedIndex];
-            const fila = select.closest('tr');
             const labelUnidad = fila.querySelector('.unidad-medida');
             const inputCantidad = fila.querySelector('.cantidad-input');
-            const isMayor = document.getElementById('switchVentaMayor').checked;
+            const switchGlobal = document.getElementById('switchVentaMayor');
+            const switchFila = fila.querySelector('.switch-mayor');
 
-            if (select.value === "") {
+            if (!select.value) {
                 fila.querySelector('.precio-unitario').value = "";
                 fila.querySelector('.impuesto-producto').value = "";
                 labelUnidad.innerText = "Unidad: Und";
-            } else {
-                const pNormal = option.getAttribute("data-precio") || 0;
-                const pMayor = option.getAttribute("data-preciomayor") || pNormal;
-                const precioFinal = isMayor ? pMayor : pNormal;
-
-                const impuesto = option.getAttribute("data-impuesto") || 0;
-
-                // --- CAMBIO AQUÍ: Ahora comparamos con código DIAN (KGM) ---
-                const tipoVenta = option.getAttribute("data-tipo");
-
-                fila.querySelector('.precio-unitario').value = parseFloat(precioFinal).toFixed(2);
-                fila.querySelector('.impuesto-producto').value = impuesto;
-
-                // Si el código es KGM (Kilogramo) o LTR (Litro)
-                if (tipoVenta === 'KGM' || tipoVenta === 'LTR') {
-                    labelUnidad.innerText = (tipoVenta === 'KGM') ? "Unidad: Gramos" : "Unidad: Mililitros";
-                    labelUnidad.className = "badge badge-warning unidad-medida";
-                    inputCantidad.step = "1";
-                } else {
-                    labelUnidad.innerText = "Unidad: Und";
-                    labelUnidad.className = "text-muted small unidad-medida";
-                    inputCantidad.step = "1";
-                }
+                return;
             }
+
+            const pNormal = parseFloat(option.getAttribute("data-precio")) || 0;
+            const pMayor = parseFloat(option.getAttribute("data-preciomayor")) || pNormal;
+            
+            // Si el switch global está activo, forzamos precio mayor en todas las filas
+            // Si no, respetamos el switch individual de la fila
+            const isMayor = switchGlobal.checked || (switchFila && switchFila.checked);
+            const precioFinal = isMayor ? pMayor : pNormal;
+
+            const impuesto = option.getAttribute("data-impuesto") || 0;
+            const tipoVenta = option.getAttribute("data-tipo");
+
+            fila.querySelector('.precio-unitario').value = precioFinal.toFixed(2);
+            fila.querySelector('.impuesto-producto').value = impuesto;
+
+            // Si el código es KGM (Kilogramo) o LTR (Litro)
+            if (tipoVenta === 'KGM' || tipoVenta === 'LTR') {
+                labelUnidad.innerText = (tipoVenta === 'KGM') ? "Unidad: Gramos" : "Unidad: Mililitros";
+                labelUnidad.className = "badge badge-warning unidad-medida";
+                inputCantidad.step = "1";
+            } else {
+                labelUnidad.innerText = "Unidad: Und";
+                labelUnidad.className = "text-muted small unidad-medida";
+                inputCantidad.step = "1";
+            }
+            
             calcularSubtotalFila(inputCantidad);
         }
         // Función corregida para calcular subtotal por fila
@@ -632,6 +648,12 @@
 
             // Actualiza todas las filas existentes con el nuevo modo de precio
             document.querySelectorAll('.detalle-item').forEach(fila => {
+                const switchFila = fila.querySelector('.switch-mayor');
+                if (switchFila) {
+                    // Sincronizamos el switch de la fila con el switch global
+                    switchFila.checked = isMayor;
+                }
+                
                 const select = fila.querySelector('.producto-select');
                 if (select && select.value !== "") {
                     actualizarPrecioFila(select);
@@ -639,8 +661,7 @@
             });
         }
         // Vincular el primer elemento manualmente (ya que no se crea por JS)
-        document.querySelector('.producto-select').setAttribute('onchange', 'actualizarPrecioFila(this)');
-        document.querySelector('.cantidad-input').setAttribute('onchange', 'calcularSubtotalFila(this)');
+        // Ya están vinculados en el HTML estático, pero aseguramos compatibilidad si fuera necesario.
     </script>
 </th:block>
 </body>

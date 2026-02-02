@@ -1,6 +1,5 @@
 package com.example.demo.entidad;
 
-import com.example.demo.Login.Usuario;
 import com.example.demo.entidad.Enum.EstadoDeCaja;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;

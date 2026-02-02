@@ -50,12 +50,12 @@
                             <thead>
                             <tr>
                                 <th>Nombre</th>
-                                <th>Tipo Venta</th>
+                                <th>Codigo</th>
                                 <th style="min-width: 140px;">Finanzas (Costo/Venta)</th>
                                 <th>Stock</th>
                                 <th>Stock Mínimo</th>
                                 <th>Categoría / Prov</th>
-                                <th>Descripción</th>
+                                <th>Tipo Venta</th>
                                 <th class="text-center">Acciones</th>
                             </tr>
                             </thead>
@@ -63,15 +63,7 @@
                             <tr th:each="producto : ${productos}">
                                 <td class="font-weight-bold" th:text="${producto.nombre}"></td>
 
-                                <td>
-                                    <span class="badge shadow-sm"
-                                          th:classappend="${producto.tipoVenta.code == 'KGM' ? 'badge-peso' :
-                                                          (producto.tipoVenta.code == 'LTR' ? 'badge-volumen' :
-                                                          (producto.tipoVenta.code == 'MTR' ? 'badge-metro' : 'badge-unidad'))}"
-                                          th:text="${producto.tipoVenta.name}">
-                                    </span>
-                                </td>
-
+                                <td class="small text-muted" th:text="${producto.codigo}"></td>
                                 <td>
                                     <div class="d-flex flex-column">
                                         <small class="text-primary mb-0" title="Costo de compra">
@@ -142,7 +134,15 @@
                                     </small>
                                 </td>
 
-                                <td class="small text-muted" th:text="${producto.descripcion}"></td>
+                                <td>
+                                    <span class="badge shadow-sm"
+                                          th:classappend="${producto.tipoVenta.code == 'KGM' ? 'badge-peso' :
+                                                          (producto.tipoVenta.code == 'LTR' ? 'badge-volumen' :
+                                                          (producto.tipoVenta.code == 'MTR' ? 'badge-metro' : 'badge-unidad'))}"
+                                          th:text="${producto.tipoVenta.name}">
+                                    </span>
+                                </td>
+
 
                                 <td class="text-center">
                                     <div class="btn-group">

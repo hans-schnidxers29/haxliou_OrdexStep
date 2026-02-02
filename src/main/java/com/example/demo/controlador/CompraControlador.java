@@ -1,7 +1,7 @@
 package com.example.demo.controlador;
 
-import com.example.demo.Login.Servicio.ServicioUsuario;
-import com.example.demo.Login.Usuario;
+import com.example.demo.servicio.ServicioUsuario;
+import com.example.demo.entidad.Usuario;
 import com.example.demo.entidad.Compras;
 import com.example.demo.entidad.DetalleCompra;
 import com.example.demo.entidad.Enum.EstadoCompra;
@@ -67,7 +67,7 @@ public class CompraControlador {
         Compras compras = new Compras();
         model.addAttribute("compras",compras);
         model.addAttribute("proveedores",proveedorServicio.listarproveedores());
-        model.addAttribute("productos",productoServicio.listarProductos());
+        model.addAttribute("productos",productoServicio.ProductoSimple());
         model.addAttribute("MetodoPago", MetodoPago.values());
 
         return "viewCompras/crearCompras";
@@ -85,7 +85,7 @@ public class CompraControlador {
         if (result.hasErrors()) {
             // No redirigir, sino devolver la misma vista
             model.addAttribute("proveedores", proveedorServicio.listarproveedores());
-            model.addAttribute("productos", productoServicio.listarProductos());
+            model.addAttribute("productos", productoServicio.ProductoSimple());
             return "viewCompras/crearCompras";
         }
 
@@ -94,27 +94,18 @@ public class CompraControlador {
             Usuario user = servicioUsuario.findByEmail(userDetails.getUsername());
             compras.setUsuario(user);
 
-            // 3. Validar Proveedor
-            Proveedores proveedor = proveedorServicio.proveedorById(compras.getProveedor().getId());
-            if (proveedor == null) {
-                // Aquí también devolvemos la misma vista en lugar de redirect
-                model.addAttribute("error", "Proveedor no encontrado");
-                model.addAttribute("proveedores", proveedorServicio.listarproveedores());
-                model.addAttribute("productos", productoServicio.listarProductos());
-                return "viewCompras/crearCompras";
-            }
-            compras.setProveedor(proveedor);
 
             // 4. Procesar Detalles de Compra
             if (compras.getDetalles() == null || compras.getDetalles().isEmpty()) {
                 model.addAttribute("info", "La lista de productos no puede estar vacía");
                 model.addAttribute("proveedores", proveedorServicio.listarproveedores());
-                model.addAttribute("productos", productoServicio.listarProductos());
+                model.addAttribute("productos", productoServicio.ProductoSimple());
                 return "viewCompras/crearCompras";
             }
 
             List<DetalleCompra> detallesValidos = new ArrayList<>();
             BigDecimal acumuladorSubtotales = BigDecimal.ZERO;
+            Proveedores primerProveedor = null; // To store the supplier of the first product
 
             for (DetalleCompra detalle : compras.getDetalles()) {
                 if (detalle.getProductos() == null || detalle.getProductos().getId() == null ||
@@ -126,6 +117,10 @@ public class CompraControlador {
                 Productos productoCompleto = productoServicio.productoById(detalle.getProductos().getId());
                 if (productoCompleto == null) continue;
 
+                // Set the supplier of the purchase from the first product found
+                if (primerProveedor == null && productoCompleto.getProveedor() != null) {
+                    primerProveedor = productoCompleto.getProveedor();
+                }
 
                 if (detalle.getProductos().getImpuesto() != null) {
                     productoCompleto.setImpuesto(detalle.getProductos().getImpuesto());
@@ -143,10 +138,21 @@ public class CompraControlador {
                 detallesValidos.add(detalle);
             }
 
+            // Set the purchase's supplier based on the first product's supplier
+            if (primerProveedor != null) {
+                compras.setProveedor(primerProveedor);
+            } else {
+                // Handle case where no valid product with a supplier was found
+                result.rejectValue("proveedor.id", "error.compras", "No se pudo determinar el proveedor a partir de los productos.");
+                model.addAttribute("proveedores", proveedorServicio.listarproveedores());
+                model.addAttribute("productos", productoServicio.ProductoSimple());
+                return "viewCompras/crearCompras";
+            }
+
             if (detallesValidos.isEmpty()) {
                 model.addAttribute("error", "Debe agregar al menos un producto válido con cantidad mayor a cero");
                 model.addAttribute("proveedores", proveedorServicio.listarproveedores());
-                model.addAttribute("productos", productoServicio.listarProductos());
+                model.addAttribute("productos", productoServicio.ProductoSimple());
                 return "viewCompras/crearCompras";
             }
 
@@ -165,7 +171,7 @@ public class CompraControlador {
         } catch (Exception e) {
             model.addAttribute("error", "Error al procesar la compra: " + e.getMessage());
             model.addAttribute("proveedores", proveedorServicio.listarproveedores());
-            model.addAttribute("productos", productoServicio.listarProductos());
+            model.addAttribute("productos", productoServicio.ProductoSimple());
             return "viewCompras/crearCompras";
         }
     }
@@ -176,7 +182,7 @@ public class CompraControlador {
         Compras compras = compraServicio.compraById(id);
         model.addAttribute("compras",compras);
         model.addAttribute("proveedores",proveedorServicio.listarproveedores());
-        model.addAttribute("productos",productoServicio.listarProductos());
+        model.addAttribute("productos",productoServicio.ProductoSimple());
         return "viewCompras/editarCompra";
 
     }
@@ -199,7 +205,6 @@ public class CompraControlador {
             }
 
             // 2. Datos básicos
-            compraExistente.setProveedor(proveedorServicio.proveedorById(compras.getProveedor().getId()));
             compraExistente.setMetodoPago(compras.getMetodoPago());
             compraExistente.setObservaciones(compras.getObservaciones());
 
@@ -208,10 +213,16 @@ public class CompraControlador {
 
             if (compras.getDetalles() != null) {
                 BigDecimal acumulador = BigDecimal.ZERO;
+                Proveedores primerProveedor = null; // To store the supplier of the first product
                 for (DetalleCompra detalle : compras.getDetalles()) {
                     if (detalle.getProductos() != null && detalle.getProductos().getId() != null) {
 
                         Productos prod = productoServicio.productoById(detalle.getProductos().getId());
+                        // Set the supplier of the purchase from the first product found
+                        if (primerProveedor == null && prod.getProveedor() != null) {
+                            primerProveedor = prod.getProveedor();
+                        }
+
                         detalle.setProductos(prod);
                         detalle.setCompra(compraExistente); // Vínculo necesario para JPA
 
@@ -221,6 +232,15 @@ public class CompraControlador {
 
                         compraExistente.getDetalles().add(detalle);
                     }
+                }
+                // Set the purchase's supplier based on the first product's supplier
+                if (primerProveedor != null) {
+                    compraExistente.setProveedor(primerProveedor);
+                } else {
+                    // Handle case where no valid product with a supplier was found
+                    // This might need more robust error handling or a default supplier
+                    // For now, I'll set it to null if no product with a supplier is found.
+                    compraExistente.setProveedor(null);
                 }
                 compraExistente.setTotal(acumulador);
             }

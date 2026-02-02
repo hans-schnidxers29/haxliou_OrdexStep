@@ -82,8 +82,12 @@
                                                         th:text="${p.nombre}"
                                                         th:selected="${p.id == det.productos.id}"
                                                         th:data-precio="${p.precioCompra}"
-                                                        th:data-iva="${p.impuesto}"></option>
+                                                        th:data-iva="${p.impuesto}"
+                                                        th:data-proveedor="${p.proveedor != null ? p.proveedor.nombre : 'Sin Proveedor'}"></option>
                                             </select>
+                                            <div class="mt-1 small text-muted">
+                                                <i class="fas fa-truck mr-1"></i>Proveedor: <span class="nombre-proveedor" th:text="${det.productos.proveedor != null ? det.productos.proveedor.nombre : 'Sin Proveedor'}">---</span>
+                                            </div>
                                         </td>
                                         <td><input type="number" th:name="|detalles[${stat.index}].cantidad|" class="form-control cantidad" step="0.01" th:value="${det.cantidad}" required></td>
                                         <td>
@@ -139,8 +143,11 @@
                 <td>
                     <select name="detalles[${contador}].productos.id" class="form-control select-producto" required>
                         <option value="">Seleccione...</option>
-                        ${productos.map(p => `<option value="${p.id}" data-precio="${p.precioCompra || 0}" data-iva="${p.impuesto || 0}">${p.nombre}</option>`).join('')}
+                        ${productos.map(p => `<option value="${p.id}" data-precio="${p.precioCompra || 0}" data-iva="${p.impuesto || 0}" data-proveedor="${p.proveedor || 'Sin Proveedor'}">${p.nombre}</option>`).join('')}
                     </select>
+                    <div class="mt-1 small text-muted">
+                        <i class="fas fa-truck mr-1"></i>Proveedor: <span class="nombre-proveedor">---</span>
+                    </div>
                 </td>
                 <td><input type="number" name="detalles[${contador}].cantidad" class="form-control cantidad" step="0.01" value="1" required></td>
                 <td><input type="number" name="detalles[${contador}].precioUnitario" class="form-control precio-compra-actual" step="0.01" value="0" required></td>
@@ -161,7 +168,10 @@
                 const option = this.options[this.selectedIndex];
                 if(option.value) {
                     fila.querySelector('.precio-compra-actual').value = option.getAttribute('data-precio');
+                    fila.querySelector('.nombre-proveedor').innerText = option.getAttribute('data-proveedor');
                     calcular();
+                } else {
+                    fila.querySelector('.nombre-proveedor').innerText = "---";
                 }
             });
 

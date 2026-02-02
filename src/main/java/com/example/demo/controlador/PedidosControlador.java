@@ -1,9 +1,10 @@
 package com.example.demo.controlador;
 
 
-import com.example.demo.Login.Servicio.ServicioEmpresa;
-import com.example.demo.Login.Servicio.ServicioUsuario;
-import com.example.demo.Login.Usuario;
+import com.example.demo.Seguridad.SecurityService;
+import com.example.demo.servicio.ServicioEmpresa;
+import com.example.demo.servicio.ServicioUsuario;
+import com.example.demo.entidad.Usuario;
 import com.example.demo.entidad.*;
 import com.example.demo.entidad.Enum.EstadoPedido;
 import com.example.demo.pdf.PdfServicio;
@@ -56,6 +57,8 @@ public class PedidosControlador {
 
     @Autowired
     private ServicioUsuario servicoUser;
+
+    @Autowired private SecurityService securityService;
 
     /**
      * Listar todos los pedidos
@@ -522,9 +525,7 @@ public class PedidosControlador {
     public ResponseEntity<byte[]> generarTicket(@PathVariable Long id, @AuthenticationPrincipal UserDetails user) throws Exception{
 
         Pedidos pedido = pedidoService.pedidosByid(id);
-        Usuario usuario = servicoUser.findByEmail(user.getUsername());
-        Long IdEmpresa = servicoUser.ObtenreIdEmpresa(usuario.getId());
-        Empresa empresa = empresaService.DatosEmpresa(IdEmpresa);
+        Empresa empresa = securityService.ObtenerEmpresa();
 
         BigDecimal Subtotal = pedido.getSubtotal();
         BigDecimal Impuesto = pedido.getImpuesto(); // Ahora simplemente usamos el campo impuesto del pedido
