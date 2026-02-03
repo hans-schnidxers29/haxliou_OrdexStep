@@ -5,11 +5,19 @@ import com.example.demo.entidad.*;
 import com.example.demo.servicio.ServicioUsuario;
 import com.example.demo.servicio.ServicioEmpresa;
 import com.example.demo.entidad.DetalleVenta;
+import com.example.demo.Seguridad.SecurityService;
+import com.example.demo.entidad.Venta;
+import com.example.demo.entidad.Usuario;
+import com.example.demo.entidad.Caja;
+import com.example.demo.entidad.Empresa;
+import com.example.demo.entidad.Cliente;
+import com.example.demo.entidad.Productos;
 import com.example.demo.pdf.PdfServicio;
 import com.example.demo.servicio.CajaServicio;
 import com.example.demo.servicio.CategoriaService;
 import com.example.demo.servicio.ClienteService;
 import com.example.demo.servicio.ProductoServicio;
+import com.example.demo.util.RoundingUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -25,6 +33,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/ventas")
@@ -52,6 +61,8 @@ public class VentaControlador {
 
     @Autowired
     private CategoriaService categoriaService;
+
+    @Autowired private SecurityService securityService;
 
 
     // Inyectar el servicio
@@ -237,7 +248,8 @@ public class VentaControlador {
             venta.setImpuesto(porcentajeGlobal != null ? porcentajeGlobal : BigDecimal.ZERO); 
 
             // El Total sigue siendo Subtotal + Dinero del Impuesto Acumulado
-            venta.setTotal(subtotalGeneral.add(totalImpuestosAcumulado).setScale(2, RoundingMode.HALF_UP));
+            BigDecimal totalCalculado = subtotalGeneral.add(totalImpuestosAcumulado);
+            venta.setTotal(RoundingUtil.roundToColombianPeso(totalCalculado));
 
             // 4. Gestión de Usuario y Stock
             Usuario usuarioVendedor = servicioUsuario.findByEmail(userDetails.getUsername());
@@ -269,12 +281,10 @@ public class VentaControlador {
     @GetMapping("/ticket/{id}")
     public ResponseEntity<byte[]> generarTicket(@PathVariable Long id,@AuthenticationPrincipal UserDetails usuario) throws Exception {
 
-        Usuario user = servicioUsuario.findByEmail(usuario.getUsername());
-        Long IdEmpresa  = servicioUsuario.ObtenreIdEmpresa(user.getId());
         Venta venta = servicio.buscarVenta(id);
 
         // Usamos tu método DatosEmpresa con ID 1
-        Empresa empresa = servicioEmpresa.DatosEmpresa(IdEmpresa);
+        Empresa empresa = securityService.ObtenerEmpresa();
 
         BigDecimal subtotal = venta.getSubtotal();
         BigDecimal impuesto = venta.getTotal().subtract(subtotal);

@@ -11,14 +11,12 @@ import java.util.Optional;
 
 @Repository
 public interface RepositorioUsuario extends JpaRepository<Usuario, Long> {
-
      Usuario findByEmail(String email);
 
      @Query("SELECT ue.empresa.id FROM UsuarioEmpresa ue WHERE ue.usuario.id = :usuarioId")
      Long buscarIdEmpresaPorUsuarioId(@Param("usuarioId") Long usuarioId);
 
+
      @Query("SELECT ue.empresa FROM UsuarioEmpresa ue WHERE ue.usuario.id = :usuarioId")
      Optional<Empresa> ObtenerEmpresaPorUsuarioId(@Param("usuarioId") Long usuarioId);
-
-
 }

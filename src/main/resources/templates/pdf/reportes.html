@@ -189,19 +189,23 @@
     <table id="tabla-PRODUCTOS">
       <thead>
       <tr>
-        <th>ID</th><th>Nombre</th><th>Categoría</th><th>Stock Actual</th><th>Unidad</th><th>Precio Venta</th><th>Proveedor</th><th>Tipo de Impuesto</th>
+        <th>ID</th><th>Nombre</th><th>Categoría</th><th>Stock Actual</th><th>Unidad</th><th>Precio Compra</th>
+        <th>Precio AlMayor</th><th>Precio Venta</th><th>Proveedor</th><th>Tipo de Impuesto</th><th>taza de Impuesto</th>
       </tr>
       </thead>
       <tbody>
       <tr th:each="prod : ${productos}">
-        <td th:text="${prod.id}"></td>
+        <td th:text="${prod.codigo}"></td>
         <td th:text="${prod.nombre}"></td>
         <td th:text="${prod.categoria.nombrecategoria}"></td>
         <td th:text="${prod.cantidad}"></td>
         <td th:text="${prod.tipoVenta.name}"></td>
+        <td th:text="${prod.precioCompra}"></td>
+        <td th:text="${prod.precioPorMayor}"></td>
         <td th:text="${prod.precio}"></td>
-        <td th:text="${prod.proveedor}"></td>
-        <td th:text="${prod.tipo_Impuesto}"></td>
+        <td th:text="${prod.proveedor.nombre}"></td>
+        <td th:text="${prod.tipo_Impuesto.name}"></td>
+        <td th:text="${prod.impuesto}"></td>
       </tr>
       </tbody>
     </table>

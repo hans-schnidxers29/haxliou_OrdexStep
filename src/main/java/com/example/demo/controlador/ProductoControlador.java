@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 @Controller
 public class ProductoControlador {
@@ -129,7 +130,18 @@ public class ProductoControlador {
             // NUEVO: Seteamos el precio de compra desde el formulario
             productoActual.setPrecioCompra(producto.getPrecioCompra());
 
-            productoActual.setCantidad(producto.getCantidad());
+            if(producto.getPrecioPorMayor()!=null) {
+                productoActual.setPrecioPorMayor(producto.getPrecioPorMayor());
+            }
+            BigDecimal  CantidadNueva = BigDecimal.ZERO;
+            if(producto.getTipoVenta().getCode().equalsIgnoreCase("KGM")){
+                 CantidadNueva = producto.getCantidad().setScale(3, RoundingMode.HALF_UP);
+            }else{
+                CantidadNueva = producto.getCantidad();
+            }
+
+
+            productoActual.setCantidad(CantidadNueva);
             productoActual.setDescripcion(producto.getDescripcion());
             productoActual.setCategoria(categoria);
             productoActual.setTipoVenta(producto.getTipoVenta());
@@ -151,7 +163,7 @@ public class ProductoControlador {
     }
 
     @GetMapping("/productos/delete/{id}")
-    public String EliminarProdutos(@PathVariable Long id, RedirectAttributes redirectAttributes){
+    public String EliminarProdutos(@PathVariable Long id, RedirectAttributes redirectAttributes) throws Exception {
         service.deleteProductoById(id);
         redirectAttributes.addFlashAttribute("success", "Producto eliminado correctamente");
         return "redirect:/listarproductos";

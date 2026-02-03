@@ -27,23 +27,23 @@ body {
     max-width: 700px;
     overflow-y: auto;
 }
-
 .logo {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 40px;
+    display: flex;          /* Activa el alineado horizontal */
+    align-items: center;    /* Centra el texto verticalmente respecto al logo */
+    gap: 10px;              /* Espacio entre el icono y el texto */
+    margin-bottom: 2rem;    /* Espacio inferior antes del "Bienvenido" */
 }
 
 .logo img {
-    height: 50px;
+    height: 40px;           /* Ajusta según el tamaño que desees */
     width: auto;
 }
 
 .logo-text {
-    font-size: 24px;
-    font-weight: 700;
-    color: #1a1a1a;
+    font-size: 1.5rem;      /* Tamaño del título */
+    font-weight: bold;
+    color: #333;            /* Color del texto */
+    line-height: 1;         /* Evita espacios extra arriba/abajo del texto */
 }
 
 h1 {

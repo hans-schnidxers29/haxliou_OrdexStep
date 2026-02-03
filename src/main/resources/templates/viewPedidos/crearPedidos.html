@@ -174,7 +174,13 @@
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td><input type="text" class="form-control form-control-sm precio-unitario-display bg-light text-right" readonly tabindex="-1"></td>
+                                            <td>
+                                                <input type="text" class="form-control form-control-sm precio-unitario-display bg-light text-right" readonly tabindex="-1">
+                                                <div class="custom-control custom-switch mt-1">
+                                                    <input type="checkbox" class="custom-control-input switch-mayor" id="switchMayor_0" onchange="actualizarPrecio(0)">
+                                                    <label class="custom-control-label small font-weight-normal" for="switchMayor_0">¿P. Mayor?</label>
+                                                </div>
+                                            </td>
                                             <td><input type="text" class="form-control form-control-sm impuesto-display bg-light text-right" readonly tabindex="-1"></td>
                                             <td><input type="text" class="form-control form-control-sm subtotal-display bg-light font-weight-bold text-right" readonly tabindex="-1"></td>
                                             <td></td>
@@ -305,7 +311,13 @@
                         <div class="input-group-append"><span class="input-group-text unidad-label p-1" style="font-size: 0.7rem;">un</span></div>
                     </div>
                 </td>
-                <td><input type="text" class="form-control form-control-sm bg-light text-right precio-unitario-display" readonly tabindex="-1"></td>
+                <td>
+                    <input type="text" class="form-control form-control-sm bg-light text-right precio-unitario-display" readonly tabindex="-1">
+                    <div class="custom-control custom-switch mt-1">
+                        <input type="checkbox" class="custom-control-input switch-mayor" id="switchMayor_${detalleCount}" onchange="actualizarPrecio(${detalleCount})">
+                        <label class="custom-control-label small font-weight-normal" for="switchMayor_${detalleCount}">¿P. Mayor?</label>
+                    </div>
+                </td>
                 <td><input type="text" class="form-control form-control-sm bg-light text-right impuesto-display" readonly tabindex="-1"></td>
                 <td><input type="text" class="form-control form-control-sm bg-light font-weight-bold text-right subtotal-display" readonly tabindex="-1"></td>
                 <td class="text-center"><button type="button" class="btn btn-link text-danger p-0" onclick="this.closest('tr').remove(); calcularTotal();"><i class="fas fa-trash"></i></button></td>
@@ -318,7 +330,9 @@
             if(!row) return;
 
             const select = row.querySelector('.producto-select');
-            const isMayor = document.getElementById('switchVentaMayor').checked;
+            const switchGlobal = document.getElementById('switchVentaMayor');
+            const switchFila = row.querySelector('.switch-mayor');
+            const isMayor = switchGlobal.checked || (switchFila && switchFila.checked);
 
             if (!select.value) {
                 row.querySelector('.precio-unitario-display').value = "";
@@ -372,7 +386,10 @@
             if (!select || !select.value) return;
 
             const opt = select.options[select.selectedIndex];
-            const isMayor = document.getElementById('switchVentaMayor').checked;
+            const switchGlobal = document.getElementById('switchVentaMayor');
+            const switchFila = row.querySelector('.switch-mayor');
+            const isMayor = switchGlobal.checked || (switchFila && switchFila.checked);
+
             const precioNormal = parseFloat(opt.getAttribute('data-precio')) || 0;
             const precioMayor = parseFloat(opt.getAttribute('data-preciomayor')) || precioNormal;
             const precioAEjercer = isMayor ? precioMayor : precioNormal;
@@ -398,11 +415,14 @@
         function calcularTotal() {
             let subtotalGeneral = 0;
             let impuestoGeneral = 0;
-            const isMayor = document.getElementById('switchVentaMayor').checked;
+            const switchGlobal = document.getElementById('switchVentaMayor');
 
             document.querySelectorAll('.detalle-item').forEach(fila => {
                 const select = fila.querySelector('.producto-select');
                 if (!select || !select.value) return;
+
+                const switchFila = fila.querySelector('.switch-mayor');
+                const isMayor = switchGlobal.checked || (switchFila && switchFila.checked);
 
                 const opt = select.options[select.selectedIndex];
                 const pNormal = parseFloat(opt.getAttribute('data-precio')) || 0;
@@ -435,6 +455,14 @@
 
             label.innerText = isMayor ? "Precio MAYORISTA" : "Precio DETAL";
             label.className = isMayor ? "small font-weight-bold text-success" : "small font-weight-bold text-danger";
+
+            // Sincroniza todos los switches de las filas con el global
+            document.querySelectorAll('.detalle-item').forEach(fila => {
+                const switchFila = fila.querySelector('.switch-mayor');
+                if (switchFila) {
+                    switchFila.checked = isMayor;
+                }
+            });
 
             // Recalcula todas las filas de la tabla
             document.querySelectorAll('#detallesContainer tr').forEach((fila, index) => {

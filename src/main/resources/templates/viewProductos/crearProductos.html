@@ -109,11 +109,11 @@
                                     </div>
                                     <div class="col-md-3 form-group">
                                         <label>Stock Inicial</label>
-                                        <input type="number" th:field="*{cantidad}" class="form-control" required>
+                                        <input type="number" th:field="*{cantidad}" class="form-control" required step="any" min="0.00">
                                     </div>
                                     <div class="col-md-3 form-group">
                                         <label>Alerta Stock Mínimo</label>
-                                        <input type="number" th:field="*{stockMinimo}" class="form-control">
+                                        <input type="number" th:field="*{stockMinimo}" class="form-control" step="any" min="0.00">
                                     </div>
                                 </div>
 
@@ -184,8 +184,8 @@
 
                 if (tipoVenta === 'UNIDAD') {
                     $contenedorAdicionales.fadeOut();
-                    $inputStock.attr('step', '1');
-                    $inputStockMinimo.attr('step', '1');
+                    $inputStock.attr('step', 'any');
+                    $inputStockMinimo.attr('step', 'any');
                     $addonStock.text('unidad');
                     $addonStockMinimo.text('unidad');
                     $labelPrecio.text('Unitario');

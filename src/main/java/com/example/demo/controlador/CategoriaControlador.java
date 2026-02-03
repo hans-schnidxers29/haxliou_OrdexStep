@@ -8,6 +8,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
 @Controller
@@ -28,11 +30,18 @@ public class CategoriaControlador {
         service.savecategoria(categoria);
         return "redirect:/listar/categorias";
     }
+
     @GetMapping("/listar/categorias")
     public String listarCategorias(Model model){
         Categoria c = new Categoria();
         model.addAttribute("categorias",c);
         model.addAttribute("listadoCategorias", service.Listarcategoria());
         return "viewCategorias/CategoriasListar";
+    }
+
+    @GetMapping("/categoria/eliminar/{id}")
+    public String eliminarCategoria(@PathVariable Long id, Model model) throws Exception{
+        service.DeleteCategoria(id);
+        return "redirect:/listar/categorias";
     }
 }

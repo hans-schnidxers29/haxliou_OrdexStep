@@ -34,6 +34,17 @@
                             <div class="card-header"><h3 class="card-title font-weight-bold">Información de Pago</h3></div>
                             <div class="card-body">
                                 <div class="form-group">
+                                    <label>Proveedor</label>
+                                    <select th:field="*{proveedor.id}" class="form-control select2" required>
+                                        <option value="">Seleccione un proveedor</option>
+                                        <option th:each="proveedor : ${proveedores}"
+                                                th:value="${proveedor.id}"
+                                                th:text="${proveedor.nombre}">
+                                        </option>
+                                    </select>
+                                    <div th:if="${#fields.hasErrors('proveedor.id')}" th:errors="*{proveedor.id}" class="text-danger"></div>
+                                </div>
+                                <div class="form-group">
                                     <label>Método de Pago</label>
                                     <select th:field="*{metodoPago}" class="form-control" required>
                                         <option value="">Seleccione un método</option>
@@ -43,6 +54,7 @@
                                         </option>
                                     </select>
                                 </div>
+
                             </div>
                         </div>
                     </div>
@@ -113,7 +125,7 @@
             <td>
                 <select name="detalles[${contador}].productos.id" class="form-control select-producto" required>
                     <option value="">Seleccione...</option>
-                    ${productos.map(p => `<option value="${p.id}" data-precio="${p.precioCompra || 0}" data-iva="${p.impuesto || 0}" data-proveedor="${p.proveedor ? p.proveedor.nombre : 'Sin Proveedor'}">${p.nombre}</option>`).join('')}
+                    ${productos.map(p => `<option value="${p.id}" data-precio="${p.precioCompra || 0}" data-iva="${p.impuesto || 0}" data-proveedor="${p.proveedor || 'Sin Proveedor'}">${p.nombre}</option>`).join('')}
                 </select>
                 <div class="mt-1 small text-muted">
                     <i class="fas fa-truck mr-1"></i>Proveedor: <span class="nombre-proveedor">---</span>
@@ -140,7 +152,7 @@
                     <label class="custom-control-label font-weight-normal small" for="switchIVA_${contador}">¿Cambiar IVA?</label>
                 </div>
                 <div class="div-nuevo-iva" style="display: none;">
-                    <input type="number" name="detalles[${contador}].productos.Impuesto" class="form-control form-control-sm border-info iva-val" placeholder="%" step="0.01" value="0">
+                    <input type="number" name="detalles[${contador}].productos.impuesto" class="form-control form-control-sm border-info iva-val" placeholder="%" step="0.01" value="0">
                     <small class="text-info font-italic">Nuevo IVA ficha</small>
                 </div>
             </td>
@@ -211,7 +223,9 @@
                 if(swPrecio.checked) inputPrecioFicha.value = this.value;
                 calcular();
             });
-            inputIvaFicha.addEventListener('input', calcular);
+            inputPrecioFicha.addEventListener('input', function() {
+                // Ya no afecta el total
+            });
 
             fila.querySelector('.eliminarFila').addEventListener('click', () => {
                 fila.remove();
@@ -226,12 +240,10 @@
             let totalCompra = 0;
             document.querySelectorAll('.fila-detalle').forEach(fila => {
                 let c = parseFloat(fila.querySelector('.cantidad').value || 0);
-                let p = parseFloat(fila.querySelector('.precio-compra-actual').value || 0);
-                let iva = parseFloat(fila.querySelector('.iva-val').value || 0);
 
-                let neto = c * p;
-                let impuesto = neto * (iva / 100);
-                let totalLinea = neto + impuesto;
+                let p = parseFloat(fila.querySelector('.precio-compra-actual').value || 0);
+
+                let totalLinea = c * p;
 
                 fila.querySelector('.subtotal-display').innerText = totalLinea.toFixed(2);
                 totalCompra += totalLinea;
@@ -244,10 +256,11 @@
                 f.querySelector('.select-producto').name = `detalles[${i}].productos.id`;
                 f.querySelector('.cantidad').name = `detalles[${i}].cantidad`;
                 f.querySelector('.precio-compra-actual').name = `detalles[${i}].precioUnitario`;
-                f.querySelector('.div-nuevo-iva input').name = `detalles[${i}].productos.Impuesto`;
+                f.querySelector('.div-nuevo-iva input').name = `detalles[${i}].productos.impuesto`;
                 f.querySelector('.div-nuevo-precio input').name = `detalles[${i}].productos.precioCompra`;
                 f.querySelector('.val-switch-precio').name = `detalles[${i}].actualizarPrecio`;
                 f.querySelector('.val-switch-iva').name = `detalles[${i}].actualizarImpuesto`;
+
 
                 let swIva = f.querySelector('.switch-iva');
                 let lblIva = f.querySelector('label[for^="switchIVA"]');

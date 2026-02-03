@@ -20,17 +20,19 @@ public class ProductoServiceImpl implements ProductoServicio{
     @Autowired
     private ProductoRepositorio repositorio;
 
-    @Autowired
-    private SecurityService obtenerIdEmpresa;
+    @Autowired private SecurityService securityService;
 
     @Override
     public List<Productos> listarProductos() {
-        Long empresaId = obtenerIdEmpresa.obtenerEmpresaId();
-        return repositorio.findByEmpresaId(empresaId);
+        return repositorio.findByEmpresaIdAndEstado(securityService.obtenerEmpresaId(),true);
     }
 
     @Override
     public Productos save(Productos producto) {
+        producto.setEmpresa(securityService.ObtenerEmpresa());
+        if(producto.getCodigo() == null){
+            producto.setCodigo(CodigoProductos());
+        }
         return repositorio.save(producto);
     }
 
@@ -40,8 +42,10 @@ public class ProductoServiceImpl implements ProductoServicio{
     }
 
     @Override
-    public void deleteProductoById(Long id) {
-        repositorio.deleteById(id);
+    @Transactional
+    public void deleteProductoById(Long id){
+        Productos producto = productoById(id);
+        producto.setEstado(false);
     }
 
     @Transactional
@@ -63,9 +67,8 @@ public class ProductoServiceImpl implements ProductoServicio{
         if (producto.getCategoria() != null) {
             p1.setCategoria(producto.getCategoria());
         }
-        if (producto.getPrecioPorMayor() != null) {
-            p1.setPrecioPorMayor(producto.getPrecioPorMayor());
-        }
+        p1.setPrecioPorMayor(producto.getPrecioPorMayor());
+
 
     }
 
@@ -81,12 +84,12 @@ public class ProductoServiceImpl implements ProductoServicio{
         return resultado.stream().map(objeto ->(BigDecimal) objeto[1]).toList();
     }
 
-    /**
-     * @return
-     */
+
     @Override
     public List<Productos> verificarStock() {
-        return repositorio.StockBajoList().stream().toList();
+        return repositorio.StockBajoList().stream()
+                .filter(Productos::isEstado)
+                .collect(Collectors.toList());
     }
 
     @Transactional
@@ -113,7 +116,7 @@ public class ProductoServiceImpl implements ProductoServicio{
 
     @Override
     public List<Map<String, Object>> ProductoSimple() {
-        return repositorio.findAll().stream().map(p -> {
+        return listarProductos().stream().map(p -> {
             Map<String, Object> map = new HashMap<>();
             map.put("id", p.getId());
             map.put("nombre", p.getNombre());
@@ -122,11 +125,16 @@ public class ProductoServiceImpl implements ProductoServicio{
             map.put("tipoVenta", p.getTipoVenta().getCode());
             map.put("categoriaId", p.getCategoria().getId() != null ? p.getCategoria().getId() : null);
             map.put("precioPorMayor", p.getPrecioPorMayor());
+            map.put("proveedor", p.getProveedor() != null ? p.getProveedor().getNombre() : "Sin Proveedor");
+            map.put("precioCompra",p.getPrecioCompra());
             map.put("EmpresaId",p.getEmpresa().getId());
-            map.put("precioCompra", p.getPrecioCompra());
             return map;
         }).collect(Collectors.toList());
     }
 
-
+    private String CodigoProductos(){
+        String prefrijo = "PROD-";
+        Long IdFormateado = repositorio.obtenerMaximoCodigoNumerico() + 1 ;
+        return prefrijo + String.format("%05d", IdFormateado);
+    }
 }

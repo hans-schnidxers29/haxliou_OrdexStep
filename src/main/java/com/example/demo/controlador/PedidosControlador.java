@@ -1,16 +1,12 @@
 package com.example.demo.controlador;
 
 
-import com.example.demo.servicio.ServicioEmpresa;
-import com.example.demo.servicio.ServicioUsuario;
-import com.example.demo.entidad.Usuario;
+import com.example.demo.Seguridad.SecurityService;
 import com.example.demo.entidad.*;
 import com.example.demo.entidad.Enum.EstadoPedido;
 import com.example.demo.pdf.PdfServicio;
-import com.example.demo.servicio.CategoriaService;
-import com.example.demo.servicio.ClienteService;
-import com.example.demo.servicio.PedidoService;
-import com.example.demo.servicio.ProductoServicio;
+import com.example.demo.servicio.*;
+import com.example.demo.util.RoundingUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -56,6 +52,8 @@ public class PedidosControlador {
 
     @Autowired
     private ServicioUsuario servicoUser;
+
+    @Autowired private SecurityService securityService;
 
     /**
      * Listar todos los pedidos
@@ -262,7 +260,7 @@ public class PedidosControlador {
             pedido.setImpuesto(montoTotalImpuestos.setScale(2, RoundingMode.HALF_UP));
 
             BigDecimal total = subtotalPedido.add(montoTotalImpuestos).add(pedido.getFlete());
-            pedido.setTotal(total.setScale(2, RoundingMode.HALF_UP));
+            pedido.setTotal(RoundingUtil.roundToColombianPeso(total));
 
             pedidoService.DescantorStock(pedido);
             pedido.setEstado(EstadoPedido.PENDIENTE);
@@ -402,7 +400,7 @@ public class PedidosControlador {
             pedidoExistente.setFlete(flete);
             pedidoExistente.setSubtotal(subtotalProductos.setScale(2, RoundingMode.HALF_UP));
             pedidoExistente.setImpuesto(montoTotalImpuestos.setScale(2, RoundingMode.HALF_UP));
-            pedidoExistente.setTotal(totalFinal.setScale(2, RoundingMode.HALF_UP));
+            pedidoExistente.setTotal(RoundingUtil.roundToColombianPeso(totalFinal));
             pedidoExistente.actualizarDetalles(detallesNuevos);
 
             // 5. Guardar cambios
@@ -522,9 +520,7 @@ public class PedidosControlador {
     public ResponseEntity<byte[]> generarTicket(@PathVariable Long id, @AuthenticationPrincipal UserDetails user) throws Exception{
 
         Pedidos pedido = pedidoService.pedidosByid(id);
-        Usuario usuario = servicoUser.findByEmail(user.getUsername());
-        Long IdEmpresa = servicoUser.ObtenreIdEmpresa(usuario.getId());
-        Empresa empresa = empresaService.DatosEmpresa(IdEmpresa);
+        Empresa empresa = securityService.ObtenerEmpresa();
 
         BigDecimal Subtotal = pedido.getSubtotal();
         BigDecimal Impuesto = pedido.getImpuesto(); // Ahora simplemente usamos el campo impuesto del pedido

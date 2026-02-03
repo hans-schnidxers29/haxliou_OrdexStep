@@ -1,3 +1,4 @@
+
 package com.example.demo.Seguridad;
 
 import com.example.demo.entidad.Empresa;

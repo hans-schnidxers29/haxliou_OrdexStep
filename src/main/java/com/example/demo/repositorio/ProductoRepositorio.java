@@ -16,10 +16,11 @@ import java.util.List;
 @EnableJpaRepositories
 public interface ProductoRepositorio extends JpaRepository<Productos,Long> {
 
+    List<Productos>findByEmpresaIdAndEstado(Long empresaId,boolean estado);
 
-    List<Productos>findByEmpresaId(Long empresa_id);
-
-
+    @Query(value = "SELECT COALESCE(MAX(CAST(SUBSTRING(codigo, 6) AS INTEGER)), 0) " +
+            "FROM productos", nativeQuery = true)
+    Long obtenerMaximoCodigoNumerico();
 
     @Query(value = "SELECT nombre, SUM(total_cantidad) as productos_vendidos \n" +
             "FROM (\n" +

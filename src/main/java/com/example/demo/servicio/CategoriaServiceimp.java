@@ -2,7 +2,6 @@ package com.example.demo.servicio;
 
 import com.example.demo.Seguridad.SecurityService;
 import com.example.demo.entidad.Categoria;
-import com.example.demo.entidad.Empresa;
 import com.example.demo.repositorio.CategoriaRepositorio;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,13 +25,12 @@ public class CategoriaServiceimp implements CategoriaService{
     @Override
     public List<Categoria> Listarcategoria() {
         Long empresaId=securityService.obtenerEmpresaId();
-        return repositorio.findByEmpresaId(empresaId);
+        return repositorio.findByEmpresaIdAndEstado(securityService.obtenerEmpresaId(),true);
     }
 
     @Override
     public Categoria savecategoria(Categoria categoria) {
-        Empresa empresa = securityService.ObtenerEmpresa();
-        categoria.setEmpresa(empresa);
+        categoria.setEmpresa(securityService.ObtenerEmpresa());
         return repositorio.save(categoria);
     }
 
@@ -44,12 +42,16 @@ public class CategoriaServiceimp implements CategoriaService{
 
     @Override
     public List<Map<String, Object>> Categorias() {
-        Long Empresaid= securityService.obtenerEmpresaId();
-        return repositorio.findByEmpresaId(Empresaid).stream().map(c ->{
+        return Listarcategoria().stream().map(c ->{
             Map<String,Object> datos = new HashMap<>();
             datos.put("id",c.getId());
             datos.put("nombre",c.getNombrecategoria());
             return datos;
         }).collect(Collectors.toList());
+    }
+
+    @Override
+    public void DeleteCategoria(Long id) {
+        repositorio.deleteById(id);
     }
 }

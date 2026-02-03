@@ -1,5 +1,6 @@
 package com.example.demo.entidad;
 
+import com.example.demo.entidad.Enum.TipoVenta;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
@@ -22,7 +23,7 @@ public class Productos {
     @Column(name = "precio", nullable = false, precision = 10, scale = 2)
     private BigDecimal precio;
 
-    @Column(name = "cantidad", nullable = false, scale = 2, precision = 10)
+    @Column(name = "cantidad", nullable = false, scale = 3, precision = 10)
     private BigDecimal cantidad = BigDecimal.ZERO;
 
     @ManyToOne
@@ -35,7 +36,7 @@ public class Productos {
     @Column(name = "incremento", precision = 10, scale = 2)
     private BigDecimal incremento;
 
-    @Column(name = "stock_minimo", precision = 10, scale = 2)
+    @Column(name = "stock_minimo", precision = 10, scale = 3)
     private BigDecimal stockMinimo;
 
     @ManyToOne
@@ -57,7 +58,7 @@ public class Productos {
     private BigDecimal PrecioPorMayor = BigDecimal.ZERO;
 
     @Column(name = "estado")
-    private Boolean Estado = true;
+    private boolean estado = true;
 
     @ManyToOne
     @JoinColumn(name = "tributo_id")
@@ -65,7 +66,10 @@ public class Productos {
 
     @ManyToOne
     @JoinColumn(name = "empresa_id")
-    private Empresa empresa ;
+    private Empresa empresa;
+
+    @Column(name = "codigo")
+    private String Codigo;
 
     // Constructores
     public Productos() {
@@ -196,12 +200,12 @@ public class Productos {
         PrecioPorMayor = precioPorMayor;
     }
 
-    public Boolean getEstado() {
-        return Estado;
+    public boolean isEstado() {
+        return estado;
     }
 
-    public void setEstado(Boolean estado) {
-        Estado = estado;
+    public void setEstado(boolean estado) {
+        this.estado = estado;
     }
 
     public Tributo getTipo_Impuesto() {
@@ -218,5 +222,13 @@ public class Productos {
 
     public void setEmpresa(Empresa empresa) {
         this.empresa = empresa;
+    }
+
+    public String getCodigo() {
+        return Codigo;
+    }
+
+    public void setCodigo(String codigo) {
+        Codigo = codigo;
     }
 }

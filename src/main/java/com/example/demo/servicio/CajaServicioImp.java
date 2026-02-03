@@ -10,13 +10,17 @@ import com.example.demo.repositorio.Cajarepositorio;
 import com.example.demo.repositorio.ComprasRepositorio;
 import com.example.demo.repositorio.EgresoRepositorio;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class CajaServicioImp implements CajaServicio{
@@ -65,7 +69,7 @@ public class CajaServicioImp implements CajaServicio{
         BigDecimal totalCompras = nvl(comprasRepositorio.sumTotalCompras(inicio, fin));
         BigDecimal totalVentas = nvl(ventarepositorio.sumaVentasRango(inicio, fin));
 
-        BigDecimal saldoTeorico = caja.getMontoInicial().add(totalVentas).subtract(totalEgresos);
+        BigDecimal saldoTeorico = caja.getMontoInicial().add(totalVentas).subtract(totalEgresos).subtract(totalCompras);
 
         // Actualización de la entidad
         caja.setIngresoTotal(totalVentas);

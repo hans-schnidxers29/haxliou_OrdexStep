@@ -25,14 +25,17 @@ public class Usuario {
 
     private String password;
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @Column(name = "telefono")
     private String telefono;
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @Column(name = "direccion_casa")
     private String direccionCasa;
 
 
     // --- RELACIÓN CON SEGURIDAD ---
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinTable(
             name = "usuarios_roles",
@@ -42,6 +45,7 @@ public class Usuario {
     private Collection<Rol> roles;
 
     @OneToMany(mappedBy = "usuario")
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private List<UsuarioEmpresa> empresa;
 
 

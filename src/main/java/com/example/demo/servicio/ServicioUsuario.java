@@ -18,6 +18,5 @@ public interface ServicioUsuario extends UserDetailsService {
     void actualizarContrasena(Long idUser, String password);
     Usuario saveUserRolADmin(Usuario usuario);
     Long ObtenreIdEmpresa(Long id);
-    Empresa ObtenerEmpresa (Long id);
-
+    Empresa ObtenerEmpresa(Long id);
 }

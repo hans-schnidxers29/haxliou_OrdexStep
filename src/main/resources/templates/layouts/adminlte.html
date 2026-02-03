@@ -6,7 +6,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title th:text="${title} ?: 'Gestor de Pedidos'">Ordex-Step</title>
+    <title th:text="${title} ?: 'Gestor de Pedidos'">OrdexStep</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- Google Font -->
     <link rel="stylesheet"
@@ -22,7 +22,8 @@
     <link rel="stylesheet" th:href="@{/plugins/datatables-responsive/css/responsive.bootstrap4.min.css}">
     <link rel="stylesheet" th:href="@{/plugins/chart.js/Chart.min.css}">
     <link rel="stylesheet" th:href="@{/plugins/sweetalert2/sweetalert2.min.css}">
-    <link rel="icon" type="image/x-icon" th:href="@{/adminlte/img/IconoOrdex.ico}">
+    <!--ICONO -->
+    <link rel="icon" type="image/png" th:href="@{/adminlte/img/OrdexLogo.png}">
     <!-- CSS adicionales de cada página -->
     <th:block layout:fragment="css"></th:block>
     <style>
@@ -56,6 +57,93 @@
             from { opacity: 0; transform: translateY(5px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+        .logo {
+            display: flex;
+            align-items: center; /* Alineación vertical perfecta */
+            gap: 12px;           /* Espacio horizontal */
+            margin-bottom: 2rem;
+        }
+
+        .logo img {
+            height: 50px;        /* Tamaño fijo para control total */
+            width: auto;
+            display: block;
+        }
+
+        .logo-text {
+            font-size: 2rem;
+            font-weight: 700;    /* Un poco más de grosor como en la imagen */
+            line-height: 1;      /* Elimina espacios extra del texto */
+            margin: 0;           /* Quita márgenes por defecto */
+        }
+        /* ===== SIDEBAR ORDEx ===== */
+        .ordex-sidebar {
+            background-color: #0F172A !important; /* Azul oscuro premium */
+        }
+
+        /* Logo */
+        .brand-link {
+            background-color: #0F172A !important;
+            border-bottom: 1px solid #1E293B;
+        }
+
+        .brand-text {
+            font-weight: 700;
+            color: #F59E0B !important; /* Naranja del logo */
+            letter-spacing: 0.5px;
+        }
+
+        /* Icono del logo */
+        .brand-image {
+            filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.4));
+        }
+
+        /* Texto del menú */
+        .nav-sidebar .nav-link {
+            color: #E5E7EB !important;
+        }
+
+        /* Íconos */
+        .nav-sidebar .nav-icon {
+            color: #94A3B8;
+        }
+
+        /* Hover */
+        .nav-sidebar .nav-link:hover {
+            background-color: #1E293B !important;
+            color: #FFFFFF !important;
+        }
+
+        /* Activo */
+        .nav-sidebar .nav-link.active {
+            background-color: #1E293B !important;
+            border-left: 4px solid #F59E0B;
+            color: #FFFFFF !important;
+        }
+
+        /* Submenú */
+        .nav-treeview .nav-link {
+            background-color: transparent !important;
+            padding-left: 2.2rem;
+        }
+
+        /* Header ADMINISTRACIÓN */
+        .nav-header {
+            color: #64748B;
+            font-size: 0.75rem;
+            letter-spacing: 0.08em;
+        }
+        .navbar {
+            border-bottom: 1px solid #e5e7eb; /* gris muy suave */
+        }
+        .navbar {
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+        }
+        .navbar i {
+            color: #374151;
+        }
+
     </style>
 </head>
 
@@ -105,10 +193,13 @@
     </nav>
 
     <!-- SIDEBAR -->
-    <aside class="main-sidebar sidebar-dark-primary elevation-4">
-        <a th:href="@{/Home}" class="brand-link">
-            <i class="fas fa-store ml-3 text-primary"></i>
-            <span class="brand-text font-weight-light ml-2">Mi Sistema</span>
+    <aside class="main-sidebar elevation-4 ordex-sidebar">
+        <a th:href="@{/Home}" class="brand-link d-flex align-items-center">
+                <img th:src="@{/adminlte/img/LogoOrdexxStep.png}"
+                     alt="Logo ERP"
+                 class="brand-image"
+                 style="max-height: 35px; width: auto; float: none; margin-left: 0.8rem;">
+            <span class="brand-text font-weight-light ml-2">OrdexStep</span>
         </a>
 
 
@@ -210,7 +301,7 @@
                             <li class="nav-item">
                                 <a th:href="@{/listarproductos}" class="nav-link">
                                     <i class="fas fa-clipboard-list nav-icon"></i>
-                                    <p>Listado de Productos</p>
+                                    <p>Listado Productos</p>
                                 </a>
                             </li>
                             <li class="nav-item">
@@ -222,7 +313,7 @@
                             <li class="nav-item">
                                 <a th:href="@{/listar/categorias}" class="nav-link">
                                     <i class="fas fa-tags nav-icon"></i>
-                                    <p>Listado Categorias</p>
+                                    <p>Listado Categoria</p>
                                 </a>
                             </li>
                         </ul>
