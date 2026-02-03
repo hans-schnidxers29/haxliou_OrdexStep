@@ -16,6 +16,7 @@ import com.example.demo.servicio.CajaServicio;
 import com.example.demo.servicio.CategoriaService;
 import com.example.demo.servicio.ClienteService;
 import com.example.demo.servicio.ProductoServicio;
+import com.example.demo.util.RoundingUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -245,7 +246,8 @@ public class VentaControlador {
             venta.setImpuesto(porcentajeGlobal != null ? porcentajeGlobal : BigDecimal.ZERO); 
 
             // El Total sigue siendo Subtotal + Dinero del Impuesto Acumulado
-            venta.setTotal(subtotalGeneral.add(totalImpuestosAcumulado).setScale(2, RoundingMode.HALF_UP));
+            BigDecimal totalCalculado = subtotalGeneral.add(totalImpuestosAcumulado);
+            venta.setTotal(RoundingUtil.roundToColombianPeso(totalCalculado));
 
             // 4. Gestión de Usuario y Stock
             Usuario usuarioVendedor = servicioUsuario.findByEmail(userDetails.getUsername());

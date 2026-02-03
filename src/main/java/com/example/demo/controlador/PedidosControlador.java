@@ -12,6 +12,7 @@ import com.example.demo.servicio.CategoriaService;
 import com.example.demo.servicio.ClienteService;
 import com.example.demo.servicio.PedidoService;
 import com.example.demo.servicio.ProductoServicio;
+import com.example.demo.util.RoundingUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -265,7 +266,7 @@ public class PedidosControlador {
             pedido.setImpuesto(montoTotalImpuestos.setScale(2, RoundingMode.HALF_UP));
 
             BigDecimal total = subtotalPedido.add(montoTotalImpuestos).add(pedido.getFlete());
-            pedido.setTotal(total.setScale(2, RoundingMode.HALF_UP));
+            pedido.setTotal(RoundingUtil.roundToColombianPeso(total));
 
             pedidoService.DescantorStock(pedido);
             pedido.setEstado(EstadoPedido.PENDIENTE);
@@ -405,7 +406,7 @@ public class PedidosControlador {
             pedidoExistente.setFlete(flete);
             pedidoExistente.setSubtotal(subtotalProductos.setScale(2, RoundingMode.HALF_UP));
             pedidoExistente.setImpuesto(montoTotalImpuestos.setScale(2, RoundingMode.HALF_UP));
-            pedidoExistente.setTotal(totalFinal.setScale(2, RoundingMode.HALF_UP));
+            pedidoExistente.setTotal(RoundingUtil.roundToColombianPeso(totalFinal));
             pedidoExistente.actualizarDetalles(detallesNuevos);
 
             // 5. Guardar cambios
