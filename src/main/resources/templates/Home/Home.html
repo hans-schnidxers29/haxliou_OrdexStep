@@ -23,17 +23,34 @@
 
     <div class="content-header">
         <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
+            <div class="row mb-2 align-items-center">
+
+                <!-- Título a la IZQUIERDA -->
+                <div class="col-sm-6 d-flex align-items-center">
                     <h1 class="m-0 font-weight-bold text-dark">
-                        <i class="fas fa-tachometer-alt mr-2 text-primary"></i>Panel de Gestión
+                        <i class="fas fa-tachometer-alt mr-2 text-primary"></i>
+                        Panel de Gestión
                     </h1>
                 </div>
-                <div class="col-sm-6 text-right">
-                     <span class="badge badge-info p-2 shadow-sm">
-                         <i class="far fa-calendar-alt mr-1"></i> [[${#temporals.format(#temporals.createNow(), 'dd/MM/yyyy HH:mm')}]]
-                     </span>
+
+                <!-- Anuncio a la DERECHA -->
+                <div class="col-sm-6 d-flex justify-content-end align-items-center">
+                    <div id="banner-vencimiento"
+                         class="hidden d-inline-flex align-items-center px-3 py-2 shadow-sm"
+                         style="background-color: #1a222b; border-radius: 8px; border-left: 4px solid #f39c12;">
+
+                        <span id="mensaje-alerta"
+                              class="font-weight-bold"
+                              style="color: #f39c12; font-size: 0.85rem; letter-spacing: 0.5px;">
+                        </span>
+
+                        <button class="btn btn-xs ml-3 font-weight-bold px-3"
+                                style="background-color: #f39c12; color: #1a222b; border-radius: 4px; border: none;">
+                            RENOVAR
+                        </button>
+                    </div>
                 </div>
+
             </div>
         </div>
     </div>
@@ -148,18 +165,138 @@
                         </div>
                     </div>
                 </div>
-
             </div>
-
         </div>
     </section>
+    <div class="modal fade" id="modalSuspension" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-danger shadow-lg">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title font-weight-bold" style="color: #f39c12;">
+                        <i class="fas fa-exclamation-triangle mr-2"></i> SERVICIO SUSPENDIDO
+                    </h5>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <div class="mb-3">
+                        <i class="fas fa-user-slash text-danger" style="font-size: 4rem;"></i>
+                    </div>
+                    <h4 class="font-weight-bold">Acceso Restringido</h4>
+                    <p class="text-muted">
+                        La suscripción de <b th:text="${NombreEmpresa}">Empresa</b> ha expirado.
+                        El sistema se encuentra bloqueado hasta que se regularice el pago.
+                    </p>
+                    <div class="alert alert-secondary border-orange" style="background-color: #1a222b; color: #f39c12;">
+                        <i class="fab fa-whatsapp mr-2"></i> Contacte a Soporte: <b>+57 300 XXX XXXX</b>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light d-flex justify-content-between">
+                    <a th:href="@{/login?logout}" class="btn btn-secondary shadow-sm">
+                        <i class="fas fa-sign-out-alt mr-1"></i> Salir
+                    </a>
+                    <button class="btn font-weight-bold px-4 shadow-sm" style="background-color: #f39c12; color: #1a222b;">
+                        NOTIFICAR PAGO
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal Empresa Inactiva -->
+    <div class="modal fade" id="modalInactivo" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-warning shadow-lg">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title font-weight-bold" style="color: #f39c12;">
+                        <i class="fas fa-info-circle mr-2"></i> EMPRESA PENDIENTE DE ACTIVACIÓN
+                    </h5>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <div class="mb-3">
+                        <i class="fas fa-hourglass-half text-warning" style="font-size: 4rem;"></i>
+                    </div>
+                    <h4 class="font-weight-bold">Aún no estás activo</h4>
+                    <p class="text-muted">
+                        Hola <b th:text="${NombreEmpresa}">Empresa</b>, tu cuenta aún no ha sido activada por nuestro equipo administrativo.
+                    </p>
+                    <div class="alert alert-info">
+                        <i class="fas fa-clock mr-2"></i> La activación se realizará en un máximo de <b>3 días hábiles</b>.
+                    </div>
+                    <p class="small text-muted">Agradecemos tu paciencia.</p>
+                </div>
+                <div class="modal-footer bg-light">
+                    <a th:href="@{/logout}" class="btn btn-secondary shadow-sm btn-block">
+                        <i class="fas fa-sign-out-alt mr-1"></i> Salir del Sistema
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-
 <th:block layout:fragment="scripts">
     <script th:src="@{/plugins/chart.js/Chart.min.js}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
     <script th:inline="javascript">
         $(function () {
-            // --- GRÁFICA DE PIE (MÉTODOS DE PAGO) ---
+            // --- VARIABLES DESDE EL MODELO ---
+            const EMPRESA_ID_LOGUEADA = /*[[${EmpresaId}]]*/ 0;
+            const EMPRESA_ESTADO = /*[[${EmpresaEstado}]]*/ true;
+            const API_ADMIN_URL = 'http://localhost:8082/api/empresas';
+
+            // --- 0. VERIFICAR ESTADO ACTIVO ---
+            function verificarEstadoActivo() {
+                if (EMPRESA_ESTADO === false) {
+                    $('#modalInactivo').modal('show');
+                    document.body.style.overflow = 'hidden';
+                    bloquearInteraccionGlobal();
+                    return false;
+                }
+                return true;
+            }
+
+            // --- 1. LÓGICA DE SUSCRIPCIÓN ---
+            async function verificarSuscripcion() {
+                if(!EMPRESA_ID_LOGUEADA) return;
+
+                try {
+                    const { data } = await axios.get(`${API_ADMIN_URL}/${EMPRESA_ID_LOGUEADA}`);
+                    const banner = document.getElementById('banner-vencimiento');
+                    const mensaje = document.getElementById('mensaje-alerta');
+                    const dias = data.diasRestantes;
+
+                    if (dias <= 7) {
+                        banner.classList.remove('hidden');
+                        banner.classList.add('d-inline-flex');
+
+                        if (dias >= 0) {
+                            // Caso: Aviso de pocos días
+                            mensaje.innerHTML = `<i class="fas fa-clock mr-2"></i> TU PLAN VENCE EN ${dias} DÍAS`;
+                            banner.style.borderRightColor = "#f39c12";
+                        } else {
+                            // Caso: SUSPENDIDO
+                            mensaje.innerHTML = `<i class="fas fa-ban mr-2"></i> SUSCRIPCIÓN VENCIDA`;
+                            banner.style.borderRightColor = "#dc3545";
+                            mensaje.style.color = "#dc3545";
+
+                            // --- BLOQUEO CON MODAL ---
+                            $('#modalSuspension').modal('show');
+
+                            // Capa extra: Bloquear scroll y clics de fondo
+                            document.body.style.overflow = 'hidden';
+                            bloquearInteraccionGlobal();
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error conectando al sistema de administración", error);
+                }
+            }
+
+            function bloquearInteraccionGlobal() {
+                const overlay = document.createElement('div');
+                overlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; z-index:1040; background: rgba(0,0,0,0.1); cursor:not-allowed;';
+                document.body.appendChild(overlay);
+            }
+
+            // --- 2. GRÁFICA DE PIE ---
             const metodosLabels = /*[[${metodosPagoLabels}]]*/ ['Sin Datos'];
             const metodosData = /*[[${metodosPagoValores}]]*/ [0];
 
@@ -176,9 +313,14 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     legend: { position: 'bottom' },
-                    cutoutPercentage: 65 // Le da un estilo más moderno
+                    cutoutPercentage: 65
                 }
             });
+
+            // Ejecutar verificación al cargar
+            if (verificarEstadoActivo()) {
+                verificarSuscripcion();
+            }
         });
     </script>
 </th:block>

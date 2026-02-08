@@ -15,7 +15,7 @@ import java.util.List;
 public interface ClienteRepositorio  extends JpaRepository<Cliente,Long> {
 
     boolean existsByNumeroIdentificacionAndEmpresaId(String numeroIdentificacion, Long empresaId);
-    Cliente findByNumeroIdentificacion(String numeroIdentificacion);
+    Cliente findByNumeroIdentificacionAndEmpresaId(String numeroIdentificacion, Long empresaId);
     List<Cliente>findByEmpresaId(Long empresa_id);
 
     @Query(value = "SELECT \n" +
@@ -28,6 +28,7 @@ public interface ClienteRepositorio  extends JpaRepository<Cliente,Long> {
             "    JOIN cliente c ON p.id_cliente = c.id\n" +
             "    WHERE p.estado = 'ENTREGADO'\n" +
             "    AND c.numero_identificacion != '222222222222' -- Excluir Consumidor Final\n" +
+            "    AND p.empresa_id = :empresaId\n" +
             "\n" +
             "    UNION ALL\n" +
             "\n" +
@@ -36,16 +37,18 @@ public interface ClienteRepositorio  extends JpaRepository<Cliente,Long> {
             "    FROM venta v\n" +
             "    JOIN cliente c ON v.cliente_id = c.id\n" +
             "    WHERE c.numero_identificacion != '222222222222' -- Excluir Consumidor Final\n" +
+            "    AND v.empresa_id = :empresaId\n" +
             ") as consolidado_ventas\n" +
             "GROUP BY nombre\n" +
             "ORDER BY total_ventas DESC\n" +
             "LIMIT 5;", nativeQuery = true) // Agregamos LIMIT 5 para el Top 5
-    List<Object []> CantidadPorPedidos();
+    List<Object []> CantidadPorPedidos(@Param("empresaId") Long empresaId);
 
-    @Query("SELECT COUNT(c) FROM Cliente c WHERE c.fechaRegistro BETWEEN :inicio AND :fin")
+    @Query("SELECT COUNT(c) FROM Cliente c WHERE c.fechaRegistro BETWEEN :inicio AND :fin AND c.empresa.id = :empresaId")
     Integer contarNuevosClientesPorRango(
             @Param("inicio") LocalDateTime inicio,
-            @Param("fin") LocalDateTime fin
+            @Param("fin") LocalDateTime fin,
+            @Param("empresaId") Long empresaId
     );
 
 }

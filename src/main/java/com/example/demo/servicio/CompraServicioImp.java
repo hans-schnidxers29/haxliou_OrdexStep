@@ -120,21 +120,21 @@ public class CompraServicioImp implements CompraServicio{
         Map<String, Object> datos = new HashMap<>();
 
         // Gasto total (este ya te funciona)
-        datos.put("TotalEgresos", repositorio.sumTotalCompras(inicio, fin));
+        datos.put("TotalEgresos", repositorio.sumTotalCompras(inicio, fin, securityservice.obtenerEmpresaId()));
 
         // Cantidades (usando los nombres de los Enums)
         BigDecimal unidades = repositorio.sumarTotalEntrantePorTipoYRango(
                 "94", // Convertir a String
                 EstadoCompra.CONFIRMADA.name(), // Convertir a String
                 inicio,
-                fin
+                fin, securityservice.obtenerEmpresaId()
         );
 
         BigDecimal peso = repositorio.sumarTotalEntrantePorTipoYRango(
                 "KGM", // O el nombre exacto de tu enum para peso
                 EstadoCompra.CONFIRMADA.name(),
                 inicio,
-                fin
+                fin,securityservice.obtenerEmpresaId()
         );
 
         datos.put("EntradasEnUnidades", unidades);

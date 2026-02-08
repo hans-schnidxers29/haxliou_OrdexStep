@@ -10,12 +10,13 @@ import java.time.LocalDateTime;
 
 public interface DetalleVentaRepositorio extends JpaRepository<DetalleVenta, Long> {
 
-    @Query("SELECT  SUM(cantidad) FROM DetalleVenta")
-    BigDecimal sumaproductos();
+    @Query("SELECT SUM(dv.cantidad) FROM DetalleVenta dv WHERE dv.venta.empresa.id = :empresaId")
+    BigDecimal sumaproductos(@Param("empresaId") Long empresaId);
 
     @Query("SELECT COALESCE(SUM(dv.cantidad), 0) FROM DetalleVenta dv " +
-            "WHERE dv.venta.fechaVenta >= :inicio AND dv.venta.fechaVenta < :fin")
+            "WHERE dv.venta.fechaVenta >= :inicio AND dv.venta.fechaVenta < :fin AND dv.venta.empresa.id = :empresaId")
     Long sumaProductosPorDia(@Param("inicio") LocalDateTime inicio,
-                             @Param("fin") LocalDateTime fin);
+                             @Param("fin") LocalDateTime fin,
+                             @Param("empresaId") Long empresaId);
 
 }

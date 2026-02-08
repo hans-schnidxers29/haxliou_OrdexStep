@@ -23,4 +23,9 @@ public class Servicioempresaimp implements ServicioEmpresa{
                 () -> new RuntimeException("Empresa no encontrada"));
         return empresa;
     }
+
+    @Override
+    public boolean existePorNit(String nit) {
+        return empresaRepositorio.existsByNit(nit);
+    }
 }

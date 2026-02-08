@@ -38,7 +38,10 @@ public class Empresa {
 
     @OneToMany(mappedBy ="empresa" )
     @com.fasterxml.jackson.annotation.JsonIgnore
-    private List<UsuarioEmpresa> usuario;   
+    private List<UsuarioEmpresa> usuario;
+
+    @Column(name = "estado")
+    private Boolean estado;
 
     public Empresa() {
 
@@ -132,6 +135,14 @@ public class Empresa {
 
     public Long getId() {
         return id;
+    }
+
+    public Boolean getEstado() {
+        return estado;
+    }
+
+    public void setEstado(Boolean estado) {
+        this.estado = estado;
     }
 }
 

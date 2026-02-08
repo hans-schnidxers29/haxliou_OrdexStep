@@ -15,14 +15,14 @@
 <div class="container">
     <div class="left-section">
         <div class="logo">
-            <img th:src="@{/adminlte/img/RDEX.png}" alt="OrdexStep Logo">
+            <img th:src="@{/adminlte/img/OrdexLogo.png}" alt="OrdexStep Logo">
             <span class="logo-text">OrdexStep</span>
         </div>
 
         <h1>Registro de Usuario</h1>
         <p class="subtitle">Completa el formulario para crear tu cuenta</p>
 
-        <form method="POST" th:action="@{/registro/nuevo}" th:object="${usuario}">
+        <form id="registroForm" method="POST" th:action="@{/registro/nuevo}" th:object="${usuario}">
             <br>
             <div class="form-section">
                 <div class="section-title">
@@ -61,13 +61,6 @@
                     <label for="direccionCasa">Dirección de Residencia</label>
                     <input type="text" id="direccionCasa" th:field="*{direccionCasa}"
                            placeholder="Calle, número, ciudad">
-                </div>
-
-                <div class="form-group">
-                    <label for="password">Contraseña <span class="required">*</span></label>
-                    <input type="password" id="password" th:field="*{password}"
-                           placeholder="Mínimo 8 caracteres" required>
-                    <small class="help-text">Debe contener al menos 8 caracteres</small>
                 </div>
             </div>
 
@@ -152,7 +145,7 @@
         </svg>
 
         <div class="right-content">
-            <img th:src="@{/adminlte/img/LogoForm.png}" alt="OrdexStep">
+            <img th:src="@{/adminlte/img/RDEX_full}" alt="OrdexStep">
             <h2>Gestiona tus Pedidos</h2>
             <p>Simplifica la gestión de tu negocio con nuestra plataforma integral de pedidos y ventas</p>
         </div>
@@ -162,15 +155,54 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const urlParams = new URLSearchParams(window.location.search);
+
+        // Loading al enviar formulario
+        const registroForm = document.getElementById('registroForm');
+        if (registroForm) {
+            registroForm.addEventListener('submit', function() {
+                Swal.fire({
+                    title: 'Procesando registro...',
+                    text: 'Creando tu cuenta y configurando tu empresa, por favor espera',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    allowEnterKey: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+            });
+        }
+
         if (urlParams.get('success') === 'true') {
             Swal.fire({
-                toast: true,
-                position: 'top-end',
                 icon: 'success',
-                title: 'Registro exitoso',
-                showConfirmButton: false,
-                timer: 3000,
-                timerProgressBar: true
+                title: 'Registro recibido',
+                text: 'La empresa está en verificación. Recuerda que el correo debe ser legítimo.',
+                confirmButtonText: 'Entendido'
+            });
+        }
+
+        const errorParam = "[[${error}]]";
+        if (errorParam === 'empresa_registrada') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Empresa ya registrada',
+                text: 'El NIT ingresado ya se encuentra registrado en nuestro sistema.',
+                confirmButtonText: 'Intentar de nuevo'
+            });
+        } else if (errorParam === 'usuario_registrado') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Usuario ya registrado',
+                text: 'El correo electrónico ingresado ya se encuentra registrado.',
+                confirmButtonText: 'Intentar de nuevo'
+            });
+        } else if (errorParam && errorParam !== 'null' && errorParam !== '') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error en el registro',
+                text: errorParam,
+                confirmButtonText: 'Cerrar'
             });
         }
     });

@@ -1,6 +1,7 @@
 package com.example.demo.servicio;
 
 
+import com.example.demo.Seguridad.SecurityService;
 import com.example.demo.entidad.DetalleVenta;
 import com.example.demo.repositorio.DetalleVentaRepositorio;
 import com.example.demo.entidad.Productos;
@@ -30,6 +31,8 @@ public class VentaServicioImp implements VentaServicio {
 
     @Autowired
     private DetalleVentaRepositorio detalleVentaRepositorio;
+
+    @Autowired private SecurityService securityService;
 
     @Override
     public List<Venta> ListarVenta() {
@@ -109,31 +112,31 @@ public class VentaServicioImp implements VentaServicio {
     public BigDecimal totalVentas() {
         LocalDateTime inicio = LocalDate.now().atStartOfDay(); // Hoy a las 00:00
         LocalDateTime fin = inicio.plusDays(1);
-        return repositorioVenta.sumaVentasRango(inicio,fin);
+        return repositorioVenta.sumaVentasRango(inicio,fin,securityService.obtenerEmpresaId());
     }
 
     @Override
     public BigDecimal sumapormes(LocalDateTime mes, LocalDateTime anio) {
-        BigDecimal totalmess= repositorioVenta.sumaPorMes(mes, anio);
+        BigDecimal totalmess= repositorioVenta.sumaPorMes(mes, anio,securityService.obtenerEmpresaId());
         return totalmess != null ? totalmess : BigDecimal.ZERO;
     }
 
     @Override
     public BigDecimal sumaproductos() {
-        return detalleVentaRepositorio.sumaproductos();
+        return detalleVentaRepositorio.sumaproductos(securityService.obtenerEmpresaId());
     }
 
     @Override
     public List<Object[]> sumaproductosPordia() {
         LocalDateTime inicio = LocalDate.now().atStartOfDay(); // Hoy a las 00:00
         LocalDateTime fin = inicio.plusDays(1);
-        return repositorioVenta.obtenerVentasPorRango(inicio, fin);
+        return repositorioVenta.obtenerVentasPorRango(inicio, fin,securityService.obtenerEmpresaId());
     }
 
     @Override
     public List<String> ListaMeses() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM", new Locale("es", "ES"));
-        return repositorioVenta.listarFechasUnicasPorMes()
+        return repositorioVenta.listarFechasUnicasPorMes(securityService.obtenerEmpresaId())
                 .stream()
                 .map(fecha -> fecha.format(formatter))
                 .collect(Collectors.toList());
@@ -141,24 +144,24 @@ public class VentaServicioImp implements VentaServicio {
 
     @Override
     public List<BigDecimal>listarTotalVentas() {
-        return repositorioVenta.listarTotalesAgrupadosPorMes().stream().toList();
+        return repositorioVenta.listarTotalesAgrupadosPorMes(securityService.obtenerEmpresaId()).stream().toList();
     }
 
     @Override
     public List<String> NombreProductos() {
-        List<Object[]>resultado =repositorioVenta.listarProductosVendidos();
+        List<Object[]>resultado =repositorioVenta.listarProductosVendidos(securityService.obtenerEmpresaId());
         return resultado.stream().map(objeto ->(String) objeto[0]).toList();
     }
 
     @Override
     public List<Number> CantidadProductos() {
-        List<Object[]>resultado =repositorioVenta.listarProductosVendidos();
+        List<Object[]>resultado =repositorioVenta.listarProductosVendidos(securityService.obtenerEmpresaId());
         return resultado.stream().map(objeto -> (Number) objeto[1]).toList();
     }
 
     @Override
     public BigDecimal TotalVentasMesActual() {
-        return repositorioVenta.TotaVentasMes();
+        return repositorioVenta.TotaVentasMes(securityService.obtenerEmpresaId());
     }
 
     /**
@@ -166,7 +169,7 @@ public class VentaServicioImp implements VentaServicio {
      */
     @Override
     public List<String> ListaMetodosPago() {
-        List<Object[]> resultado = repositorioVenta.ListaMetodosPago();
+        List<Object[]> resultado = repositorioVenta.ListaMetodosPago(securityService.obtenerEmpresaId());
         return resultado.stream()
                 .map(objeto -> objeto[0] == null ? "Desconocido" : objeto[0].toString())
                 .toList();
@@ -174,7 +177,7 @@ public class VentaServicioImp implements VentaServicio {
 
     @Override
     public List<Number> ListaMetodosPagoValores() {
-        List<Object[]> resultado = repositorioVenta.ListaMetodosPago();
+        List<Object[]> resultado = repositorioVenta.ListaMetodosPago(securityService.obtenerEmpresaId());
         return resultado.stream()
                 .map(objeto -> {
                     // Convertimos de forma segura a Double para que JS no tenga problemas

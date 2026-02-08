@@ -74,7 +74,7 @@ public class ClienteServiceImp implements ClienteService {
     @Override
     public Map<String, Object> CantidadPedidosPorPersonas() {
         // 1. Obtenemos la lista de objetos del repositorio
-        List<Object[]> resultados = repositorio.CantidadPorPedidos();
+        List<Object[]> resultados = repositorio.CantidadPorPedidos(securityService.obtenerEmpresaId());
 
         // 2. Creamos las listas para separar los datos
         List<String> nombres = new ArrayList<>();

@@ -27,7 +27,7 @@ import java.util.List;
 public class UsuarioControlador {
 
     @Autowired
-    private ServicioUsuario usuarioservico;
+    private ServicioUsuario usuarioservicio;
     @Autowired
     private ServicioEmpresa servicioEmpresa;
     @Autowired
@@ -54,7 +54,28 @@ public class UsuarioControlador {
             @ModelAttribute("empresa") Empresa empresa,
             RedirectAttributes flash) {
         try {
-            Usuario usuarioGuardado = usuarioservico.saveUserRolADmin(usuario);
+            // Validar si la empresa ya existe por NIT
+            if (empresa.getNit() != null && !empresa.getNit().isBlank()) {
+                if (servicioEmpresa.existePorNit(empresa.getNit())) {
+                    flash.addFlashAttribute("error", "empresa_registrada");
+                    return "redirect:/registro";
+                }
+            }
+
+            // Validar si el usuario ya existe por Email
+            if (usuario.getEmail() != null && !usuario.getEmail().isBlank()) {
+                if (usuarioservicio.findByEmail(usuario.getEmail()) != null) {
+                    flash.addFlashAttribute("error", "usuario_registrado");
+                    return "redirect:/registro";
+                }
+            }
+
+            empresa.setEstado(Boolean.FALSE);
+            // Al quitar el campo de contraseña, asignamos el email como contraseña temporal
+            if (usuario.getPassword() == null || usuario.getPassword().isBlank()) {
+                usuario.setPassword(usuario.getEmail());
+            }
+            Usuario usuarioGuardado = usuarioservicio.saveUserRolADmin(usuario);
 
             if (empresa.getNit() != null && !empresa.getNit().isBlank()) {
                 Empresa empresaGuardada = servicioEmpresa.saveEmpresa(empresa);
@@ -67,7 +88,7 @@ public class UsuarioControlador {
                 usuarioEmpresaRepositorio.save(ue);
             }
 
-            flash.addFlashAttribute("success", "Registro exitoso. Ya puede iniciar sesión.");
+            flash.addFlashAttribute("success", "true");
             return "redirect:/login";
 
         } catch (Exception e) {
@@ -89,14 +110,14 @@ public class UsuarioControlador {
                                        @AuthenticationPrincipal UserDetails userDetails,
                                        RedirectAttributes redirectAttributes) {
         try {
-            int MaximosUsuarios = usuarioservico.ListarUSer().size();
-            if (MaximosUsuarios >= 3) {
+            int MaximosUsuarios = usuarioservicio.ListarUSer().size();
+            if (MaximosUsuarios >= 4) {
                 redirectAttributes.addFlashAttribute("error", "Solo se permiten 3 usuarios");
                 return "redirect:/registro/usuario";
             }
 
             // 1) Usuario que está registrando (logueado)
-            Usuario creador = usuarioservico.findByEmail(userDetails.getUsername());
+            Usuario creador = usuarioservicio.findByEmail(userDetails.getUsername());
             if (creador == null) {
                 redirectAttributes.addFlashAttribute("error", "No se pudo identificar el usuario actual.");
                 return "redirect:/registro/usuario";
@@ -119,7 +140,7 @@ public class UsuarioControlador {
             Empresa empresa = servicioEmpresa.DatosEmpresa(empresaId);
 
             // 3) Crear el usuario nuevo (esto asigna ROLE_USER por tu ServicioUsuarioImp.saveUser)
-            Usuario usuarioGuardado = usuarioservico.saveUser(usuario);
+            Usuario usuarioGuardado = usuarioservicio.saveUser(usuario);
 
             // 4) Crear la relación usuario_empresa para el usuario nuevo dentro de LA MISMA empresa
             UsuarioEmpresa ueNuevo = new UsuarioEmpresa();
@@ -141,7 +162,7 @@ public class UsuarioControlador {
     @GetMapping("/{id}")
     public String DeleteUsuario(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
         try {
-            usuarioservico.deleteUser(id);
+            usuarioservicio.deleteUser(id);
             redirectAttributes.addFlashAttribute("success", "Usuario eliminado exitosamente");
             return "redirect:/perfil";
         } catch (Exception e) {
@@ -153,7 +174,7 @@ public class UsuarioControlador {
     @GetMapping("/editar/usuario/{id}")
     public String MostrarFormedit(@PathVariable Long id, Model model) {
         model.addAttribute("roles", rolServicio.listarRoles());
-        model.addAttribute("usuario", usuarioservico.finbyyId(id));
+        model.addAttribute("usuario", usuarioservicio.finbyyId(id));
         return "viewUsuarios/EditarUsuario";
     }
 
@@ -161,7 +182,7 @@ public class UsuarioControlador {
     public String EditarUsuario(@PathVariable Long id, @ModelAttribute("usuario") Usuario usuario, RedirectAttributes redirectAttributes) {
         try {
             // El servicio ahora actualiza NIT, Razón Social, Direcciones, etc.
-            usuarioservico.updateUser(usuario, id);
+            usuarioservicio.updateUser(usuario, id);
             redirectAttributes.addFlashAttribute("success", "Datos actualizados correctamente");
             return "redirect:/perfil";
         } catch (Exception e) {
@@ -181,7 +202,7 @@ public class UsuarioControlador {
             }
 
             // Llamar al servicio pasando el ID y la NUEVA contraseña
-            usuarioservico.actualizarContrasena(id, nuevaPassword);
+            usuarioservicio.actualizarContrasena(id, nuevaPassword);
 
             flash.addFlashAttribute("success", "Contraseña actualizada con éxito");
             return "redirect:/perfil";
@@ -198,7 +219,7 @@ public class UsuarioControlador {
     public String ActualizarRol(@PathVariable Long id, RedirectAttributes flash){
         try{
             Rol role = new Rol("ROLE_ADMIN");
-            usuarioservico.ActualizarRol(id,role);
+            usuarioservicio.ActualizarRol(id,role);
             flash.addFlashAttribute("success","Rol actualizado con exito");
             return "redirect:/perfil";
         }catch (Exception e){

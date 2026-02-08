@@ -16,14 +16,16 @@ public interface EgresoRepositorio extends JpaRepository <Egresos, Long>{
 
     List<Egresos> findByEmpresaId(Long empresa_id);
 
-    @Query(" SELECT COALESCE(SUM(e.monto), 0) FROM Egresos e WHERE e.fechaRegistro BETWEEN :inicio AND :fin")
+    @Query(" SELECT COALESCE(SUM(e.monto), 0) FROM Egresos e WHERE e.fechaRegistro BETWEEN :inicio AND :fin AND e.empresa.id = :empresaId")
     BigDecimal sumarEgresosPorDia(@Param("inicio") LocalDateTime inicio,
-                                  @Param("fin") LocalDateTime fin);
+                                  @Param("fin") LocalDateTime fin,
+                                  @Param("empresaId") Long empresaId);
 
     @Query(" SELECT COALESCE(SUM(e.monto), 0) FROM Egresos e WHERE e.fechaRegistro BETWEEN :inicio AND :fin " +
-            "AND e.tipoEgreso = :tipoegreso")
+            "AND e.tipoEgreso = :tipoegreso AND e.empresa.id = :empresaId")
     BigDecimal SumaEgresosPorTipo(@Param("inicio")LocalDateTime inicio,
                                   @Param("fin")LocalDateTime fin,
-                                  @Param("tipoegreso") TipoEgreso egreso);
+                                  @Param("tipoegreso") TipoEgreso egreso,
+                                  @Param("empresaId") Long empresaId);
 
 }

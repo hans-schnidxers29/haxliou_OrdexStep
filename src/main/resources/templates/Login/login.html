@@ -39,7 +39,7 @@
         </div>
 
         <!-- Formulario de Login -->
-        <form th:action="@{/login}" method="POST">
+        <form id="loginForm" th:action="@{/login}" method="POST">
             <!-- CSRF Token -->
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 
@@ -109,6 +109,23 @@
     document.addEventListener('DOMContentLoaded', function() {
         const urlParams = new URLSearchParams(window.location.search);
 
+        // Loading al enviar formulario
+        const loginForm = document.getElementById('loginForm');
+        if (loginForm) {
+            loginForm.addEventListener('submit', function() {
+                Swal.fire({
+                    title: 'Iniciando sesión...',
+                    text: 'Por favor espere',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    allowEnterKey: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+            });
+        }
+
         if (urlParams.get('error')) {
             Swal.fire({
                 toast: true,
@@ -130,6 +147,17 @@
                 showConfirmButton: false,
                 timer: 3000,
                 timerProgressBar: true
+            });
+        }
+
+        // Obtener mensaje de éxito de flash attributes (si se redirige desde registro)
+        const successParam = "[[${success}]]";
+        if (successParam === 'true') {
+            Swal.fire({
+                icon: 'success',
+                title: 'Registro recibido',
+                text: 'La empresa está en verificación. Recuerda que el correo debe ser legítimo.',
+                confirmButtonText: 'Entendido'
             });
         }
     });

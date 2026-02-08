@@ -36,11 +36,16 @@ public class SecurityService {
 
     public Empresa ObtenerEmpresa(){
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.getPrincipal() instanceof UserDetails user) {
+        if (auth != null && auth.isAuthenticated() && auth.getPrincipal() instanceof UserDetails user) {
             Usuario usuario = servicioUser.findByEmail(user.getUsername());
             return servicioUser.ObtenerEmpresa(usuario.getId());
         }
 
         throw new IllegalStateException("No se pudo encontrar una empresa vinculada a la sesión actual.");
+    }
+
+    public boolean estaAutenticado() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null && auth.isAuthenticated() && !(auth.getPrincipal() instanceof String && auth.getPrincipal().equals("anonymousUser"));
     }
 }

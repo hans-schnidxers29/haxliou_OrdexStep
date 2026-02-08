@@ -17,12 +17,20 @@ public interface ComprasRepositorio extends JpaRepository<Compras,Long> {
 
     List<Compras>findByEmpresaId(Long empresa_id);
 
-    @Query(value = "SELECT COALESCE(MAX(CAST(SUBSTRING(referencia, 6) AS INTEGER)), 0) + 1 " +
-            "FROM compras WHERE empresa_id = :empresaId", nativeQuery = true)
+    @Query(value = "SELECT COALESCE(\n" +
+            "    MAX(\n" +
+            "        CAST(\n" +
+            "            NULLIF(regexp_replace(SUBSTRING(numero_referencia, 6), '\\D', '', 'g'), '') \n" +
+            "            AS INTEGER\n" +
+            "        )\n" +
+            "    ), 0\n" +
+            ") + 1 \n" +
+            "FROM compras \n" +
+            "WHERE empresa_id = :empresaId", nativeQuery = true)
     Long obtenerNumeroSigReferencia(@Param("empresaId") Long empresaId);
 
-    @Query("SELECT COALESCE(SUM(c.total), 0) FROM Compras c WHERE c.fechaCompra BETWEEN :inicio AND :fin")
-    BigDecimal sumTotalCompras(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin);
+    @Query("SELECT COALESCE(SUM(c.total), 0) FROM Compras c WHERE c.fechaCompra BETWEEN :inicio AND :fin AND c.empresa.id = :empresaId")
+    BigDecimal sumTotalCompras(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin,@Param("empresaId") Long empresaId);
 
     @Query(value = "SELECT SUM(d.cantidad) " +
             "FROM detalle_compra d " +
@@ -31,12 +39,13 @@ public interface ComprasRepositorio extends JpaRepository<Compras,Long> {
             "JOIN unidad_medida um ON um.id = p.unidad_medida_id " +
             "WHERE c.estado = :estado " +
             "AND um.code = :tipoVenta " + // Filtramos por el código (String)
-            "AND c.fecha_compra BETWEEN :inicio AND :fin",
+            "AND c.fecha_compra BETWEEN :inicio AND :fin AND c.empresa_id = :empresaId AND p.empresa_id = c.empresa_id",
             nativeQuery = true)
     BigDecimal sumarTotalEntrantePorTipoYRango(
             @Param("tipoVenta") String tipoVenta, // Aquí pasas 'UND', 'KG', etc.
             @Param("estado") String estado,
             @Param("inicio") LocalDateTime inicio,
-            @Param("fin") LocalDateTime fin
+            @Param("fin") LocalDateTime fin,
+            @Param("empresaId") Long empresaId
     );
 }

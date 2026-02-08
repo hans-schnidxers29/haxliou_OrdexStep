@@ -39,9 +39,9 @@ public class EgresosServicioImp implements EgresoServicio{
     @Override
     public Map<String, Object> DatosEgresos(LocalDateTime inicio, LocalDateTime fin) {
 
-        BigDecimal egresosMensuales = repositorio.sumarEgresosPorDia(inicio,fin);
-        BigDecimal GastosFijos = repositorio.SumaEgresosPorTipo(inicio, fin, TipoEgreso.GASTO_FIJO);
-        BigDecimal GastosVariables = repositorio.SumaEgresosPorTipo(inicio,fin,TipoEgreso.GASTOS_VARIABLES);
+        BigDecimal egresosMensuales = repositorio.sumarEgresosPorDia(inicio,fin,securityService.obtenerEmpresaId());
+        BigDecimal GastosFijos = repositorio.SumaEgresosPorTipo(inicio, fin, TipoEgreso.GASTO_FIJO,securityService.obtenerEmpresaId());
+        BigDecimal GastosVariables = repositorio.SumaEgresosPorTipo(inicio,fin,TipoEgreso.GASTOS_VARIABLES,securityService.obtenerEmpresaId());
 
         Map<String,Object> datos = new HashMap<>();
         // Lógica CORRECTA: Si es null, poner CERO. Si existe, usar el VALOR con escala 2.

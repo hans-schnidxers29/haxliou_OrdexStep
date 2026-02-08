@@ -13,12 +13,12 @@ public interface CierreMensualRepositorio extends JpaRepository<CierreMensual, L
 
 
     // 1. Verificar si existe (Spring lo genera solo por el nombre)
-    boolean existsByMesAndAnio(int mes, int anio);
+    boolean existsByMesAndAnioAndEmpresaId(int mes, int anio, Long empresaId);
 
     // 2. Borrar el cierre previo (Query Nativo para asegurar la eliminación)
     @Modifying
     @Transactional
-    @Query(value = "DELETE FROM cierre_mensual WHERE mes = :mes AND anio = :anio", nativeQuery = true)
-    void eliminarCierreExistente(@Param("mes") int mes, @Param("anio") int anio);
+    @Query(value = "DELETE FROM cierre_mensual WHERE mes = :mes AND anio = :anio AND empresa_id = :empresaId", nativeQuery = true)
+    void eliminarCierreExistente(@Param("mes") int mes, @Param("anio") int anio, @Param("empresaId") Long empresaId);
 }
 

@@ -7,5 +7,6 @@ public interface ServicioEmpresa {
 
     Empresa saveEmpresa(Empresa empresa);
     Empresa DatosEmpresa(Long id);
+    boolean existePorNit(String nit);
 
 }
