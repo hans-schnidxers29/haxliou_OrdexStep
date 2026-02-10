@@ -121,6 +121,7 @@ public class CierreMensualImp implements CierreMensualServicio{
 
     @Override
     public Map<String, Object> obtenerResumenProyectado(int mes, int anio) {
+        
         Map<String, Object> resumen = new HashMap<>();
         LocalDateTime fechaInicio = LocalDateTime.of(anio, mes, 1, 0, 0);
         LocalDateTime fechaFin = fechaInicio.with(TemporalAdjusters.lastDayOfMonth()).withHour(23).withMinute(59).withSecond(59);

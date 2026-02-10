@@ -1,9 +1,11 @@
 package com.example.demo.servicio;
 
+import com.example.demo.Seguridad.SecurityService;
 import com.example.demo.entidad.Usuario;
 import com.example.demo.repositorio.RepositorioUsuario;
 import com.example.demo.entidad.Rol;
 import com.example.demo.entidad.Empresa;
+import com.example.demo.repositorio.UsuarioEmpresaRepositorio;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
@@ -27,6 +29,14 @@ public class ServicioUsuarioImp implements ServicioUsuario {
 
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
+
+    @Autowired
+    private UsuarioEmpresaRepositorio usuarioEmpresaRepositorio;
+
+    @Autowired
+    private SecurityService securityService;
+
+
 
     @Override
     public Usuario saveUser(Usuario usuario) {
@@ -112,7 +122,7 @@ public class ServicioUsuarioImp implements ServicioUsuario {
 
     @Override
     public List<Usuario> ListarUSer() {
-        return repositorioUsuario.findAll();
+        return usuarioEmpresaRepositorio.listaUsuarios(securityService.obtenerEmpresaId());
     }
 
     @Override
