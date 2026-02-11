@@ -21,6 +21,10 @@
         .small-box p { font-size: 0.9rem; opacity: 0.9; }
 
         .chart-wrapper { min-height: 250px; height: 250px; max-height: 250px; width: 100%; }
+        .modal-body {
+            max-height: 60vh;
+            overflow-y: auto;
+        }
     </style>
 </head>
 <body>
@@ -85,50 +89,96 @@
                 <div class="col-12">
                     <div class="card card-outline card-primary shadow">
                         <div class="card-header"><h3 class="card-title">Historial de Ventas</h3></div>
-                        <div class="card-body p-2">
-                            <table id="tablaVentas" class="table table-sm table-bordered table-striped table-hover dt-responsive nowrap" style="width:100%" th:unless="${#lists.isEmpty(ventas)}">
-                                <thead class="bg-light text-dark">
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Cliente</th>
-                                    <th>Fecha</th>
-                                    <th>Detalle</th>
-                                    <th>Pago</th>
-                                    <th >Total</th>
-                                    <th class="text-center">Acciones</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                <tr th:each="venta : ${ventas}">
-                                    <td th:text="${venta.id}" class="font-weight-bold"></td>
-                                    <td><span th:text="${venta.cliente.nombre}"></span><br><small class="text-muted">[[${venta.cliente.email}]]</small></td>
-                                    <td><span th:text="${#temporals.format(venta.fechaVenta,'dd/MM/yyyy')}"></span><small class="text-muted ml-1">[[${#temporals.format(venta.fechaVenta,'HH:mm')}]]</small></td>
-                                    <td>
-                                        <span class="badge badge-info shadow-sm" th:text="${venta.detalles.size()} + ' Items'"></span>
-                                        <small class="text-muted d-block mt-1" style="max-width: 250px; line-height: 1.2;">
-                                        <span th:each="detalle, iterStat : ${venta.detalles}">
-                                            <span th:if="${detalle.producto.tipoVenta.code == '94'}"
-                                                  th:text="${#numbers.formatDecimal(detalle.cantidad, 1, 0)} + ' und'"></span>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table id="tablaVentas" class="table table-hover table-striped w-100">
+                                    <thead class="bg-light">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Cliente</th>
+                                        <th>Detalle</th>
+                                        <th>Total</th>
+                                        <th class="text-center">Acciones</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr th:each="venta : ${ventas}">
+                                        <td th:text="${venta.id}" class="font-weight-bold"></td>
+                                        <td>
+                                            <span th:text="${venta.cliente.nombre}"></span><br>
+                                            <small class="text-muted">[[${venta.cliente.email}]]</small>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge badge-info" th:text="${venta.detalles.size()} + ' items'"></span>
+                                            <div class="mt-1">
+                                                <button type="button" class="btn btn-xs btn-outline-primary"
+                                                        data-toggle="modal"
+                                                        th:data-target="'#modalVenta' + ${venta.id}">
+                                                    <i class="fas fa-search-plus mr-1"></i> Ver detalle
+                                                </button>
+                                            </div>
+                                        </td>
+                                        <td class="text-success font-weight-bold"
+                                            th:text="'$' + ${#numbers.formatDecimal(venta.total, 1, 'COMMA', 2, 'POINT')}"></td>
+                                        <td class="text-center">
+                                            <a th:href="@{/ventas/ticket/{id}(id=${venta.id})}" class="btn btn-sm btn-info">
+                                                <i class="fas fa-print"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div> <div th:each="venta : ${ventas}">
+                        <div class="modal fade" th:id="'modalVenta' + ${venta.id}" tabindex="-1" role="dialog" aria-hidden="true">
+                            <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+                                <div class="modal-content shadow-lg border-0" style="border-radius: 12px;">
 
-                                            <span th:if="${detalle.producto.tipoVenta.code == 'KGM'}"
-                                                  th:text="${#numbers.formatDecimal(detalle.cantidad, 1, 2)} + ' kg'"></span>
+                                    <div class="modal-header bg-primary text-white">
+                                        <h5 class="modal-title font-weight-bold">
+                                            <i class="fas fa-file-invoice mr-2"></i> Detalle de Venta #[[${venta.id}]]
+                                        </h5>
+                                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
 
-                                            x <span th:text="${detalle.producto.nombre}"></span>
-                                            <span th:if="${!iterStat.last}">, </span>
-                                        </span>
-                                        </small>
-                                    </td>
-                                    <td><span class="badge" th:classappend="${venta.metodoPago == 'Efectivo' ? 'badge-success' : 'badge-primary'}" th:text="${venta.metodoPago}"></span></td>
-                                    <td><span class="font-weight-bold text-success">$[[${#numbers.formatDecimal(venta.total,1, 'COMMA', 2, 'POINT')}]]</span></td>
-                                    <td class="text-center">
-                                        <div class="btn-group shadow-sm">
-                                            <a th:href="@{/ventas/ticket/{id}(id=${venta.id})}" class="btn btn-xs btn-info" title="Ver Ticket"><i class="fas fa-print"></i></a>
+                                    <div class="modal-body p-0">
+                                        <div class="table-responsive" style="max-height: 350px;">
+                                            <table class="table table-hover mb-0">
+                                                <thead class="bg-light">
+                                                <tr>
+                                                    <th class="border-top-0">Producto</th>
+                                                    <th class="text-center border-top-0">Cant.</th>
+                                                    <th class="text-right border-top-0">Subtotal</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                <tr th:each="detalle : ${venta.detalles}">
+                                                    <td th:text="${detalle.producto.nombre}"></td>
+                                                    <td class="text-center">
+                                                        <span th:text="${detalle.cantidad}"></span>
+                                                        <small class="text-muted" th:text="${detalle.producto.tipoVenta.code == 'KGM' ? 'kg' : 'und'}"></small>
+                                                    </td>
+                                                    <td class="text-right font-weight-bold"
+                                                        th:text="'$' + ${#numbers.formatDecimal(detalle.subtotal, 1, 'COMMA', 2, 'POINT')}"></td>
+                                                </tr>
+                                                </tbody>
+                                            </table>
                                         </div>
-                                    </td>
-                                </tr>
-                                </tbody>
-                            </table>
+                                    </div>
+
+                                    <div class="modal-footer bg-light d-flex justify-content-between">
+                                        <h4 class="text-success font-weight-bold mb-0">
+                                            Total: $[[${#numbers.formatDecimal(venta.total, 1, 'COMMA', 2, 'POINT')}]]
+                                        </h4>
+                                        <button type="button" class="btn btn-secondary shadow-sm" data-dismiss="modal">Cerrar</button>
+                                    </div>
+
+                                </div>
+                            </div>
                         </div>
+                    </div>
                     </div>
                 </div>
             </div>
