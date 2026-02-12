@@ -292,6 +292,23 @@
                                         <span class="text-muted small">IVA Total:</span>
                                         <span class="small font-weight-bold">$ <span id="totalImpuestosLabel" th:text="${#numbers.formatDecimal(pedido.impuesto, 1, 'POINT', 2, 'COMMA')}">0.00</span></span>
                                     </div>
+                                    <div class="form-group mb-2 border-top pt-2">
+                                        <label class="small font-weight-bold text-danger">DESCUENTO (%)</label>
+                                        <div class="input-group input-group-sm">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text bg-danger text-white border-danger"><i class="fas fa-percent"></i></span>
+                                            </div>
+                                            <input type="number"
+                                                   th:field="*{descuento}"
+                                                   id="inputDescuento"
+                                                   class="form-control text-right font-weight-bold border-danger"
+                                                   placeholder="0" min="0" max="100" step="0.1"
+                                                   oninput="calcularTotal()">
+                                        </div>
+                                        <div class="text-right small text-danger mt-1">
+                                            - $ <span id="valorDescuentoCalculado">0.00</span>
+                                        </div>
+                                    </div>
                                     <hr class="my-2">
                                     <div class="total-box-mini text-center mb-3">
                                         <span class="d-block text-muted small text-uppercase" style="font-size: 0.65rem;">Total a Pagar</span>
@@ -561,37 +578,52 @@
         }
 
         function calcularTotal() {
-            let subtotalVista = 0;
-            let impuestoVista = 0;
+            let subtotalGeneral = 0;
+            let impuestoGeneral = 0;
             const isMayor = document.getElementById('switchVentaMayor').checked;
 
+            // 1. Calcular base de productos e impuestos
             document.querySelectorAll('.detalle-item').forEach(fila => {
                 const select = fila.querySelector('.producto-select');
                 if (!select || !select.value) return;
 
-                const pNormal = parseFloat(select.options[select.selectedIndex].getAttribute('data-precio')) || 0;
-                const pMayor = parseFloat(select.options[select.selectedIndex].getAttribute('data-preciomayor')) || pNormal;
+                const opt = select.options[select.selectedIndex];
+                const pNormal = parseFloat(opt.getAttribute('data-precio')) || 0;
+                const pMayor = parseFloat(opt.getAttribute('data-preciomayor')) || pNormal;
                 const precioAEjercer = isMayor ? pMayor : pNormal;
 
-                const cantidad = parseFloat(fila.querySelector('input[name*="cantidad"]').value) || 0;
-                const tasaImpuesto = parseFloat(select.options[select.selectedIndex].getAttribute('data-impuesto')) || 0;
+                const cantidad = parseFloat(fila.querySelector('.cantidad-input').value) || 0;
+                const tasaImpuesto = parseFloat(opt.getAttribute('data-impuesto')) || 0;
 
-                // --- CAMBIO AQUÍ: Consistencia en el cálculo total ---
-                const tipo = select.options[select.selectedIndex].getAttribute('data-tipo');
+                const tipo = opt.getAttribute('data-tipo');
                 let cantidadCalculo = (tipo === 'KGM' || tipo === 'LTR') ? cantidad / 1000 : cantidad;
-                // -------------------------------------------------------
 
                 const subItem = cantidadCalculo * precioAEjercer;
-                subtotalVista += subItem;
-                impuestoVista += (subItem * tasaImpuesto) / 100;
+                subtotalGeneral += subItem;
+                impuestoGeneral += (subItem * tasaImpuesto) / 100;
             });
 
-            const flete = parseFloat(document.querySelector('input[name="flete"]').value) || 0;
-            const totalVista = subtotalVista + impuestoVista + flete;
+            // 2. Lógica de DESCUENTO
+            const inputDesc = document.getElementById('inputDescuento');
+            const porcDescuento = parseFloat(inputDesc.value) || 0;
+            const valorDescuento = subtotalGeneral * (porcDescuento / 100);
 
-            document.getElementById('totalSubtotalLabel').innerText = subtotalVista.toLocaleString('es-CO', {minimumFractionDigits: 2});
-            document.getElementById('totalImpuestosLabel').innerText = impuestoVista.toLocaleString('es-CO', {minimumFractionDigits: 2});
-            document.getElementById('totalPedidoLabel').innerText = totalVista.toLocaleString('es-CO', {minimumFractionDigits: 2});
+            // 3. Flete
+            const flete = parseFloat(document.querySelector('input[name="flete"]').value) || 0;
+
+            // 4. TOTAL FINAL: (Subtotal - Descuento) + Impuestos + Flete
+            const totalFinal = (subtotalGeneral - valorDescuento) + impuestoGeneral + flete;
+
+            // 5. Actualizar etiquetas en la interfaz
+            document.getElementById('totalSubtotalLabel').innerText = subtotalGeneral.toLocaleString('es-CO', {minimumFractionDigits: 2});
+            document.getElementById('totalImpuestosLabel').innerText = impuestoGeneral.toLocaleString('es-CO', {minimumFractionDigits: 2});
+            document.getElementById('valorDescuentoCalculado').innerText = valorDescuento.toLocaleString('es-CO', {minimumFractionDigits: 2});
+            document.getElementById('totalPedidoLabel').innerText = totalFinal.toLocaleString('es-CO', {minimumFractionDigits: 2});
+        }
+
+        // Alias para evitar errores si el HTML llama a calcularTotales()
+        function calcularTotales() {
+            calcularTotal();
         }
 
         function alternarPreciosGlobal() {

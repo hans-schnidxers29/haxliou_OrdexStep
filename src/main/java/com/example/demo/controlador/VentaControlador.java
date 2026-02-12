@@ -238,17 +238,29 @@ public class VentaControlador {
             venta.setDetalles(detallesValidos);
             venta.setSubtotal(subtotalGeneral.setScale(2, RoundingMode.HALF_UP));
 
+            BigDecimal TotalDescuento = BigDecimal.ZERO;
+            BigDecimal descuentoProcesar = venta.getDescuento();
+            if(descuentoProcesar == null){
+                venta.setDescuento(BigDecimal.ZERO);
+            }else{
+                TotalDescuento = descuentoProcesar.multiply(subtotalGeneral)
+                        .divide(new BigDecimal("100")).setScale(2, RoundingMode.HALF_UP);
+                venta.setDescuento(descuentoProcesar);
+            }
+
             // CORRECCIÓN: Guardar el PORCENTAJE de impuesto global (puedes tomarlo del primer producto o un promedio)
             // Si manejas un IVA estándar (ej. 19%), guárdalo como valor fijo.
             // Aquí lo calculamos de forma segura basándonos en los productos vendidos:
+
+
             BigDecimal porcentajeGlobal = BigDecimal.ZERO;
             if (!detallesValidos.isEmpty()) {
                 porcentajeGlobal = detallesValidos.get(0).getProducto().getImpuesto();
             }
-            venta.setImpuesto(porcentajeGlobal != null ? porcentajeGlobal : BigDecimal.ZERO); 
+            venta.setImpuesto(porcentajeGlobal != null ? porcentajeGlobal : BigDecimal.ZERO);
 
             // El Total sigue siendo Subtotal + Dinero del Impuesto Acumulado
-            BigDecimal totalCalculado = subtotalGeneral.add(totalImpuestosAcumulado);
+            BigDecimal totalCalculado = subtotalGeneral.add(totalImpuestosAcumulado).subtract(TotalDescuento);
             venta.setTotal(RoundingUtil.roundToColombianPeso(totalCalculado));
 
             // 4. Gestión de Usuario y Stock
@@ -279,27 +291,32 @@ public class VentaControlador {
     // PDF TICKET DE VENTA
     // ============================
     @GetMapping("/ticket/{id}")
-    public ResponseEntity<byte[]> generarTicket(@PathVariable Long id,@AuthenticationPrincipal UserDetails usuario) throws Exception {
+    public ResponseEntity<byte[]> generarTicket(@PathVariable Long id, @AuthenticationPrincipal UserDetails usuarioLogueado) throws Exception {
 
         Venta venta = servicio.buscarVenta(id);
-
-        // Usamos tu método DatosEmpresa con ID 1
         Empresa empresa = securityService.ObtenerEmpresa();
 
         BigDecimal subtotal = venta.getSubtotal();
-        BigDecimal impuesto = venta.getTotal().subtract(subtotal);
+        BigDecimal impuesto = venta.getImpuesto(); // O el cálculo que ya tienes
+
+        // Cálculo del valor del descuento basado en el porcentaje guardado en la venta
+        BigDecimal porcentajeDescuento = (venta.getDescuento() != null) ? venta.getDescuento() : BigDecimal.ZERO;
+        BigDecimal valorDescuento = subtotal.multiply(porcentajeDescuento).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
 
         Map<String, Object> datos = new HashMap<>();
         datos.put("venta", venta);
         datos.put("subtotal", subtotal);
         datos.put("impuesto", impuesto);
-        datos.put("empresa", empresa); // Pasamos el objeto empresa completo
+        datos.put("valorDescuento", valorDescuento);
+        datos.put("porcentajeDescuento", porcentajeDescuento);
+        datos.put("empresa", empresa);
+        // Accedemos al nombre del vendedor desde la relación de la venta
+        datos.put("vendedorNombre", venta.getVendedor().getNombre() + " " + (venta.getVendedor().getApellido() != null ? venta.getVendedor().getApellido() : ""));
 
         byte[] pdf = pdfServicio.generarPdf("pdf/ticketVenta", datos);
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "inline; filename=ticket_venta_" + id + ".pdf")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=ticket_venta_" + id + ".pdf")
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(pdf);
     }

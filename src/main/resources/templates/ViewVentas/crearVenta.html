@@ -205,6 +205,7 @@
                                         </label>
                                     </div>
                                 </div>
+
                                 <div class="form-group">
                                     <label>Método de Pago <span class="text-danger">*</span></label>
                                     <select class="form-control" th:field="*{metodoPago}" id="metodoPagoSelect" required>
@@ -215,26 +216,51 @@
                                         <option value="MIXTO">Mixto</option>
                                     </select>
                                 </div>
+
                                 <hr>
+
                                 <div class="bg-light p-3 rounded">
                                     <div class="d-flex justify-content-between mb-2">
-                                        <span>Subtotal:</span>
-                                        <input type="number" id="subtotalGeneral" class="form-control form-control-sm text-right border-0 bg-transparent font-weight-bold" readonly value="0.00">
+                                        <span class="text-muted">Subtotal:</span>
+                                        <div class="font-weight-bold">
+                                            $ <input type="number" id="subtotalGeneral" class="d-inline text-right border-0 bg-transparent font-weight-bold" readonly value="0.00" style="width: 100px;">
+                                        </div>
                                     </div>
-                                    <div class="form-group mb-2">
-                                        <label class="small">Impuesto Total ($)</label>
-                                        <input type="number" id="impuesto" th:field="*{impuesto}" class="form-control form-control-sm text-right bg-transparent border-0 font-weight-bold" readonly value="0">
+
+                                    <div class="form-group mb-2 border-top pt-2">
+                                        <label class="small font-weight-bold text-danger">DESCUENTO (%)</label>
+                                        <div class="input-group input-group-sm">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text bg-danger text-white border-danger"><i class="fas fa-percent"></i></span>
+                                            </div>
+                                            <input type="number" th:field="*{descuento}" id="inputDescuento"
+                                                   class="form-control text-right font-weight-bold border-danger"
+                                                   placeholder="0" min="0" max="100" step="0.1"
+                                                   oninput="calcularTotales()">
+                                        </div>
+                                        <div class="text-right small text-danger mt-1">
+                                            - $ <span id="valorDescuentoCalculado">0.00</span>
+                                        </div>
                                     </div>
-                                    <div class="d-flex justify-content-between text-lg text-primary font-weight-bold mt-3">
+
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted">Impuesto Total:</span>
+                                        <div class="font-weight-bold">
+                                            $ <input type="number" id="impuesto" th:field="*{impuesto}" class="d-inline text-right bg-transparent border-0 font-weight-bold" readonly value="0" style="width: 100px;">
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex justify-content-between text-lg text-primary font-weight-bold mt-3 border-top pt-2">
                                         <span>TOTAL:</span>
                                         <div>
-                                            $ <input type="number" id="totalVenta" th:field="*{total}" class="d-inline text-right border-0 bg-transparent font-weight-bold text-primary" readonly style="width: 120px;">
+                                            $ <input type="number" id="totalVenta" th:field="*{total}" class="d-inline text-right border-0 bg-transparent font-weight-bold text-primary text-xl" readonly style="width: 140px;">
                                         </div>
                                     </div>
                                 </div>
                             </div>
+
                             <div class="card-footer">
-                                <button type="button" onclick="validarYProcesar()" class="btn btn-success btn-block shadow">
+                                <button type="button" onclick="validarYProcesar()" class="btn btn-success btn-block shadow btn-lg">
                                     <i class="fas fa-save mr-1"></i> Finalizar Venta
                                 </button>
                                 <a href="/ventas/listar" class="btn btn-default btn-block mt-2">Cancelar</a>
@@ -575,22 +601,41 @@
             calcularTotal();
         }
 
-        // Función corregida para sumar todos los subtotales
         function calcularTotal() {
             let subtotalGlobal = 0;
             let impuestoGlobal = 0;
 
+            // 1. Sumar totales de cada fila
             document.querySelectorAll('.detalle-item').forEach(fila => {
                 const subtotalFila = parseFloat(fila.querySelector('.subtotal-item').value) || 0;
                 const porcImpuesto = parseFloat(fila.querySelector('.impuesto-producto').value) || 0;
 
                 subtotalGlobal += subtotalFila;
+                // El impuesto se calcula sobre el subtotal de la fila
                 impuestoGlobal += (subtotalFila * (porcImpuesto / 100));
             });
 
+            // 2. Obtener el porcentaje de descuento
+            const inputDescuento = document.getElementById('inputDescuento');
+            const porcentajeDescuento = parseFloat(inputDescuento.value) || 0;
+
+            // 3. Calcular valor del descuento en pesos (sobre el subtotal)
+            const valorDescuento = subtotalGlobal * (porcentajeDescuento / 100);
+
+            // 4. Mostrar el valor del descuento calculado visualmente
+            const spanValorDesc = document.getElementById('valorDescuentoCalculado');
+            if (spanValorDesc) {
+                spanValorDesc.textContent = valorDescuento.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+
+            // 5. Calcular Total Final
+            // Total = (Subtotal - Descuento) + Impuestos
+            const totalFinal = (subtotalGlobal - valorDescuento) + impuestoGlobal;
+
+            // 6. Actualizar los campos en la interfaz
             document.getElementById('subtotalGeneral').value = subtotalGlobal.toFixed(2);
             document.getElementById('impuesto').value = impuestoGlobal.toFixed(2);
-            document.getElementById('totalVenta').value = (subtotalGlobal + impuestoGlobal).toFixed(2);
+            document.getElementById('totalVenta').value = totalFinal.toFixed(2);
         }
         function calcularDiferenciaCierre() {
             // Obtenemos el valor esperado directamente del texto que muestra el resumen para asegurar consistencia
@@ -660,6 +705,11 @@
                 }
             });
         }
+        // Esto hace que si llamas a calcularTotales, ejecute calcularTotal
+        function calcularTotales() {
+            calcularTotal();
+        }
+
         // Vincular el primer elemento manualmente (ya que no se crea por JS)
         // Ya están vinculados en el HTML estático, pero aseguramos compatibilidad si fuera necesario.
     </script>

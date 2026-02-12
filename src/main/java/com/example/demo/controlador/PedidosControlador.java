@@ -257,9 +257,25 @@ public class PedidosControlador {
 
             pedido.setDetalles(detallesValidos);
             pedido.setSubtotal(subtotalPedido.setScale(2, RoundingMode.HALF_UP));
+
+            //logica de Descuento para los Pedidos
+            BigDecimal PorcentajeDescuento = pedido.getDescuento();
+            BigDecimal TotalDescuento = BigDecimal.ZERO;
+            if(PorcentajeDescuento == null){
+                pedido.setDescuento(BigDecimal.ZERO);
+            }else{
+                TotalDescuento = PorcentajeDescuento
+                        .multiply(subtotalPedido)
+                        .divide( new BigDecimal("100"));
+
+                pedido.setDescuento(PorcentajeDescuento);
+            }
             pedido.setImpuesto(montoTotalImpuestos.setScale(2, RoundingMode.HALF_UP));
 
-            BigDecimal total = subtotalPedido.add(montoTotalImpuestos).add(pedido.getFlete());
+            BigDecimal total = subtotalPedido.add(montoTotalImpuestos)
+                    .add(pedido.getFlete())
+                    .subtract(TotalDescuento);
+
             pedido.setTotal(RoundingUtil.roundToColombianPeso(total));
 
             pedidoService.DescantorStock(pedido);
@@ -391,9 +407,20 @@ public class PedidosControlador {
                 return "redirect:/pedidos/listar";
             }
 
+            BigDecimal PorcentajeDescuento = pedido.getDescuento();
+            BigDecimal TotalDescuento = BigDecimal.ZERO;
+            if(PorcentajeDescuento == null){
+                pedido.setDescuento(BigDecimal.ZERO);
+            }else{
+                TotalDescuento = PorcentajeDescuento
+                        .multiply(subtotalProductos)
+                        .divide( new BigDecimal("100"));
+
+                pedido.setDescuento(PorcentajeDescuento);
+            }
             // 3. Lógica Financiera Final
             BigDecimal flete = (pedido.getFlete() != null) ? pedido.getFlete() : BigDecimal.ZERO;
-            BigDecimal totalFinal = subtotalProductos.add(flete).add(montoTotalImpuestos);
+            BigDecimal totalFinal = subtotalProductos.add(flete).add(montoTotalImpuestos).subtract(TotalDescuento);
 
             // 4. Sincronizar el objeto existente
             pedidoExistente.setFechaEntrega(pedido.getFechaEntrega());
@@ -517,28 +544,35 @@ public class PedidosControlador {
     }
 
     @GetMapping("/generarTicket/{id}")
-    public ResponseEntity<byte[]> generarTicket(@PathVariable Long id, @AuthenticationPrincipal UserDetails user) throws Exception{
+    public ResponseEntity<byte[]> generarTicket(@PathVariable Long id, @AuthenticationPrincipal UserDetails user) throws Exception {
 
         Pedidos pedido = pedidoService.pedidosByid(id);
         Empresa empresa = securityService.ObtenerEmpresa();
 
-        BigDecimal Subtotal = pedido.getSubtotal();
-        BigDecimal Impuesto = pedido.getImpuesto(); // Ahora simplemente usamos el campo impuesto del pedido
-        BigDecimal Total = pedido.getTotal();
+        BigDecimal subtotal = pedido.getSubtotal();
+        BigDecimal impuesto = pedido.getImpuesto();
+        BigDecimal total = pedido.getTotal();
         BigDecimal flete = (pedido.getFlete() != null) ? pedido.getFlete() : BigDecimal.ZERO;
+
+        // Calculamos el valor real del descuento en moneda
+        BigDecimal porcentajeDescuento = (pedido.getDescuento() != null) ? pedido.getDescuento() : BigDecimal.ZERO;
+        BigDecimal valorDescuento = subtotal.multiply(porcentajeDescuento).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
 
         Map<String, Object> model = new HashMap<>();
         model.put("pedido", pedido);
-        model.put("subtotal", Subtotal);
-        model.put("impuesto", Impuesto);
-        model.put("flete",flete);
-        model.put("total", Total);
-        model.put("empresa",empresa);
+        model.put("subtotal", subtotal);
+        model.put("impuesto", impuesto);
+        model.put("flete", flete);
+        model.put("total", total);
+        model.put("valorDescuento", valorDescuento); // Valor en $
+        model.put("porcentajeDescuento", porcentajeDescuento); // Valor en %
+        model.put("empresa", empresa);
+        model.put("usuario", securityService.obtenerEmailUsuario()); // O usar user.getUsername()
+
         byte[] pdf = pdfService.generarPdf("pdf/ticketPedidos", model);
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "inline; filename=ticket_pedido_" + id + ".pdf")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=ticket_pedido_" + id + ".pdf")
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(pdf);
     }

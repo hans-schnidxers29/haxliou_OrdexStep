@@ -111,18 +111,10 @@
                                 </td>
                                 <td>
                                     <span class="badge badge-info shadow-sm" th:text="${pedido.detalles.size()} + ' Items'"></span>
-                                    <small class="text-muted d-block mt-1" style="max-width: 250px; line-height: 1.2;">
-                                        <span th:each="detalle, iterStat : ${pedido.detalles}">
-                                            <span th:if="${detalle.producto.tipoVenta.code == '94'}"
-                                                  th:text="${#numbers.formatDecimal(detalle.cantidad, 1, 0)} + ' und'"></span>
-
-                                            <span th:if="${detalle.producto.tipoVenta.code == 'KGM'}"
-                                                  th:text="${#numbers.formatDecimal(detalle.cantidad, 1, 2)} + ' kg'"></span>
-
-                                            x <span th:text="${detalle.producto.nombre}"></span>
-                                            <span th:if="${!iterStat.last}">, </span>
-                                        </span>
-                                    </small>
+                                    <button type="button" class="btn btn-sm btn-default mr-1"
+                                            data-toggle="modal" th:data-target="'#modalPedido' + ${pedido.id}" title="Ver Detalle Completo">
+                                        <i class="fas fa-eye text-primary"></i>
+                                    </button>
                                 </td>
                                 <td>
                                     <span class="text-primary font-weight-bold" th:text="'$' + ${#numbers.formatDecimal(pedido.total, 1, 'POINT', 2, 'COMMA')}"></span>
@@ -136,6 +128,7 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="btn-group">
+
                                         <th:block th:if="${pedido.estado.name() != 'ENTREGADO' && pedido.estado.name() != 'CANCELADO'}">
                                             <a th:href="@{/pedidos/Entregar/{id}(id=${pedido.id})}" class="btn btn-success btn-sm" title="Entregar">
                                                 <i class="fas fa-check"></i>
@@ -151,7 +144,7 @@
                                 </td>
                                 <td>
                                     <div class="btn-group">
-                                        <a th:href="@{/pedidos/generarTicket/{id}(id=${pedido.id})}" class="btn btn-default btn-sm ml-1">
+                                        <a th:href="@{/pedidos/generarTicket/{id}(id=${pedido.id})}" target="_blank" class="btn btn-default btn-sm ml-1">
                                             <i class="fas fa-print"></i> POS
                                         </a>
                                     </div>
@@ -188,6 +181,119 @@
 
         </div>
     </section>
+    <div th:each="pedido : ${pedidos}">
+        <div class="modal fade text-left" th:id="'modalPedido' + ${pedido.id}" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+                <div class="modal-content shadow-lg" style="border-radius: 15px; border: none;">
+
+                    <div class="modal-header bg-gradient-primary text-white" style="border-radius: 15px 15px 0 0;">
+                        <h5 class="modal-title font-weight-bold">
+                            <i class="fas fa-shopping-bag mr-2"></i> Detalle de Pedido #[[${pedido.id}]]
+                        </h5>
+                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="row mb-4 p-2 bg-light rounded shadow-sm mx-1">
+                            <div class="col-md-4">
+                                <label class="text-muted small text-uppercase d-block mb-0">Cliente</label>
+                                <strong th:text="${pedido.cliente.nombre}"></strong>
+                                <small class="d-block text-muted" th:text="${pedido.cliente.email}"></small>
+                            </div>
+                            <div class="col-md-4 border-left">
+                                <label class="text-muted small text-uppercase d-block mb-0">Programación</label>
+                                <span>Pedido: </span><strong th:text="${#temporals.format(pedido.fechaPedido, 'dd/MM/yyyy')}"></strong><br>
+                                <span>Entrega: </span><strong class="text-primary" th:text="${#temporals.format(pedido.fechaEntrega, 'dd/MM/yyyy')}"></strong>
+                            </div>
+                            <div class="col-md-4 border-left text-right">
+                                <label class="text-muted small text-uppercase d-block mb-0">Estado</label>
+                                <span class="badge badge-estado"
+                                      th:classappend="${pedido.estado.name() == 'ENTREGADO' ? 'badge-success' :
+                               (pedido.estado.name() == 'CANCELADO' ? 'badge-danger' : 'badge-warning')}"
+                                      th:text="${pedido.estado}"></span>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive" style="max-height: 350px;">
+                            <table class="table table-hover table-sm">
+                                <thead class="bg-secondary text-white">
+                                <tr>
+                                    <th class="pl-3">Producto</th>
+                                    <th class="text-center">Cantidad</th>
+                                    <th class="text-right">Precio Unit.</th>
+                                    <th class="text-right pr-3">Subtotal</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="detalle : ${pedido.detalles}">
+                                    <td class="pl-3 font-weight-bold" th:text="${detalle.producto.nombre}"></td>
+                                    <td class="text-center">
+                                        <span th:text="${detalle.cantidad}"></span>
+                                        <small class="text-muted" th:text="${detalle.producto.tipoVenta.code == 'KGM' ? 'kg' : 'und'}"></small>
+                                    </td>
+                                    <td class="text-right" th:text="'$' + ${#numbers.formatDecimal(detalle.precioUnitario, 1, 'POINT', 2, 'COMMA')}"></td>
+                                    <td class="text-right pr-3 font-weight-bold" th:text="'$' + ${#numbers.formatDecimal(detalle.subtotal, 1, 'POINT', 2, 'COMMA')}"></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-md-7">
+                            </div>
+                            <div class="col-md-5">
+                                <div class="p-3 bg-light rounded border">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="text-muted">Subtotal:</span>
+                                        <span th:text="'$' + ${#numbers.formatDecimal(pedido.subtotal, 1, 'POINT', 2, 'COMMA')}"></span>
+                                    </div>
+
+                                    <div class="d-flex justify-content-between mb-1 text-danger">
+                                        <span>Descuento (<span th:text="${pedido.descuento}">0</span>%):</span>
+                                        <span th:text="'- $' + ${#numbers.formatDecimal(pedido.subtotal * (pedido.descuento / 100.0), 1, 'POINT', 2, 'COMMA')}"></span>
+                                    </div>
+
+                                    <div class="d-flex justify-content-between mb-1 text-muted small">
+                                        <span>Impuestos (IVA):</span>
+                                        <span th:text="'$' + ${#numbers.formatDecimal(pedido.impuesto, 1, 'POINT', 2, 'COMMA')}"></span>
+                                    </div>
+
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span>Flete/Envío:</span>
+                                        <span th:text="'$' + ${#numbers.formatDecimal(pedido.flete, 1, 'POINT', 2, 'COMMA')}"></span>
+                                    </div>
+
+                                    <hr class="my-2">
+
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <strong class="text-uppercase">Total:</strong>
+                                        <h4 class="text-primary font-weight-bold mb-0"
+                                            th:text="'$' + ${#numbers.formatDecimal(pedido.total, 1, 'POINT', 2, 'COMMA')}"></h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light d-flex justify-content-between" style="border-radius: 0 0 15px 15px;">
+                        <div>
+                            <a th:href="@{/pedidos/generarTicket/{id}(id=${pedido.id})}" class="btn btn-outline-info shadow-sm">
+                                <i class="fas fa-print mr-1"></i> Imprimir Ticket POS
+                            </a>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-muted mr-2">VALOR TOTAL:</span>
+                            <span class="h4 text-primary font-weight-bold mb-0">
+                            $[[${#numbers.formatDecimal(pedido.total, 1, 'COMMA', 2, 'POINT')}]]
+                        </span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <th:block layout:fragment="scripts">

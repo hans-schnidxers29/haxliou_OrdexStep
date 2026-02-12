@@ -13,6 +13,8 @@ import java.util.List;
 @Repository
 public interface VentaRepositorio extends JpaRepository<Venta, Long> {
 
+    List<Venta>findByEmpresaId(Long empresaId);
+
     @Query(value = "SELECT COALESCE(SUM(v.total), 0) " +
             "FROM venta v " +
             "WHERE v.fecha_venta >= :inicio " +

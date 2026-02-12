@@ -45,6 +45,9 @@ public class Venta {
     @Column(name = "venta_al_por_mayor")
     private Boolean VentaAlPorMayor = false;
 
+    @Column(name = "descuento")
+    private BigDecimal Descuento;
+
     @ManyToOne
     @JoinColumn(name = "empresa_id")
     private Empresa empresa ;
@@ -145,4 +148,20 @@ public class Venta {
         return VentaAlPorMayor;
     }
 
+    public BigDecimal getDescuento() {
+        return Descuento;
+    }
+
+    public void setDescuento(BigDecimal descuento) {
+        Descuento = descuento;
+    }
+
+    public Empresa getEmpresa() {
+        return empresa;
+    }
+
+    public void setEmpresa(Empresa empresa) {
+        this.empresa = empresa;
+    }
 }
+

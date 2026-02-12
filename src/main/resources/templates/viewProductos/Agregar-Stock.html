@@ -29,7 +29,7 @@
                                 <div class="row mb-3">
                                     <div class="col-6">
                                         <label class="text-muted">Stock Actual:</label>
-                                        <h4 th:text="${producto.cantidad} + ' ' + ${producto.getUnidadMedida()}"></h4>
+                                        <h4 th:text="${producto.cantidad} + ' ' + ${producto.tipoVenta.name}"></h4>
                                     </div>
                                     <div class="col-6">
                                         <label class="text-muted">Categoría:</label>
@@ -46,7 +46,7 @@
                                                class="form-control form-control-lg"
                                                placeholder="0.00" required autofocus>
                                         <div class="input-group-append">
-                                            <span class="input-group-text" th:text="${producto.getUnidadMedida()}"></span>
+                                            <span class="input-group-text" th:text="${producto.tipoVenta.name}"></span>
                                         </div>
                                     </div>
                                     <small class="text-muted">La cantidad ingresada se sumará al inventario actual</small>

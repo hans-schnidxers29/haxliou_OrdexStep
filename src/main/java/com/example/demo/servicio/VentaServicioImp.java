@@ -36,11 +36,12 @@ public class VentaServicioImp implements VentaServicio {
 
     @Override
     public List<Venta> ListarVenta() {
-        return repositorioVenta.findAll();
+        return repositorioVenta.findByEmpresaId(securityService.obtenerEmpresaId());
     }
 
     @Override
     public Venta guardarVenta(Venta venta) {
+        venta.setEmpresa(securityService.ObtenerEmpresa());
         return repositorioVenta.save(venta);
     }
 

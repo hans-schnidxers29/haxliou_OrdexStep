@@ -84,6 +84,7 @@
     <div th:text="'NIT: ' + ${empresa.nit}">NIT</div>
     <div th:text="${empresa.direccionEmpresa}">DIRECCION</div>
     <div th:text="'Tel: ' + ${empresa.numeroTelefono}">TEL</div>
+    <div th:text="'Atendido por: ' + ${usuario}" style="font-size: 9px; margin-top: 3px;">USUARIO</div>
     <div>Cartagena - Colombia</div>
 </div>
 
@@ -124,26 +125,30 @@
     </tr>
     </tbody>
 </table>
-
 <div class="totales">
-    <div>Subtotal Prod: <span th:text="'$' + ${#numbers.formatDecimal(subtotal, 1, 'POINT', 2, 'COMMA')}"></span></div>
+    <div>Subtotal: <span th:text="'$' + ${#numbers.formatDecimal(subtotal, 1, 'POINT', 2, 'COMMA')}"></span></div>
+
+    <div th:if="${porcentajeDescuento > 0}" style="color: #000;">
+        Descuento (<span th:text="${porcentajeDescuento} + '%'"></span>):
+        <span th:text="'- $' + ${#numbers.formatDecimal(valorDescuento, 1, 'POINT', 2, 'COMMA')}"></span>
+    </div>
+
+    <div>Impuestos (IVA): <span th:text="'$' + ${#numbers.formatDecimal(impuesto, 1, 'POINT', 2, 'COMMA')}"></span></div>
 
     <div th:if="${flete != null and flete > 0}">
         Flete/Envío: <span th:text="'$' + ${#numbers.formatDecimal(flete, 1, 'POINT', 2, 'COMMA')}"></span>
     </div>
 
-    <div>Impuestos: <span th:text="'$' + ${#numbers.formatDecimal(impuesto, 1, 'POINT', 2, 'COMMA')}"></span></div>
-
-    <div style="font-size: 13px; font-weight: bold; margin-top: 5px;">
+    <div style="font-size: 13px; font-weight: bold; margin-top: 5px; border-top: 1px solid #000; padding-top: 2px;">
         TOTAL A PAGAR: <span th:text="'$' + ${#numbers.formatDecimal(total, 1, 'POINT', 2, 'COMMA')}"></span>
     </div>
 </div>
 
 <div class="footer">
     ¡GRACIAS POR SU COMPRA!<br/>
+    <span th:text="'Impreso por: ' + ${usuario}"></span><br/>
     Régimen Simplificado<br/>
     Conserve este tiquete para cualquier reclamo.
 </div>
-
 </body>
 </html>

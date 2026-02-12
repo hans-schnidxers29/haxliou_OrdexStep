@@ -78,13 +78,15 @@
 </head>
 
 <body>
-
 <div class="header">
     <div class="title" th:text="${empresa.razonSocial}"></div>
     <div th:text="'NIT: ' + ${empresa.nit}"></div>
     <div th:text="${empresa.direccionEmpresa}"></div>
     <div th:text="'Tel: ' + ${empresa.numeroTelefono}"></div>
-    <div >Cartagena - Colombia</div>
+    <div style="font-size: 9px; margin-top: 3px;">
+        Vendedor: <span th:text="${vendedorNombre}"></span>
+    </div>
+    <div>Cartagena - Colombia</div>
 </div>
 
 <div class="info">
@@ -124,12 +126,18 @@
     </tr>
     </tbody>
 </table>
-
 <div class="totales">
-    <div>Subtotal: <span th:text="'$' + ${#numbers.formatDecimal(subtotal, 1, 'POINT', 3, 'COMMA')}"></span></div>
-    <div>Impuesto: <span th:text="'$' + ${#numbers.formatDecimal(impuesto, 1, 'POINT', 3, 'COMMA')}"></span></div>
-    <div style="font-size: 13px; font-weight: bold; margin-top: 5px;">
-        TOTAL A PAGAR: <span th:text="'$' + ${#numbers.formatDecimal(venta.total, 1, 'POINT', 3, 'COMMA')}"></span>
+    <div>Subtotal: <span th:text="'$' + ${#numbers.formatDecimal(subtotal, 1, 'POINT', 2, 'COMMA')}"></span></div>
+
+    <div th:if="${porcentajeDescuento > 0}" style="color: #000;">
+        Descuento (<span th:text="${porcentajeDescuento} + '%'"></span>):
+        <span th:text="'- $' + ${#numbers.formatDecimal(valorDescuento, 1, 'POINT', 2, 'COMMA')}"></span>
+    </div>
+
+    <div>Impuesto (IVA): <span th:text="'$' + ${#numbers.formatDecimal(impuesto, 1, 'POINT', 2, 'COMMA')}"></span></div>
+
+    <div style="font-size: 13px; font-weight: bold; margin-top: 5px; border-top: 1px solid #000; padding-top: 2px;">
+        TOTAL PAGADO: <span th:text="'$' + ${#numbers.formatDecimal(venta.total, 1, 'POINT', 2, 'COMMA')}"></span>
     </div>
 </div>
 
@@ -137,6 +145,7 @@
     <strong>FORMA DE PAGO: </strong><span th:text="${venta.metodoPago}"></span><br/>
     <br/>
     ¡GRACIAS POR SU COMPRA!<br/>
+    <span style="font-size: 8px;">Le atendió: [[${vendedorNombre}]]</span><br/>
     Régimen Simplificado<br/>
     Conserve este tiquete para cualquier reclamo.
 </div>

@@ -52,6 +52,9 @@ public class Pedidos {
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DetallePedido> detalles = new ArrayList<>();
 
+    @Column(name = "descuento")
+    private BigDecimal descuento;
+
     @ManyToOne
     @JoinColumn(name = "empresa_id")
     private Empresa empresa ;
@@ -188,5 +191,13 @@ public class Pedidos {
 
     public void setEmpresa(Empresa empresa) {
         this.empresa = empresa;
+    }
+
+    public BigDecimal getDescuento() {
+        return descuento;
+    }
+
+    public void setDescuento(BigDecimal descuento) {
+        this.descuento = descuento;
     }
 }
