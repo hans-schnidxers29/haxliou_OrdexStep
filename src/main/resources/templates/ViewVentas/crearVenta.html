@@ -6,6 +6,8 @@
       layout:decorate="~{layouts/adminlte}">
 <head>
     <title>Registrar Venta</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@x.x.x/dist/select2-bootstrap4.min.css" />
     <style>
         .cliente-card {
             border: 2px dashed #ddd;
@@ -82,34 +84,33 @@
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group">
-                                            <label for="buscarNumeroId">
-                                                <i class="fas fa-id-card mr-1"></i> Número de Identificación
-                                                <span class="text-danger">*</span>
+                                            <label for="selectClienteNombre">
+                                                <i class="fas fa-search mr-1"></i> Buscar por Nombre o Identificación
                                             </label>
-                                            <div class="input-group">
-                                                <input type="text" id="buscarNumeroId" class="form-control form-control-lg" placeholder="Ingrese cédula o NIT..." autocomplete="off">
-                                                <div class="input-group-append">
-                                                    <button type="button" class="btn btn-primary btn-lg" onclick="buscarCliente()">
-                                                        <i class="fas fa-search"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
+                                            <select id="selectClienteNombre" class="form-control select2-ajax" style="width: 100%;">
+                                                <option value="">Escriba para buscar...</option>
+                                            </select>
+                                            <small class="text-muted">Ingrese cédula, NIT o nombre del cliente.</small>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <label class="d-block">&nbsp;</label>
-                                        <div class="cliente-card" id="clienteCard">
+                                        <div class="cliente-card border rounded p-3 bg-light" id="clienteCard" style="min-height: 150px;">
+
                                             <div class="text-center text-muted" id="clienteNoSeleccionado">
                                                 <i class="fas fa-user-slash fa-2x mb-2"></i>
                                                 <p class="mb-0">Sin cliente seleccionado</p>
                                             </div>
-                                            <div class="cliente-info" id="clienteInfo">
-                                                <h5 class="text-success mb-2">
-                                                    <i class="fas fa-check-circle mr-1"></i> Cliente Encontrado
+
+                                            <div class="cliente-info d-none" id="clienteInfo">
+                                                <h5 class="text-success mb-2 font-weight-bold">
+                                                    <i class="fas fa-check-circle mr-1"></i> Cliente Seleccionado
                                                 </h5>
-                                                <p class="mb-1"><strong>Nombre:</strong> <span id="clienteNombre"></span></p>
-                                                <p class="mb-1"><strong>Email:</strong> <span id="clienteEmail"></span></p>
-                                                <p class="mb-0"><strong>Teléfono:</strong> <span id="clienteTelefono"></span></p>
+                                                <div class="pl-2">
+                                                    <p class="mb-1"><strong>Nombre:</strong> <span id="clienteNombre"></span></p>
+                                                    <p class="mb-1"><strong>Email:</strong> <span id="clienteEmail"></span></p>
+                                                    <p class="mb-0"><strong>Teléfono:</strong> <span id="clienteTelefono"></span></p>
+                                                </div>
                                             </div>
                                         </div>
                                         <input type="hidden" th:field="*{cliente.id}" id="clienteIdHidden">
@@ -117,7 +118,6 @@
                                 </div>
                             </div>
                         </div>
-
                         <!-- DETALLE DE PRODUCTOS -->
                         <div class="card card-info shadow">
                             <div class="card-header d-flex justify-content-between align-items-center">
@@ -248,6 +248,19 @@
                                         <div class="font-weight-bold">
                                             $ <input type="number" id="impuesto" th:field="*{impuesto}" class="d-inline text-right bg-transparent border-0 font-weight-bold" readonly value="0" style="width: 100px;">
                                         </div>
+                                    </div>
+                                    <div class="form-group mb-2 border-top pt-2">
+                                        <label class="small font-weight-bold text-secondary">VALORES ADICIONALES ($)</label>
+                                        <div class="input-group input-group-sm">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text bg-secondary text-white border-secondary"><i class="fas fa-plus-circle"></i></span>
+                                            </div>
+                                            <input type="number" th:field="*{valoresAdicionales}" id="inputValoresAdicionales"
+                                                   class="form-control text-right font-weight-bold border-secondary"
+                                                   placeholder="0.00" min="0" step="0.01"
+                                                   oninput="calcularTotales()">
+                                        </div>
+                                        <small class="text-muted">Cargos extra, servicios o empaques.</small>
                                     </div>
 
                                     <div class="d-flex justify-content-between text-lg text-primary font-weight-bold mt-3 border-top pt-2">
@@ -419,6 +432,8 @@
 </div>
 
 <th:block layout:fragment="scripts">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script th:inline="javascript">
         const clientesData = /*[[${clientes}]]*/ [];
         let detalleCount = 1;
@@ -471,35 +486,81 @@
             }
             document.getElementById('formVenta').submit();
         }
+        // 2. Inicialización de Select2 con AJAX (UNIFICADO)
+        // 1. Definición de la variable (Asegúrate de que esté dentro de $(document).ready)
+        const $selectCliente = $('.select2-ajax');
 
-        function buscarCliente() {
-            const numeroId = document.getElementById('buscarNumeroId').value.trim();
-            if (!numeroId) {
-                Swal.fire('Atención', 'Ingrese un número de identificación', 'warning');
-                return;
+        $selectCliente.select2({
+            theme: 'bootstrap4',
+            placeholder: "Busque por nombre o cédula...",
+            minimumInputLength: 3,
+            allowClear: true,
+            ajax: {
+                url: '/api/clientes/buscar',
+                dataType: 'json',
+                delay: 400, // Un poco más de delay para proteger la DB
+                data: function (params) {
+                    return { term: params.term };
+                },
+                processResults: function (data) {
+                    // Select2 espera que 'data' sea un objeto con la propiedad 'results'
+                    // Si tu backend ya envía { "results": [...] }, solo retorna data.
+                    return { results: data.results || data };
+                },
+                cache: true
             }
-            const cliente = clientesData.find(c => c.numeroIdentificacion === numeroId);
-            if (cliente) {
-                document.getElementById('clienteIdHidden').value = cliente.id;
-                document.getElementById('clienteNombre').textContent = cliente.nombre + ' ' + (cliente.apellido || '');
+        });
+
+        // 2. Evento de Selección (Optimizado)
+        $selectCliente.on('select2:select', function (e) {
+            // IMPORTANTE: e.params.data YA TIENE toda la información que envió el backend
+            const cliente = e.params.data;
+
+            console.log("Cliente seleccionado:", cliente);
+
+            // Asignar ID al input oculto
+            const inputId = document.getElementById('clienteIdHidden');
+            if (inputId) inputId.value = cliente.id;
+
+            // Actualizar la Card (si los elementos existen)
+            if (document.getElementById('clienteNombre'))
+                document.getElementById('clienteNombre').textContent = cliente.text || 'N/A';
+
+            if (document.getElementById('clienteEmail'))
                 document.getElementById('clienteEmail').textContent = cliente.email || 'N/A';
+
+            if (document.getElementById('clienteTelefono'))
                 document.getElementById('clienteTelefono').textContent = cliente.telefono || 'N/A';
-                document.getElementById('clienteNoSeleccionado').style.display = 'none';
-                document.getElementById('clienteInfo').classList.add('show');
-                document.getElementById('clienteCard').classList.add('encontrado');
-                Swal.fire({ icon: 'success', title: 'Cliente Encontrado', timer: 1000, showConfirmButton: false });
-            } else {
-                Swal.fire({
-                    title: 'Cliente no encontrado',
-                    text: '¿Desea registrarlo?',
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonText: 'Sí, registrar'
-                }).then((result) => {
-                    if (result.isConfirmed) window.open('/crearcliente/nuevo', '_blank');
-                });
-            }
-        }
+
+            // Manejo de visibilidad de la Card
+            $('#clienteInfo').removeClass('d-none');
+            $('#clienteNoSeleccionado').addClass('d-none');
+            $('#clienteCard').css('border-color', '#28a745');
+
+            // OPCIÓN 3: SweetAlert tipo Toast (Elegante y no intrusivo)
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
+
+            Toast.fire({
+                icon: 'success',
+                title: 'Cliente Seleccionado',
+                html: `<b>${cliente.text}</b><br><small>ID: ${cliente.identificacion || 'N/A'}</small>`
+            });
+        });
+
+        // 3. Limpiar cuando se borra la selección
+        $selectCliente.on('select2:unselect', function () {
+            $('#clienteIdHidden').val('');
+            $('#clienteNombre, #clienteEmail, #clienteTelefono').text('N/A');
+            $('#clienteInfo').addClass('d-none');
+            $('#clienteNoSeleccionado').removeClass('d-none');
+            $('#clienteCard').css('border-color', '#dee2e6');
+        });
 
         function agregarDetalle() {
             const container = document.getElementById('detallesContainer');
@@ -611,16 +672,17 @@
                 const porcImpuesto = parseFloat(fila.querySelector('.impuesto-producto').value) || 0;
 
                 subtotalGlobal += subtotalFila;
-                // El impuesto se calcula sobre el subtotal de la fila
                 impuestoGlobal += (subtotalFila * (porcImpuesto / 100));
             });
 
-            // 2. Obtener el porcentaje de descuento
+            // 2. Lógica de DESCUENTO
             const inputDescuento = document.getElementById('inputDescuento');
             const porcentajeDescuento = parseFloat(inputDescuento.value) || 0;
-
-            // 3. Calcular valor del descuento en pesos (sobre el subtotal)
             const valorDescuento = subtotalGlobal * (porcentajeDescuento / 100);
+
+            // 3. Lógica de VALORES ADICIONALES (NUEVO)
+            const inputAdicionales = document.getElementById('inputValoresAdicionales');
+            const valoresAdicionales = parseFloat(inputAdicionales.value) || 0;
 
             // 4. Mostrar el valor del descuento calculado visualmente
             const spanValorDesc = document.getElementById('valorDescuentoCalculado');
@@ -629,14 +691,15 @@
             }
 
             // 5. Calcular Total Final
-            // Total = (Subtotal - Descuento) + Impuestos
-            const totalFinal = (subtotalGlobal - valorDescuento) + impuestoGlobal;
+            // Total = (Subtotal - Descuento) + Impuestos + Valores Adicionales
+            const totalFinal = (subtotalGlobal - valorDescuento) + impuestoGlobal + valoresAdicionales;
 
             // 6. Actualizar los campos en la interfaz
             document.getElementById('subtotalGeneral').value = subtotalGlobal.toFixed(2);
             document.getElementById('impuesto').value = impuestoGlobal.toFixed(2);
             document.getElementById('totalVenta').value = totalFinal.toFixed(2);
         }
+
         function calcularDiferenciaCierre() {
             // Obtenemos el valor esperado directamente del texto que muestra el resumen para asegurar consistencia
             const montoEsperadoTexto = document.getElementById('montoEsperado').innerText.replace('$', '').replace(',', '').trim();
@@ -709,9 +772,6 @@
         function calcularTotales() {
             calcularTotal();
         }
-
-        // Vincular el primer elemento manualmente (ya que no se crea por JS)
-        // Ya están vinculados en el HTML estático, pero aseguramos compatibilidad si fuera necesario.
     </script>
 </th:block>
 </body>

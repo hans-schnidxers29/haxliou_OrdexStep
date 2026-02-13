@@ -93,4 +93,9 @@ public class ClienteServiceImp implements ClienteService {
 
         return respuesta;
     }
+
+    @Override
+    public List<Cliente> ClienteParaJax(String term) {
+        return repositorio.buscarPorTerminoYEmpresa(term,securityService.obtenerEmpresaId());
+    }
 }

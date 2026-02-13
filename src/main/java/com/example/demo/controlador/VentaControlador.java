@@ -238,6 +238,17 @@ public class VentaControlador {
             venta.setDetalles(detallesValidos);
             venta.setSubtotal(subtotalGeneral.setScale(2, RoundingMode.HALF_UP));
 
+
+            //Logica de valores Adicionales
+            BigDecimal valorAdicional = venta.getValoresAdicionales();
+            if(valorAdicional == null) {
+                venta.setValoresAdicionales(BigDecimal.ZERO);
+                valorAdicional = BigDecimal.ZERO;
+            }else{
+                venta.setValoresAdicionales(valorAdicional);
+            }
+
+            //Logica de Descuento
             BigDecimal TotalDescuento = BigDecimal.ZERO;
             BigDecimal descuentoProcesar = venta.getDescuento();
             if(descuentoProcesar == null){
@@ -248,10 +259,6 @@ public class VentaControlador {
                 venta.setDescuento(descuentoProcesar);
             }
 
-            // CORRECCIÓN: Guardar el PORCENTAJE de impuesto global (puedes tomarlo del primer producto o un promedio)
-            // Si manejas un IVA estándar (ej. 19%), guárdalo como valor fijo.
-            // Aquí lo calculamos de forma segura basándonos en los productos vendidos:
-
 
             BigDecimal porcentajeGlobal = BigDecimal.ZERO;
             if (!detallesValidos.isEmpty()) {
@@ -260,7 +267,7 @@ public class VentaControlador {
             venta.setImpuesto(porcentajeGlobal != null ? porcentajeGlobal : BigDecimal.ZERO);
 
             // El Total sigue siendo Subtotal + Dinero del Impuesto Acumulado
-            BigDecimal totalCalculado = subtotalGeneral.add(totalImpuestosAcumulado).subtract(TotalDescuento);
+            BigDecimal totalCalculado = subtotalGeneral.add(totalImpuestosAcumulado).subtract(TotalDescuento).add(valorAdicional);
             venta.setTotal(RoundingUtil.roundToColombianPeso(totalCalculado));
 
             // 4. Gestión de Usuario y Stock

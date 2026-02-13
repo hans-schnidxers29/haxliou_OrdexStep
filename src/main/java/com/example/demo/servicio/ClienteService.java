@@ -14,4 +14,5 @@ public interface ClienteService {
     boolean VerifcarCliente(String numeroIdentificacion);
     List<Map<String, Object>>clienteSimple();
     Map<String,Object>CantidadPedidosPorPersonas();
+    List<Cliente>ClienteParaJax(String term);
 }

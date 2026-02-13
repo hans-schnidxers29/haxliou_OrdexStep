@@ -52,6 +52,9 @@ public class Venta {
     @JoinColumn(name = "empresa_id")
     private Empresa empresa ;
 
+    @Column(name="adiciones")
+    private BigDecimal  valoresAdicionales;
+
     public Venta() {
     }
 
@@ -162,6 +165,14 @@ public class Venta {
 
     public void setEmpresa(Empresa empresa) {
         this.empresa = empresa;
+    }
+
+    public BigDecimal getValoresAdicionales() {
+        return valoresAdicionales;
+    }
+
+    public void setValoresAdicionales(BigDecimal valoresAdicionales) {
+        this.valoresAdicionales = valoresAdicionales;
     }
 }
 

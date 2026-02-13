@@ -12,6 +12,11 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 @Controller
 public class ClienteControlador {
 
@@ -97,6 +102,24 @@ public class ClienteControlador {
         return "redirect:/listarclientes";
     }
 
+    @GetMapping("/api/clientes/buscar")
+    @ResponseBody
+    public List<Map<String, Object>> buscarClientesAjax(@RequestParam("term") String term) {
+        // Buscamos clientes que coincidan por nombre, apellido o identificación
+        List<Cliente> clientes = service.ClienteParaJax(term);
+
+        return clientes.stream().map(c -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", c.getId());
+            // El campo 'text' es lo que Select2 muestra en la lista
+            map.put("text", c.getNombre() + " " + (c.getApellido() != null ? c.getApellido() : "") + " (" + c.getNumeroIdentificacion() + ")");
+            // Opcional: pasar datos extra para llenar la tarjeta automáticamente
+            map.put("email", c.getEmail());
+            map.put("telefono", c.getTelefono());
+            map.put("identificacion", c.getNumeroIdentificacion());
+            return map;
+        }).collect(Collectors.toList());
+    }
 
 
 

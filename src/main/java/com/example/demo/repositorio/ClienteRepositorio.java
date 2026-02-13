@@ -16,6 +16,13 @@ public interface ClienteRepositorio  extends JpaRepository<Cliente,Long> {
 
     boolean existsByNumeroIdentificacionAndEmpresaId(String numeroIdentificacion, Long empresaId);
     Cliente findByNumeroIdentificacionAndEmpresaId(String numeroIdentificacion, Long empresaId);
+
+    @Query("SELECT c FROM Cliente c WHERE c.empresa.id = :empresaId AND " +
+            "(LOWER(c.nombre) LIKE LOWER(CONCAT('%', :term, '%')) OR " +
+            "LOWER(c.apellido) LIKE LOWER(CONCAT('%', :term, '%')) OR " +
+            "c.numeroIdentificacion LIKE CONCAT('%', :term, '%'))")
+    List<Cliente> buscarPorTerminoYEmpresa(@Param("term") String term, @Param("empresaId") Long empresaId);
+
     List<Cliente>findByEmpresaId(Long empresa_id);
 
     @Query(value = "SELECT \n" +

@@ -136,6 +136,8 @@
 
     <div>Impuesto (IVA): <span th:text="'$' + ${#numbers.formatDecimal(impuesto, 1, 'POINT', 2, 'COMMA')}"></span></div>
 
+    <div>Valores Adicionales (OTROS): <span th:text="'$' + ${#numbers.formatDecimal(venta.valoresAdicionales, 1, 'POINT', 2, 'COMMA')}"></span></div>
+
     <div style="font-size: 13px; font-weight: bold; margin-top: 5px; border-top: 1px solid #000; padding-top: 2px;">
         TOTAL PAGADO: <span th:text="'$' + ${#numbers.formatDecimal(venta.total, 1, 'POINT', 2, 'COMMA')}"></span>
     </div>
