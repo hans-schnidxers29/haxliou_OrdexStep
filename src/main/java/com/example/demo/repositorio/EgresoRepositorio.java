@@ -14,18 +14,17 @@ import java.util.List;
 @Repository
 public interface EgresoRepositorio extends JpaRepository <Egresos, Long>{
 
-    List<Egresos> findByEmpresaId(Long empresa_id);
+    // ✅ Simplificado: usar findAll() con filtro automático
+    // List<Egresos> findByEmpresaId(Long empresa_id);
 
-    @Query(" SELECT COALESCE(SUM(e.monto), 0) FROM Egresos e WHERE e.fechaRegistro BETWEEN :inicio AND :fin AND e.empresa.id = :empresaId")
+    @Query(" SELECT COALESCE(SUM(e.monto), 0) FROM Egresos e WHERE e.fechaRegistro BETWEEN :inicio AND :fin")
     BigDecimal sumarEgresosPorDia(@Param("inicio") LocalDateTime inicio,
-                                  @Param("fin") LocalDateTime fin,
-                                  @Param("empresaId") Long empresaId);
+                                  @Param("fin") LocalDateTime fin);
 
     @Query(" SELECT COALESCE(SUM(e.monto), 0) FROM Egresos e WHERE e.fechaRegistro BETWEEN :inicio AND :fin " +
-            "AND e.tipoEgreso = :tipoegreso AND e.empresa.id = :empresaId")
+            "AND e.tipoEgreso = :tipoegreso")
     BigDecimal SumaEgresosPorTipo(@Param("inicio")LocalDateTime inicio,
                                   @Param("fin")LocalDateTime fin,
-                                  @Param("tipoegreso") TipoEgreso egreso,
-                                  @Param("empresaId") Long empresaId);
+                                  @Param("tipoegreso") TipoEgreso egreso);
 
 }

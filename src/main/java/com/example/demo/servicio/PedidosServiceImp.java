@@ -28,7 +28,7 @@ public class PedidosServiceImp implements PedidoService {
 
     @Override
     public List<Pedidos> listarpedidos() {
-        return repositorio.findByEmpresaId(securityService.obtenerEmpresaId());
+        return repositorio.findAll();
     }
 
     @Override
@@ -117,17 +117,17 @@ public class PedidosServiceImp implements PedidoService {
 
     @Override
     public long ContarPorestados(EstadoPedido estadoPedido) {
-        return repositorio.contarPorEstado(EstadoPedido.PENDIENTE,securityService.obtenerEmpresaId());
+        return repositorio.contarPorEstado(EstadoPedido.PENDIENTE);
     }
 
     @Override
     public Long estadoCancelado(EstadoPedido estadoPedido) {
-        return repositorio.contarPorEstado(EstadoPedido.CANCELADO,securityService.obtenerEmpresaId());
+        return repositorio.contarPorEstado(EstadoPedido.CANCELADO);
     }
 
     @Override
     public Long estadoCEntregado(EstadoPedido estadoPedido) {
-        return repositorio.contarPorEstado(EstadoPedido.ENTREGADO,securityService.obtenerEmpresaId());
+        return repositorio.contarPorEstado(EstadoPedido.ENTREGADO);
     }
 
     @Override

@@ -15,7 +15,8 @@ import java.util.List;
 public interface ComprasRepositorio extends JpaRepository<Compras,Long> {
 
 
-    List<Compras>findByEmpresaId(Long empresa_id);
+    // ✅ Simplificado: usar findAll() con filtro automático
+    // List<Compras> findByEmpresaId(Long empresa_id);
 
     @Query(value = "SELECT COALESCE(\n" +
             "    MAX(\n" +
@@ -25,27 +26,25 @@ public interface ComprasRepositorio extends JpaRepository<Compras,Long> {
             "        )\n" +
             "    ), 0\n" +
             ") + 1 \n" +
-            "FROM compras \n" +
-            "WHERE empresa_id = :empresaId", nativeQuery = true)
+            "FROM compras WHERE empresa_id = :empresaId", nativeQuery = true)
     Long obtenerNumeroSigReferencia(@Param("empresaId") Long empresaId);
 
-    @Query("SELECT COALESCE(SUM(c.total), 0) FROM Compras c WHERE c.fechaCompra BETWEEN :inicio AND :fin AND c.empresa.id = :empresaId")
-    BigDecimal sumTotalCompras(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin,@Param("empresaId") Long empresaId);
+    @Query("SELECT COALESCE(SUM(c.total), 0) FROM Compras c WHERE c.fechaCompra BETWEEN :inicio AND :fin ")
+    BigDecimal sumTotalCompras(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin);
 
-    @Query(value = "SELECT SUM(d.cantidad) " +
-            "FROM detalle_compra d " +
-            "JOIN compras c ON c.id = d.compras_id " +
-            "JOIN productos p ON p.id = d.productos_id " +
-            "JOIN unidad_medida um ON um.id = p.unidad_medida_id " +
+    // JPQL Automáticamente aplica el filtro de tenant sobre 'c' (Compras) y 'p' (Productos)
+    @Query("SELECT SUM(d.cantidad) " +
+            "FROM DetalleCompra d " +
+            "JOIN d.compra c " +
+            "JOIN d.productos p " +
+            "JOIN p.tipoVenta um " +
             "WHERE c.estado = :estado " +
-            "AND um.code = :tipoVenta " + // Filtramos por el código (String)
-            "AND c.fecha_compra BETWEEN :inicio AND :fin AND c.empresa_id = :empresaId AND p.empresa_id = c.empresa_id",
-            nativeQuery = true)
+            "AND um.Code = :tipoVenta " +
+            "AND c.fechaCompra BETWEEN :inicio AND :fin")
     BigDecimal sumarTotalEntrantePorTipoYRango(
-            @Param("tipoVenta") String tipoVenta, // Aquí pasas 'UND', 'KG', etc.
-            @Param("estado") String estado,
+            @Param("tipoVenta") String tipoVenta,
+            @Param("estado") com.example.demo.entidad.Enum.EstadoCompra estado,
             @Param("inicio") LocalDateTime inicio,
-            @Param("fin") LocalDateTime fin,
-            @Param("empresaId") Long empresaId
+            @Param("fin") LocalDateTime fin
     );
 }

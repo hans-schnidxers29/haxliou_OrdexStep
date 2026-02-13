@@ -1,13 +1,12 @@
 <!DOCTYPE html>
-<html lang="es"
-      xmlns:th="http://www.thymeleaf.org"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6"
-      layout:decorate="~{layouts/adminlte}">
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6" layout:decorate="~{layouts/adminlte}">
+
 <head>
     <title>Registrar Venta</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@x.x.x/dist/select2-bootstrap4.min.css" />
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@x.x.x/dist/select2-bootstrap4.min.css" />
     <style>
         .cliente-card {
             border: 2px dashed #ddd;
@@ -16,13 +15,16 @@
             background-color: #f9f9f9;
             transition: all 0.3s;
         }
+
         .cliente-card.encontrado {
             border: 2px solid #28a745;
             background-color: #d4edda;
         }
+
         .cliente-info {
             display: none;
         }
+
         .cliente-info.show {
             display: block;
         }
@@ -31,545 +33,599 @@
         body.modal-open .content {
             filter: none !important;
         }
+
         .modal-backdrop {
-            background-color: rgba(0,0,0,0.1) !important;
+            background-color: rgba(0, 0, 0, 0.1) !important;
         }
+
         #modalAbrirCaja {
             z-index: 1070 !important;
         }
+
         #modalAbrirCaja .modal-content {
             border: 3px solid #007bff;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
     </style>
 </head>
+
 <body>
 
-<div layout:fragment="content">
-    <!-- HEADER CON BOTONES DE CAJA -->
-    <section class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2 align-items-center">
-                <div class="col-sm-6">
-                    <h1><i class="fas fa-cart-plus mr-2"></i> Nueva Venta</h1>
-                </div>
-                <div class="col-sm-6 text-right">
-                    <!-- BOTONES DE CAJA (SIEMPRE VISIBLES SI HAY CAJA ABIERTA) -->
-                    <div th:if="${cajaAbierta != null}">
-                        <button type="button" class="btn btn-danger shadow mr-2" data-toggle="modal" data-target="#modalCerrarCaja">
-                            <i class="fas fa-lock mr-1"></i> Cerrar Caja
-                        </button>
-                        <a th:href="@{/caja/cerrar/ticket/{id}(id=${cajaAbierta.id})}" target="_blank" class="btn btn-secondary shadow">
-                            <i class="fas fa-print mr-1"></i> Imprimir Resumen
-                        </a>
+    <div layout:fragment="content">
+        <!-- HEADER CON BOTONES DE CAJA -->
+        <section class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2 align-items-center">
+                    <div class="col-sm-6">
+                        <h1><i class="fas fa-cart-plus mr-2"></i> Nueva Venta</h1>
+                    </div>
+                    <div class="col-sm-6 text-right">
+                        <!-- BOTONES DE CAJA (SIEMPRE VISIBLES SI HAY CAJA ABIERTA) -->
+                        <div th:if="${cajaAbierta != null}">
+                            <button type="button" class="btn btn-danger shadow mr-2" data-toggle="modal"
+                                data-target="#modalCerrarCaja">
+                                <i class="fas fa-lock mr-1"></i> Cerrar Caja
+                            </button>
+                            <a th:href="@{/caja/cerrar/ticket/{id}(id=${cajaAbierta.id})}" target="_blank"
+                                class="btn btn-secondary shadow">
+                                <i class="fas fa-print mr-1"></i> Imprimir Resumen
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <section class="content">
-        <div class="container-fluid">
-            <form th:action="@{/ventas/crear/nueva}" th:object="${venta}" method="POST" id="formVenta">
-                <div class="row">
-                    <div class="col-md-8">
-                        <!-- BUSCAR CLIENTE -->
-                        <div class="card card-outline card-primary shadow">
-                            <div class="card-header">
-                                <h3 class="card-title font-weight-bold">
-                                    <i class="fas fa-user-search mr-1"></i> Buscar Cliente
-                                </h3>
-                            </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="selectClienteNombre">
-                                                <i class="fas fa-search mr-1"></i> Buscar por Nombre o Identificación
-                                            </label>
-                                            <select id="selectClienteNombre" class="form-control select2-ajax" style="width: 100%;">
-                                                <option value="">Escriba para buscar...</option>
-                                            </select>
-                                            <small class="text-muted">Ingrese cédula, NIT o nombre del cliente.</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="d-block">&nbsp;</label>
-                                        <div class="cliente-card border rounded p-3 bg-light" id="clienteCard" style="min-height: 150px;">
-
-                                            <div class="text-center text-muted" id="clienteNoSeleccionado">
-                                                <i class="fas fa-user-slash fa-2x mb-2"></i>
-                                                <p class="mb-0">Sin cliente seleccionado</p>
+        <section class="content">
+            <div class="container-fluid">
+                <form th:action="@{/ventas/crear/nueva}" th:object="${venta}" method="POST" id="formVenta">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <!-- BUSCAR CLIENTE -->
+                            <div class="card card-outline card-primary shadow">
+                                <div class="card-header">
+                                    <h3 class="card-title font-weight-bold">
+                                        <i class="fas fa-user-search mr-1"></i> Buscar Cliente
+                                    </h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="selectClienteNombre">
+                                                    <i class="fas fa-search mr-1"></i> Buscar por Nombre o
+                                                    Identificación
+                                                </label>
+                                                <select id="selectClienteNombre" class="form-control select2-ajax"
+                                                    style="width: 100%;">
+                                                    <option value="">Escriba para buscar...</option>
+                                                </select>
+                                                <small class="text-muted">Ingrese cédula, NIT o nombre del
+                                                    cliente.</small>
                                             </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="d-block">&nbsp;</label>
+                                            <div class="cliente-card border rounded p-3 bg-light" id="clienteCard"
+                                                style="min-height: 150px;">
 
-                                            <div class="cliente-info d-none" id="clienteInfo">
-                                                <h5 class="text-success mb-2 font-weight-bold">
-                                                    <i class="fas fa-check-circle mr-1"></i> Cliente Seleccionado
-                                                </h5>
-                                                <div class="pl-2">
-                                                    <p class="mb-1"><strong>Nombre:</strong> <span id="clienteNombre"></span></p>
-                                                    <p class="mb-1"><strong>Email:</strong> <span id="clienteEmail"></span></p>
-                                                    <p class="mb-0"><strong>Teléfono:</strong> <span id="clienteTelefono"></span></p>
+                                                <div class="text-center text-muted" id="clienteNoSeleccionado">
+                                                    <i class="fas fa-user-slash fa-2x mb-2"></i>
+                                                    <p class="mb-0">Sin cliente seleccionado</p>
+                                                </div>
+
+                                                <div class="cliente-info d-none" id="clienteInfo">
+                                                    <h5 class="text-success mb-2 font-weight-bold">
+                                                        <i class="fas fa-check-circle mr-1"></i> Cliente Seleccionado
+                                                    </h5>
+                                                    <div class="pl-2">
+                                                        <p class="mb-1"><strong>Nombre:</strong> <span
+                                                                id="clienteNombre"></span></p>
+                                                        <p class="mb-1"><strong>Email:</strong> <span
+                                                                id="clienteEmail"></span></p>
+                                                        <p class="mb-0"><strong>Teléfono:</strong> <span
+                                                                id="clienteTelefono"></span></p>
+                                                    </div>
                                                 </div>
                                             </div>
+                                            <input type="hidden" th:field="*{cliente.id}" id="clienteIdHidden">
                                         </div>
-                                        <input type="hidden" th:field="*{cliente.id}" id="clienteIdHidden">
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <!-- DETALLE DE PRODUCTOS -->
-                        <div class="card card-info shadow">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <h3 class="card-title font-weight-bold">
-                                    <i class="fas fa-boxes mr-1"></i> Ítems del Pedido
-                                </h3>
-                                <button type="button" class="btn btn-primary btn-sm ml-auto" onclick="agregarDetalle()">
-                                    <i class="fas fa-plus mr-1"></i> Agregar Producto
-                                </button>
+                            <!-- DETALLE DE PRODUCTOS -->
+                            <div class="card card-info shadow">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h3 class="card-title font-weight-bold">
+                                        <i class="fas fa-boxes mr-1"></i> Ítems del Pedido
+                                    </h3>
+                                    <button type="button" class="btn btn-primary btn-sm ml-auto"
+                                        onclick="agregarDetalle()">
+                                        <i class="fas fa-plus mr-1"></i> Agregar Producto
+                                    </button>
+                                </div>
+                                <div class="card-body p-0">
+                                    <table class="table table-striped mb-0">
+                                        <thead class="bg-light">
+                                            <tr>
+                                                <th style="width: 25%">Categoría</th>
+                                                <th style="width: 25%">Producto</th>
+                                                <th style="width: 10%">Cant.</th>
+                                                <th style="width: 15%">P. Unit</th>
+                                                <th style="width: 10%">IVA %</th>
+                                                <th style="width: 15%">Subtotal</th>
+                                                <th style="width: 40px"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="detallesContainer">
+                                            <tr class="detalle-item">
+                                                <td>
+                                                    <select class="form-control categoria-filter"
+                                                        onchange="filtrarProductos(this)">
+                                                        <option value="">-- Todas --</option>
+                                                        <option th:each="cat : ${categorias}" th:value="${cat.id}"
+                                                            th:text="${cat.nombrecategoria}"></option>
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <select name="detalles[0].producto.id"
+                                                        class="form-control producto-select" required
+                                                        onchange="actualizarPrecioFila(this)">
+                                                        <option value="" disabled selected>-- Seleccionar --</option>
+                                                        <option th:each="p : ${productos}" th:value="${p.id}"
+                                                            th:text="${p.nombre}" th:data-categoria="${p.categoria.id}"
+                                                            th:data-precio="${p.precio}"
+                                                            th:data-preciomayor="${p.precioPorMayor}"
+                                                            th:data-impuesto="${p.impuesto}"
+                                                            th:data-tipo="${p.tipoVenta.code}"></option>
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <input type="number" name="detalles[0].cantidad"
+                                                        class="form-control cantidad-input" min="0.01" value="1.00"
+                                                        step="0.01" required onchange="calcularSubtotalFila(this)">
+                                                    <small class="text-muted unidad-medida">Unidad: Und</small>
+                                                </td>
+                                                <td>
+                                                    <input type="number" name="detalles[0].precioUnitario"
+                                                        class="form-control precio-unitario bg-light" step="0.01"
+                                                        readonly>
+                                                    <div class="custom-control custom-switch mt-1">
+                                                        <input type="checkbox" class="custom-control-input switch-mayor"
+                                                            id="switchMayor_0" onchange="actualizarPrecioFila(this)">
+                                                        <label class="custom-control-label small font-weight-normal"
+                                                            for="switchMayor_0">¿P. Mayor?</label>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <input type="number" name="detalles[0].impuestoProducto"
+                                                        class="form-control impuesto-producto bg-light" step="0.01"
+                                                        readonly>
+                                                </td>
+                                                <td>
+                                                    <input type="number" name="detalles[0].subtotal"
+                                                        class="form-control subtotal-item bg-light text-bold"
+                                                        step="0.01" readonly>
+                                                </td>
+                                                <td class="text-center"></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
-                            <div class="card-body p-0">
-                                <table class="table table-striped mb-0">
-                                    <thead class="bg-light">
-                                    <tr>
-                                        <th style="width: 25%">Categoría</th>
-                                        <th style="width: 25%">Producto</th>
-                                        <th style="width: 10%">Cant.</th>
-                                        <th style="width: 15%">P. Unit</th>
-                                        <th style="width: 10%">IVA %</th>
-                                        <th style="width: 15%">Subtotal</th>
-                                        <th style="width: 40px"></th>
-                                    </tr>
-                                    </thead>
-                                    <tbody id="detallesContainer">
-                                    <tr class="detalle-item">
-                                        <td>
-                                            <select class="form-control categoria-filter" onchange="filtrarProductos(this)">
-                                                <option value="">-- Todas --</option>
-                                                <option th:each="cat : ${categorias}"
-                                                        th:value="${cat.id}"
-                                                        th:text="${cat.nombrecategoria}"></option>
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <select name="detalles[0].producto.id" class="form-control producto-select" required onchange="actualizarPrecioFila(this)">
-                                                <option value="" disabled selected>-- Seleccionar --</option>
-                                                <option th:each="p : ${productos}"
-                                                        th:value="${p.id}"
-                                                        th:text="${p.nombre}"
-                                                        th:data-categoria="${p.categoria.id}"
-                                                        th:data-precio="${p.precio}"
-                                                        th:data-preciomayor="${p.precioPorMayor}"
-                                                        th:data-impuesto="${p.impuesto}"
-                                                        th:data-tipo="${p.tipoVenta.code}"></option>
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <input type="number" name="detalles[0].cantidad" class="form-control cantidad-input" min="0.01" value="1.00" step="0.01" required onchange="calcularSubtotalFila(this)">
-                                            <small class="text-muted unidad-medida">Unidad: Und</small>
-                                        </td>
-                                        <td>
-                                            <input type="number" name="detalles[0].precioUnitario" class="form-control precio-unitario bg-light" step="0.01" readonly>
-                                            <div class="custom-control custom-switch mt-1">
-                                                <input type="checkbox" class="custom-control-input switch-mayor" id="switchMayor_0" onchange="actualizarPrecioFila(this)">
-                                                <label class="custom-control-label small font-weight-normal" for="switchMayor_0">¿P. Mayor?</label>
+                        </div>
+
+                        <!-- PANEL DE FACTURACIÓN -->
+                        <div class="col-md-4">
+                            <div class="card card-primary card-outline shadow">
+                                <div class="card-header">
+                                    <h3 class="card-title font-weight-bold">Datos de Facturación</h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="form-group mb-3 text-center border-bottom pb-3">
+                                        <label
+                                            class="d-block small font-weight-bold text-primary mb-2 text-uppercase">Tipo
+                                            de Operación</label>
+                                        <div
+                                            class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
+                                            <input type="checkbox" th:field="*{ventaAlPorMayor}"
+                                                class="custom-control-input" id="switchVentaMayor"
+                                                onchange="alternarPreciosGlobal()">
+                                            <label class="custom-control-label" for="switchVentaMayor">
+                                                <span id="labelVenta" class="font-weight-bold">VENTA AL DETAL</span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Método de Pago <span class="text-danger">*</span></label>
+                                        <select class="form-control" th:field="*{metodoPago}" id="metodoPagoSelect"
+                                            required>
+                                            <option value="" disabled selected>Seleccione pago...</option>
+                                            <option value="EFECTIVO">Efectivo</option>
+                                            <option value="TRANSFERENCIA">Transferencia</option>
+                                            <option value="TARJETA">Tarjeta</option>
+                                            <option value="MIXTO">Mixto</option>
+                                        </select>
+                                    </div>
+
+                                    <hr>
+
+                                    <div class="bg-light p-3 rounded">
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span class="text-muted">Subtotal:</span>
+                                            <div class="font-weight-bold">
+                                                $ <input type="number" id="subtotalGeneral"
+                                                    class="d-inline text-right border-0 bg-transparent font-weight-bold"
+                                                    readonly value="0.00" style="width: 100px;">
                                             </div>
-                                        </td>
-                                        <td>
-                                            <input type="number" name="detalles[0].impuestoProducto" class="form-control impuesto-producto bg-light" step="0.01" readonly>
-                                        </td>
-                                        <td>
-                                            <input type="number" name="detalles[0].subtotal" class="form-control subtotal-item bg-light text-bold" step="0.01" readonly>
-                                        </td>
-                                        <td class="text-center"></td>
-                                    </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- PANEL DE FACTURACIÓN -->
-                    <div class="col-md-4">
-                        <div class="card card-primary card-outline shadow">
-                            <div class="card-header">
-                                <h3 class="card-title font-weight-bold">Datos de Facturación</h3>
-                            </div>
-                            <div class="card-body">
-                                <div class="form-group mb-3 text-center border-bottom pb-3">
-                                    <label class="d-block small font-weight-bold text-primary mb-2 text-uppercase">Tipo de Operación</label>
-                                    <div class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
-                                        <input type="checkbox" th:field="*{ventaAlPorMayor}" class="custom-control-input" id="switchVentaMayor" onchange="alternarPreciosGlobal()">
-                                        <label class="custom-control-label" for="switchVentaMayor">
-                                            <span id="labelVenta" class="font-weight-bold">VENTA AL DETAL</span>
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <div class="form-group">
-                                    <label>Método de Pago <span class="text-danger">*</span></label>
-                                    <select class="form-control" th:field="*{metodoPago}" id="metodoPagoSelect" required>
-                                        <option value="" disabled selected>Seleccione pago...</option>
-                                        <option value="EFECTIVO">Efectivo</option>
-                                        <option value="TRANSFERENCIA">Transferencia</option>
-                                        <option value="TARJETA">Tarjeta</option>
-                                        <option value="MIXTO">Mixto</option>
-                                    </select>
-                                </div>
-
-                                <hr>
-
-                                <div class="bg-light p-3 rounded">
-                                    <div class="d-flex justify-content-between mb-2">
-                                        <span class="text-muted">Subtotal:</span>
-                                        <div class="font-weight-bold">
-                                            $ <input type="number" id="subtotalGeneral" class="d-inline text-right border-0 bg-transparent font-weight-bold" readonly value="0.00" style="width: 100px;">
                                         </div>
-                                    </div>
 
-                                    <div class="form-group mb-2 border-top pt-2">
-                                        <label class="small font-weight-bold text-danger">DESCUENTO (%)</label>
-                                        <div class="input-group input-group-sm">
-                                            <div class="input-group-prepend">
-                                                <span class="input-group-text bg-danger text-white border-danger"><i class="fas fa-percent"></i></span>
+                                        <div class="form-group mb-2 border-top pt-2">
+                                            <label class="small font-weight-bold text-danger">DESCUENTO (%)</label>
+                                            <div class="input-group input-group-sm">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text bg-danger text-white border-danger"><i
+                                                            class="fas fa-percent"></i></span>
+                                                </div>
+                                                <input type="number" th:field="*{descuento}" id="inputDescuento"
+                                                    class="form-control text-right font-weight-bold border-danger"
+                                                    placeholder="0" min="0" max="100" step="0.1"
+                                                    oninput="calcularTotales()">
                                             </div>
-                                            <input type="number" th:field="*{descuento}" id="inputDescuento"
-                                                   class="form-control text-right font-weight-bold border-danger"
-                                                   placeholder="0" min="0" max="100" step="0.1"
-                                                   oninput="calcularTotales()">
-                                        </div>
-                                        <div class="text-right small text-danger mt-1">
-                                            - $ <span id="valorDescuentoCalculado">0.00</span>
-                                        </div>
-                                    </div>
-
-                                    <div class="d-flex justify-content-between mb-2">
-                                        <span class="text-muted">Impuesto Total:</span>
-                                        <div class="font-weight-bold">
-                                            $ <input type="number" id="impuesto" th:field="*{impuesto}" class="d-inline text-right bg-transparent border-0 font-weight-bold" readonly value="0" style="width: 100px;">
-                                        </div>
-                                    </div>
-                                    <div class="form-group mb-2 border-top pt-2">
-                                        <label class="small font-weight-bold text-secondary">VALORES ADICIONALES ($)</label>
-                                        <div class="input-group input-group-sm">
-                                            <div class="input-group-prepend">
-                                                <span class="input-group-text bg-secondary text-white border-secondary"><i class="fas fa-plus-circle"></i></span>
+                                            <div class="text-right small text-danger mt-1">
+                                                - $ <span id="valorDescuentoCalculado">0.00</span>
                                             </div>
-                                            <input type="number" th:field="*{valoresAdicionales}" id="inputValoresAdicionales"
-                                                   class="form-control text-right font-weight-bold border-secondary"
-                                                   placeholder="0.00" min="0" step="0.01"
-                                                   oninput="calcularTotales()">
                                         </div>
-                                        <small class="text-muted">Cargos extra, servicios o empaques.</small>
-                                    </div>
 
-                                    <div class="d-flex justify-content-between text-lg text-primary font-weight-bold mt-3 border-top pt-2">
-                                        <span>TOTAL:</span>
-                                        <div>
-                                            $ <input type="number" id="totalVenta" th:field="*{total}" class="d-inline text-right border-0 bg-transparent font-weight-bold text-primary text-xl" readonly style="width: 140px;">
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span class="text-muted">Impuesto Total:</span>
+                                            <div class="font-weight-bold">
+                                                $ <input type="number" id="impuesto" th:field="*{impuesto}"
+                                                    class="d-inline text-right bg-transparent border-0 font-weight-bold"
+                                                    readonly value="0" style="width: 100px;">
+                                            </div>
+                                        </div>
+                                        <div class="form-group mb-2 border-top pt-2">
+                                            <label class="small font-weight-bold text-secondary">VALORES ADICIONALES
+                                                ($)</label>
+                                            <div class="input-group input-group-sm">
+                                                <div class="input-group-prepend">
+                                                    <span
+                                                        class="input-group-text bg-secondary text-white border-secondary"><i
+                                                            class="fas fa-plus-circle"></i></span>
+                                                </div>
+                                                <input type="number" th:field="*{valoresAdicionales}"
+                                                    id="inputValoresAdicionales"
+                                                    class="form-control text-right font-weight-bold border-secondary"
+                                                    placeholder="0.00" min="0" step="0.01" oninput="calcularTotales()">
+                                            </div>
+                                            <small class="text-muted">Cargos extra, servicios o empaques.</small>
+                                        </div>
+
+                                        <div
+                                            class="d-flex justify-content-between text-lg text-primary font-weight-bold mt-3 border-top pt-2">
+                                            <span>TOTAL:</span>
+                                            <div>
+                                                $ <input type="number" id="totalVenta" th:field="*{total}"
+                                                    class="d-inline text-right border-0 bg-transparent font-weight-bold text-primary text-xl"
+                                                    readonly style="width: 140px;">
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div class="card-footer">
-                                <button type="button" onclick="validarYProcesar()" class="btn btn-success btn-block shadow btn-lg">
-                                    <i class="fas fa-save mr-1"></i> Finalizar Venta
-                                </button>
-                                <a href="/ventas/listar" class="btn btn-default btn-block mt-2">Cancelar</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </section>
-
-    <!-- MODAL ABRIR CAJA -->
-    <div th:if="${necesitaAbrirCaja}" class="modal fade" id="modalAbrirCaja" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content border-primary shadow-lg">
-                <div class="modal-header bg-primary text-white text-center d-block">
-                    <h5 class="modal-title"><i class="fas fa-cash-register mr-2"></i> Apertura de Caja Requerida</h5>
-                </div>
-                <form th:action="@{/caja/abrir}" method="POST">
-                    <div class="modal-body text-center">
-                        <p class="mb-4">Para poder facturar, debe ingresar el <strong>monto base (saldo inicial)</strong> que hay en caja actualmente.</p>
-                        <div class="form-group">
-                            <label for="montoInicialInput">Efectivo Inicial en Caja:</label>
-                            <div class="input-group input-group-lg">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text font-weight-bold">$</span>
+                                <div class="card-footer">
+                                    <button type="button" onclick="validarYProcesar()"
+                                        class="btn btn-success btn-block shadow btn-lg">
+                                        <i class="fas fa-save mr-1"></i> Finalizar Venta
+                                    </button>
+                                    <a href="/ventas/listar" class="btn btn-default btn-block mt-2">Cancelar</a>
                                 </div>
-                                <input type="number" name="montoInicial" id="montoInicialInput" class="form-control text-center font-weight-bold" placeholder="0.00" step="0.01" min="0" required autofocus>
                             </div>
                         </div>
-                    </div>
-                    <div class="modal-footer bg-light">
-                        <button type="submit" class="btn btn-primary btn-block btn-lg font-weight-bold">
-                            <i class="fas fa-key mr-2"></i> ABRIR CAJA Y CONTINUAR
-                        </button>
-                        <a th:href="@{/Home}" class="btn btn-link btn-sm text-muted">Volver al Menú Principal</a>
                     </div>
                 </form>
             </div>
-        </div>
-    </div>
-    >
-    <!-- MODAL CERRAR CAJA -->
-    <div class="modal fade" id="modalCerrarCaja" tabindex="-1" th:if="${cajaAbierta != null}">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content">
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title">
-                        <i class="fas fa-lock mr-2"></i> Cerrar Caja del Día
-                    </h5>
-                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
-                </div>
-                <form th:action="@{/caja/cerrar/{id}(id=${cajaAbierta.id})}" method="POST" id="formCerrarCaja">
-                    <div class="modal-body">
-                        <!-- Información de la caja -->
-                        <div class="alert alert-info">
-                            <h6 class="font-weight-bold mb-2">
-                                <i class="fas fa-info-circle mr-1"></i> Información de Caja
-                            </h6>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <p class="mb-1"><strong>Apertura:</strong> <span th:text="${#temporals.format(cajaAbierta.fechaApertura, 'dd/MM/yyyy HH:mm')}"></span></p>
-                                    <p class="mb-1"><strong>Monto Inicial:</strong> $<span th:text="${#numbers.formatDecimal(cajaAbierta.montoInicial, 1, 'COMMA', 2, 'POINT')}"></span></p>
-                                    <p class="mb-1"><strong>Egresos/Compras:</strong> $<span th:text="${#numbers.formatDecimal(resumen.egresosTotales, 1, 'COMMA', 2, 'POINT')}"></span></p>
-                                </div>
-                                <div class="col-md-6">
-                                    <p class="mb-1"><strong>Ingresos:</strong> $<span th:text="${#numbers.formatDecimal(resumen.ingresosEfectivo, 1, 'COMMA', 2, 'POINT')}"></span></p>
-                                    <p class="mb-1"><strong>Ingresos Tarje:</strong> $<span th:text="${#numbers.formatDecimal(resumen.ventasTarjeta, 1, 'COMMA', 2, 'POINT')}"></span></p>
-                                    <p class="mb-1"><strong>Ingresos Transfe:</strong> $<span th:text="${#numbers.formatDecimal(resumen.ventasTransferencia, 1, 'COMMA', 2, 'POINT')}"></span></p>
+        </section>
+
+        <!-- MODAL ABRIR CAJA -->
+        <div th:if="${necesitaAbrirCaja}" class="modal fade" id="modalAbrirCaja" data-backdrop="static"
+            data-keyboard="false" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content border-primary shadow-lg">
+                    <div class="modal-header bg-primary text-white text-center d-block">
+                        <h5 class="modal-title"><i class="fas fa-cash-register mr-2"></i> Apertura de Caja Requerida
+                        </h5>
+                    </div>
+                    <form th:action="@{/caja/abrir}" method="POST">
+                        <div class="modal-body text-center">
+                            <p class="mb-4">Para poder facturar, debe ingresar el <strong>monto base (saldo
+                                    inicial)</strong> que hay en caja actualmente.</p>
+                            <div class="form-group">
+                                <label for="montoInicialInput">Efectivo Inicial en Caja:</label>
+                                <div class="input-group input-group-lg">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text font-weight-bold">$</span>
+                                    </div>
+                                    <input type="number" name="montoInicial" id="montoInicialInput"
+                                        class="form-control text-center font-weight-bold" placeholder="0.00" step="0.01"
+                                        min="0" required autofocus>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Monto esperado -->
-                        <div class="card bg-light mb-3">
-                            <div class="card-body py-2">
-                                <div class="row align-items-center">
+                        <div class="modal-footer bg-light">
+                            <button type="submit" class="btn btn-primary btn-block btn-lg font-weight-bold">
+                                <i class="fas fa-key mr-2"></i> ABRIR CAJA Y CONTINUAR
+                            </button>
+                            <a th:href="@{/Home}" class="btn btn-link btn-sm text-muted">Volver al Menú Principal</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        >
+        <!-- MODAL CERRAR CAJA -->
+        <div class="modal fade" id="modalCerrarCaja" tabindex="-1" th:if="${cajaAbierta != null}">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title">
+                            <i class="fas fa-lock mr-2"></i> Cerrar Caja del Día
+                        </h5>
+                        <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                    </div>
+                    <form th:action="@{/caja/cerrar/{id}(id=${cajaAbierta.id})}" method="POST" id="formCerrarCaja">
+                        <div class="modal-body">
+                            <!-- Información de la caja -->
+                            <div class="alert alert-info">
+                                <h6 class="font-weight-bold mb-2">
+                                    <i class="fas fa-info-circle mr-1"></i> Información de Caja
+                                </h6>
+                                <div class="row">
                                     <div class="col-md-6">
-                                        <h5 class="mb-0 text-primary">
-                                            <i class="fas fa-calculator mr-1"></i> Monto Esperado en Caja:
-                                        </h5>
+                                        <p class="mb-1"><strong>Apertura:</strong> <span
+                                                th:text="${#temporals.format(cajaAbierta.fechaApertura, 'dd/MM/yyyy HH:mm')}"></span>
+                                        </p>
+                                        <p class="mb-1"><strong>Monto Inicial:</strong> $<span
+                                                th:text="${#numbers.formatDecimal(cajaAbierta.montoInicial, 1, 'COMMA', 2, 'POINT')}"></span>
+                                        </p>
+                                        <p class="mb-1"><strong>Egresos/Compras:</strong> $<span
+                                                th:text="${#numbers.formatDecimal(resumen.egresosTotales, 1, 'COMMA', 2, 'POINT')}"></span>
+                                        </p>
                                     </div>
-                                    <div class="col-md-6 text-right">
-                                        <h3 class="mb-0 font-weight-bold text-success" id="montoEsperado">
-                                            $<span th:text="${#numbers.formatDecimal(resumen.saldoActual, 1, 'COMMA', 2, 'POINT')}"></span>
-                                        </h3>
-                                        <input type="hidden" id="montoEsperadoValue" th:value="${cajaAbierta.montoEsperado}">
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>Ingresos:</strong> $<span
+                                                th:text="${#numbers.formatDecimal(resumen.ingresosEfectivo, 1, 'COMMA', 2, 'POINT')}"></span>
+                                        </p>
+                                        <p class="mb-1"><strong>Ingresos Tarje:</strong> $<span
+                                                th:text="${#numbers.formatDecimal(resumen.ventasTarjeta, 1, 'COMMA', 2, 'POINT')}"></span>
+                                        </p>
+                                        <p class="mb-1"><strong>Ingresos Transfe:</strong> $<span
+                                                th:text="${#numbers.formatDecimal(resumen.ventasTransferencia, 1, 'COMMA', 2, 'POINT')}"></span>
+                                        </p>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Input para monto real -->
-                        <div class="form-group">
-                            <label for="montoRealInput" class="font-weight-bold">
-                                <i class="fas fa-money-bill-wave mr-1"></i> Efectivo Real en Caja:
-                                <span class="text-danger">*</span>
-                            </label>
-                            <div class="input-group input-group-lg">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text bg-success text-white font-weight-bold">$</span>
+                            <!-- Monto esperado -->
+                            <div class="card bg-light mb-3">
+                                <div class="card-body py-2">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-6">
+                                            <h5 class="mb-0 text-primary">
+                                                <i class="fas fa-calculator mr-1"></i> Monto Esperado en Caja:
+                                            </h5>
+                                        </div>
+                                        <div class="col-md-6 text-right">
+                                            <h3 class="mb-0 font-weight-bold text-success" id="montoEsperado">
+                                                $<span
+                                                    th:text="${#numbers.formatDecimal(resumen.saldoActual, 1, 'COMMA', 2, 'POINT')}"></span>
+                                            </h3>
+                                            <input type="hidden" id="montoEsperadoValue"
+                                                th:value="${cajaAbierta.montoEsperado}">
+                                        </div>
+                                    </div>
                                 </div>
-                                <input type="number"
-                                       name="montoReal"
-                                       id="montoRealInput"
-                                       class="form-control form-control-lg text-center font-weight-bold"
-                                       placeholder="0.00"
-                                       step="0.01"
-                                       min="0"
-                                       required
-                                       oninput="calcularDiferenciaCierre()">
                             </div>
-                            <small class="text-muted">Cuente el dinero físico que hay en la caja actualmente</small>
-                        </div>
 
-                        <!-- Diferencia calculada -->
-                        <div id="alertDiferencia" class="alert" style="display: none;">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="font-weight-bold">
-                                    <i class="fas fa-exchange-alt mr-1"></i> Diferencia:
-                                </span>
-                                <h4 class="mb-0 font-weight-bold" id="textoDiferencia">$0.00</h4>
+                            <!-- Input para monto real -->
+                            <div class="form-group">
+                                <label for="montoRealInput" class="font-weight-bold">
+                                    <i class="fas fa-money-bill-wave mr-1"></i> Efectivo Real en Caja:
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group input-group-lg">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-success text-white font-weight-bold">$</span>
+                                    </div>
+                                    <input type="number" name="montoReal" id="montoRealInput"
+                                        class="form-control form-control-lg text-center font-weight-bold"
+                                        placeholder="0.00" step="0.01" min="0" required
+                                        oninput="calcularDiferenciaCierre()">
+                                </div>
+                                <small class="text-muted">Cuente el dinero físico que hay en la caja actualmente</small>
                             </div>
-                            <small id="mensajeDiferencia"></small>
-                        </div>
 
-                        <!-- Observaciones -->
-                        <div class="form-group">
-                            <label for="observacionesInput" class="font-weight-bold">
-                                <i class="fas fa-comment-dots mr-1"></i> Observaciones:
-                            </label>
-                            <textarea name="observaciones"
-                                      id="observacionesInput"
-                                      class="form-control"
-                                      rows="3"
-                                      placeholder="Agregue comentarios sobre diferencias, incidencias o notas del día..."></textarea>
-                            <small class="text-muted">
-                                <span id="requiereObservacion" style="display: none;" class="text-warning">
-                                    <i class="fas fa-exclamation-triangle"></i> Se recomienda agregar observaciones cuando hay diferencia
-                                </span>
-                            </small>
+                            <!-- Diferencia calculada -->
+                            <div id="alertDiferencia" class="alert" style="display: none;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="font-weight-bold">
+                                        <i class="fas fa-exchange-alt mr-1"></i> Diferencia:
+                                    </span>
+                                    <h4 class="mb-0 font-weight-bold" id="textoDiferencia">$0.00</h4>
+                                </div>
+                                <small id="mensajeDiferencia"></small>
+                            </div>
+
+                            <!-- Observaciones -->
+                            <div class="form-group">
+                                <label for="observacionesInput" class="font-weight-bold">
+                                    <i class="fas fa-comment-dots mr-1"></i> Observaciones:
+                                </label>
+                                <textarea name="observaciones" id="observacionesInput" class="form-control" rows="3"
+                                    placeholder="Agregue comentarios sobre diferencias, incidencias o notas del día..."></textarea>
+                                <small class="text-muted">
+                                    <span id="requiereObservacion" style="display: none;" class="text-warning">
+                                        <i class="fas fa-exclamation-triangle"></i> Se recomienda agregar observaciones
+                                        cuando hay diferencia
+                                    </span>
+                                </small>
+                            </div>
                         </div>
-                    </div>
-                    <div class="modal-footer bg-light">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                            <i class="fas fa-times mr-1"></i> Cancelar
-                        </button>
-                        <button type="submit" class="btn btn-danger btn-lg" id="btnConfirmarCierre">
-                            <i class="fas fa-lock mr-1" href="cierre"></i> Confirmar Cierre de Caja
-                        </button>
-                    </div>
-                </form>
+                        <div class="modal-footer bg-light">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                <i class="fas fa-times mr-1"></i> Cancelar
+                            </button>
+                            <button type="submit" class="btn btn-danger btn-lg" id="btnConfirmarCierre">
+                                <i class="fas fa-lock mr-1" href="cierre"></i> Confirmar Cierre de Caja
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<th:block layout:fragment="scripts">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script th:inline="javascript">
-        const clientesData = /*[[${clientes}]]*/ [];
-        let detalleCount = 1;
+    <th:block layout:fragment="scripts">
 
-        $(document).ready(function () {
-            const s = /*[[${success}]]*/ null;
-            const e = /*[[${error}]]*/ null;
-            const i = /*[[${info}]]*/ null;
-            const w = /*[[${warning}]]*/ null;
-            if (typeof checkNotifications === 'function') {
-                checkNotifications(s, e, i, w);
-            }
+        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+        <script th:inline="javascript">
+            const clientesData = /*[[${clientes}]]*/[];
+            let detalleCount = 1;
 
-            const necesitaAbrir = /*[[${necesitaAbrirCaja}]]*/ false;
-            if (necesitaAbrir) {
-                $('#modalAbrirCaja').modal({ backdrop: 'static', keyboard: true, show: true });
-                setTimeout(() => $('#montoInicialInput').focus(), 800);
-            }
-        });
+            $(document).ready(function () {
+                const s = /*[[${success}]]*/ null;
+                const e = /*[[${error}]]*/ null;
+                const i = /*[[${info}]]*/ null;
+                const w = /*[[${warning}]]*/ null;
+                if (typeof checkNotifications === 'function') {
+                    checkNotifications(s, e, i, w);
+                }
 
-        // Filtrar productos por categoría en la fila específica
-        function filtrarProductos(selectElement) {
-            const catId = selectElement.value;
-            const fila = selectElement.closest('tr');
-            const productoSelect = fila.querySelector('.producto-select');
-            const options = productoSelect.querySelectorAll('option');
-
-            options.forEach(opt => {
-                if (opt.value === "" || catId === "" || opt.getAttribute('data-categoria') === catId) {
-                    opt.style.display = "block";
-                } else {
-                    opt.style.display = "none";
+                const necesitaAbrir = /*[[${necesitaAbrirCaja}]]*/ false;
+                if (necesitaAbrir) {
+                    $('#modalAbrirCaja').modal({ backdrop: 'static', keyboard: true, show: true });
+                    setTimeout(() => $('#montoInicialInput').focus(), 800);
                 }
             });
-            productoSelect.value = "";
-            actualizarPrecioFila(productoSelect);
-        }
 
-        async function validarYProcesar() {
-            const necesitaAbrir = /*[[${necesitaAbrirCaja}]]*/ false;
-            if (necesitaAbrir) {
-                Swal.fire({ icon: 'error', title: 'Caja cerrada', text: 'Debe abrir la caja primero.' });
-                $('#modalAbrirCaja').modal('show');
-                return;
+            // Filtrar productos por categoría en la fila específica
+            function filtrarProductos(selectElement) {
+                const catId = selectElement.value;
+                const fila = selectElement.closest('tr');
+                const productoSelect = fila.querySelector('.producto-select');
+                const options = productoSelect.querySelectorAll('option');
+
+                options.forEach(opt => {
+                    if (opt.value === "" || catId === "" || opt.getAttribute('data-categoria') === catId) {
+                        opt.style.display = "block";
+                    } else {
+                        opt.style.display = "none";
+                    }
+                });
+                productoSelect.value = "";
+                actualizarPrecioFila(productoSelect);
             }
-            const clienteId = document.getElementById('clienteIdHidden').value;
-            if (!clienteId) {
-                Swal.fire({ icon: 'warning', title: 'Cliente requerido', text: 'Debe seleccionar un cliente' });
-                return;
+
+            async function validarYProcesar() {
+                const necesitaAbrir = /*[[${necesitaAbrirCaja}]]*/ false;
+                if (necesitaAbrir) {
+                    Swal.fire({ icon: 'error', title: 'Caja cerrada', text: 'Debe abrir la caja primero.' });
+                    $('#modalAbrirCaja').modal('show');
+                    return;
+                }
+                const clienteId = document.getElementById('clienteIdHidden').value;
+                if (!clienteId) {
+                    Swal.fire({ icon: 'warning', title: 'Cliente requerido', text: 'Debe seleccionar un cliente' });
+                    return;
+                }
+                document.getElementById('formVenta').submit();
             }
-            document.getElementById('formVenta').submit();
-        }
-        // 2. Inicialización de Select2 con AJAX (UNIFICADO)
-        // 1. Definición de la variable (Asegúrate de que esté dentro de $(document).ready)
-        const $selectCliente = $('.select2-ajax');
+            // 2. Inicialización de Select2 con AJAX (UNIFICADO)
+            // 1. Definición de la variable (Asegúrate de que esté dentro de $(document).ready)
+            const $selectCliente = $('.select2-ajax');
 
-        $selectCliente.select2({
-            theme: 'bootstrap4',
-            placeholder: "Busque por nombre o cédula...",
-            minimumInputLength: 3,
-            allowClear: true,
-            ajax: {
-                url: '/api/clientes/buscar',
-                dataType: 'json',
-                delay: 400, // Un poco más de delay para proteger la DB
-                data: function (params) {
-                    return { term: params.term };
-                },
-                processResults: function (data) {
-                    // Select2 espera que 'data' sea un objeto con la propiedad 'results'
-                    // Si tu backend ya envía { "results": [...] }, solo retorna data.
-                    return { results: data.results || data };
-                },
-                cache: true
-            }
-        });
-
-        // 2. Evento de Selección (Optimizado)
-        $selectCliente.on('select2:select', function (e) {
-            // IMPORTANTE: e.params.data YA TIENE toda la información que envió el backend
-            const cliente = e.params.data;
-
-            console.log("Cliente seleccionado:", cliente);
-
-            // Asignar ID al input oculto
-            const inputId = document.getElementById('clienteIdHidden');
-            if (inputId) inputId.value = cliente.id;
-
-            // Actualizar la Card (si los elementos existen)
-            if (document.getElementById('clienteNombre'))
-                document.getElementById('clienteNombre').textContent = cliente.text || 'N/A';
-
-            if (document.getElementById('clienteEmail'))
-                document.getElementById('clienteEmail').textContent = cliente.email || 'N/A';
-
-            if (document.getElementById('clienteTelefono'))
-                document.getElementById('clienteTelefono').textContent = cliente.telefono || 'N/A';
-
-            // Manejo de visibilidad de la Card
-            $('#clienteInfo').removeClass('d-none');
-            $('#clienteNoSeleccionado').addClass('d-none');
-            $('#clienteCard').css('border-color', '#28a745');
-
-            // OPCIÓN 3: SweetAlert tipo Toast (Elegante y no intrusivo)
-            const Toast = Swal.mixin({
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 3000,
-                timerProgressBar: true
+            $selectCliente.select2({
+                theme: 'bootstrap4',
+                placeholder: "Busque por nombre o cédula...",
+                minimumInputLength: 3,
+                allowClear: true,
+                ajax: {
+                    url: '/api/clientes/buscar',
+                    dataType: 'json',
+                    delay: 400, // Un poco más de delay para proteger la DB
+                    data: function (params) {
+                        return { term: params.term };
+                    },
+                    processResults: function (data) {
+                        // Select2 espera que 'data' sea un objeto con la propiedad 'results'
+                        // Si tu backend ya envía { "results": [...] }, solo retorna data.
+                        return { results: data.results || data };
+                    },
+                    cache: true
+                }
             });
 
-            Toast.fire({
-                icon: 'success',
-                title: 'Cliente Seleccionado',
-                html: `<b>${cliente.text}</b><br><small>ID: ${cliente.identificacion || 'N/A'}</small>`
+            // 2. Evento de Selección (Optimizado)
+            $selectCliente.on('select2:select', function (e) {
+                // IMPORTANTE: e.params.data YA TIENE toda la información que envió el backend
+                const cliente = e.params.data;
+
+                console.log("Cliente seleccionado:", cliente);
+
+                // Asignar ID al input oculto
+                const inputId = document.getElementById('clienteIdHidden');
+                if (inputId) inputId.value = cliente.id;
+
+                // Actualizar la Card (si los elementos existen)
+                if (document.getElementById('clienteNombre'))
+                    document.getElementById('clienteNombre').textContent = cliente.text || 'N/A';
+
+                if (document.getElementById('clienteEmail'))
+                    document.getElementById('clienteEmail').textContent = cliente.email || 'N/A';
+
+                if (document.getElementById('clienteTelefono'))
+                    document.getElementById('clienteTelefono').textContent = cliente.telefono || 'N/A';
+
+                // Manejo de visibilidad de la Card
+                $('#clienteInfo').removeClass('d-none');
+                $('#clienteNoSeleccionado').addClass('d-none');
+                $('#clienteCard').css('border-color', '#28a745');
+
+                // OPCIÓN 3: SweetAlert tipo Toast (Elegante y no intrusivo)
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+
+                Toast.fire({
+                    icon: 'success',
+                    title: 'Cliente Seleccionado',
+                    html: `<b>${cliente.text}</b><br><small>ID: ${cliente.identificacion || 'N/A'}</small>`
+                });
             });
-        });
 
-        // 3. Limpiar cuando se borra la selección
-        $selectCliente.on('select2:unselect', function () {
-            $('#clienteIdHidden').val('');
-            $('#clienteNombre, #clienteEmail, #clienteTelefono').text('N/A');
-            $('#clienteInfo').addClass('d-none');
-            $('#clienteNoSeleccionado').removeClass('d-none');
-            $('#clienteCard').css('border-color', '#dee2e6');
-        });
+            // 3. Limpiar cuando se borra la selección
+            $selectCliente.on('select2:unselect', function () {
+                $('#clienteIdHidden').val('');
+                $('#clienteNombre, #clienteEmail, #clienteTelefono').text('N/A');
+                $('#clienteInfo').addClass('d-none');
+                $('#clienteNoSeleccionado').removeClass('d-none');
+                $('#clienteCard').css('border-color', '#dee2e6');
+            });
 
-        function agregarDetalle() {
-            const container = document.getElementById('detallesContainer');
-            const opcionesCat = document.querySelector('.categoria-filter').innerHTML;
-            const opcionesProd = document.querySelector('.producto-select').innerHTML;
+            function agregarDetalle() {
+                const container = document.getElementById('detallesContainer');
+                const opcionesCat = document.querySelector('.categoria-filter').innerHTML;
+                const opcionesProd = document.querySelector('.producto-select').innerHTML;
 
-            const tr = document.createElement('tr');
-            tr.className = 'detalle-item';
-            tr.innerHTML = `
+                const tr = document.createElement('tr');
+                tr.className = 'detalle-item';
+                tr.innerHTML = `
                 <td><select class="form-control categoria-filter" onchange="filtrarProductos(this)">${opcionesCat}</select></td>
                 <td><select name="detalles[${detalleCount}].producto.id" class="form-control producto-select" required onchange="actualizarPrecioFila(this)">${opcionesProd}</select></td>
                 <td>
@@ -587,192 +643,193 @@
                 <td><input type="number" name="detalles[${detalleCount}].subtotal" class="form-control subtotal-item bg-light text-bold" readonly step="0.01"></td>
                 <td class="text-center"><button type="button" class="btn btn-link text-danger" onclick="eliminarFila(this)"><i class="fas fa-trash-alt"></i></button></td>
             `;
-            container.appendChild(tr);
-            detalleCount++;
-        }
-
-        function eliminarFila(btn) {
-            btn.closest('tr').remove();
-            calcularTotal();
-        }
-
-        // Función corregida para usar el elemento directamente e integrar Venta al por Mayor
-        function actualizarPrecioFila(element) {
-            const fila = element.closest('tr');
-            const select = fila.querySelector('.producto-select');
-            const option = select.options[select.selectedIndex];
-            const labelUnidad = fila.querySelector('.unidad-medida');
-            const inputCantidad = fila.querySelector('.cantidad-input');
-            const switchGlobal = document.getElementById('switchVentaMayor');
-            const switchFila = fila.querySelector('.switch-mayor');
-
-            if (!select.value) {
-                fila.querySelector('.precio-unitario').value = "";
-                fila.querySelector('.impuesto-producto').value = "";
-                labelUnidad.innerText = "Unidad: Und";
-                return;
+                container.appendChild(tr);
+                detalleCount++;
             }
 
-            const pNormal = parseFloat(option.getAttribute("data-precio")) || 0;
-            const pMayor = parseFloat(option.getAttribute("data-preciomayor")) || pNormal;
-            
-            // Si el switch global está activo, forzamos precio mayor en todas las filas
-            // Si no, respetamos el switch individual de la fila
-            const isMayor = switchGlobal.checked || (switchFila && switchFila.checked);
-            const precioFinal = isMayor ? pMayor : pNormal;
-
-            const impuesto = option.getAttribute("data-impuesto") || 0;
-            const tipoVenta = option.getAttribute("data-tipo");
-
-            fila.querySelector('.precio-unitario').value = precioFinal.toFixed(2);
-            fila.querySelector('.impuesto-producto').value = impuesto;
-
-            // Si el código es KGM (Kilogramo) o LTR (Litro)
-            if (tipoVenta === 'KGM' || tipoVenta === 'LTR') {
-                labelUnidad.innerText = (tipoVenta === 'KGM') ? "Unidad: Gramos" : "Unidad: Mililitros";
-                labelUnidad.className = "badge badge-warning unidad-medida";
-                inputCantidad.step = "1";
-            } else {
-                labelUnidad.innerText = "Unidad: Und";
-                labelUnidad.className = "text-muted small unidad-medida";
-                inputCantidad.step = "1";
-            }
-            
-            calcularSubtotalFila(inputCantidad);
-        }
-        // Función corregida para calcular subtotal por fila
-        function calcularSubtotalFila(input) {
-            const fila = input.closest('tr');
-            const select = fila.querySelector('.producto-select');
-            const option = select.options[select.selectedIndex];
-
-            if (!option || select.value === "") return;
-
-            // --- CAMBIO AQUÍ: Lógica de conversión basada en códigos ---
-            const tipoVenta = option.getAttribute("data-tipo");
-            let cant = parseFloat(input.value) || 0;
-            const precio = parseFloat(fila.querySelector('.precio-unitario').value) || 0;
-
-            // KGM = Kilos, LTR = Litros. En ambos casos dividimos gramos/ml entre 1000
-            if (tipoVenta === 'KGM' || tipoVenta === 'LTR') {
-                cant = cant / 1000;
+            function eliminarFila(btn) {
+                btn.closest('tr').remove();
+                calcularTotal();
             }
 
-            fila.querySelector('.subtotal-item').value = (cant * precio).toFixed(2);
-            calcularTotal();
-        }
-
-        function calcularTotal() {
-            let subtotalGlobal = 0;
-            let impuestoGlobal = 0;
-
-            // 1. Sumar totales de cada fila
-            document.querySelectorAll('.detalle-item').forEach(fila => {
-                const subtotalFila = parseFloat(fila.querySelector('.subtotal-item').value) || 0;
-                const porcImpuesto = parseFloat(fila.querySelector('.impuesto-producto').value) || 0;
-
-                subtotalGlobal += subtotalFila;
-                impuestoGlobal += (subtotalFila * (porcImpuesto / 100));
-            });
-
-            // 2. Lógica de DESCUENTO
-            const inputDescuento = document.getElementById('inputDescuento');
-            const porcentajeDescuento = parseFloat(inputDescuento.value) || 0;
-            const valorDescuento = subtotalGlobal * (porcentajeDescuento / 100);
-
-            // 3. Lógica de VALORES ADICIONALES (NUEVO)
-            const inputAdicionales = document.getElementById('inputValoresAdicionales');
-            const valoresAdicionales = parseFloat(inputAdicionales.value) || 0;
-
-            // 4. Mostrar el valor del descuento calculado visualmente
-            const spanValorDesc = document.getElementById('valorDescuentoCalculado');
-            if (spanValorDesc) {
-                spanValorDesc.textContent = valorDescuento.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            }
-
-            // 5. Calcular Total Final
-            // Total = (Subtotal - Descuento) + Impuestos + Valores Adicionales
-            const totalFinal = (subtotalGlobal - valorDescuento) + impuestoGlobal + valoresAdicionales;
-
-            // 6. Actualizar los campos en la interfaz
-            document.getElementById('subtotalGeneral').value = subtotalGlobal.toFixed(2);
-            document.getElementById('impuesto').value = impuestoGlobal.toFixed(2);
-            document.getElementById('totalVenta').value = totalFinal.toFixed(2);
-        }
-
-        function calcularDiferenciaCierre() {
-            // Obtenemos el valor esperado directamente del texto que muestra el resumen para asegurar consistencia
-            const montoEsperadoTexto = document.getElementById('montoEsperado').innerText.replace('$', '').replace(',', '').trim();
-            const montoEsperado = parseFloat(montoEsperadoTexto) || 0;
-            const montoReal = parseFloat(document.getElementById('montoRealInput').value) || 0;
-
-            const alertDiv = document.getElementById('alertDiferencia');
-            const textoDif = document.getElementById('textoDiferencia');
-            const mensajeDif = document.getElementById('mensajeDiferencia');
-            const requiereObs = document.getElementById('requiereObservacion');
-
-            // Si el usuario ingresó un monto real (aunque sea 0)
-            if (document.getElementById('montoRealInput').value !== "") {
-                const diferencia = montoReal - montoEsperado;
-                const diferenciaAbsoluta = Math.abs(diferencia).toFixed(2);
-
-                // Mostrar el contenedor principal
-                alertDiv.style.display = 'block';
-
-                // Lógica de comparación
-                if (diferencia === 0) {
-                    alertDiv.className = 'alert alert-success';
-                    textoDif.className = 'mb-0 font-weight-bold text-success';
-                    textoDif.textContent = "$ 0.00";
-                    mensajeDif.textContent = '✓ Cuadre perfecto - No hay diferencia';
-                    if(requiereObs) requiereObs.style.display = 'none';
-
-                } else if (diferencia > 0) {
-                    alertDiv.className = 'alert alert-warning';
-                    textoDif.className = 'mb-0 font-weight-bold text-warning';
-                    textoDif.textContent = "+ $ " + diferenciaAbsoluta;
-                    mensajeDif.textContent = '⚠️ Sobrante en caja (Ingresó más de lo esperado)';
-                    if(requiereObs) requiereObs.style.display = 'block';
-
-                } else {
-                    alertDiv.className = 'alert alert-danger';
-                    textoDif.className = 'mb-0 font-weight-bold text-danger';
-                    textoDif.textContent = "- $ " + diferenciaAbsoluta;
-                    mensajeDif.textContent = '⚠️ Faltante en caja (Falta dinero según sistema)';
-                    if(requiereObs) requiereObs.style.display = 'block';
-                }
-            } else {
-                // Si el campo está vacío, ocultamos los avisos
-                alertDiv.style.display = 'none';
-                if(requiereObs) requiereObs.style.display = 'none';
-            }
-        }
-        function alternarPreciosGlobal() {
-            const isMayor = document.getElementById('switchVentaMayor').checked;
-            const label = document.getElementById('labelVenta');
-
-            label.innerText = isMayor ? "VENTA AL POR MAYOR" : "VENTA AL DETAL";
-            label.className = isMayor ? "font-weight-bold text-success" : "font-weight-bold text-danger";
-
-            // Actualiza todas las filas existentes con el nuevo modo de precio
-            document.querySelectorAll('.detalle-item').forEach(fila => {
-                const switchFila = fila.querySelector('.switch-mayor');
-                if (switchFila) {
-                    // Sincronizamos el switch de la fila con el switch global
-                    switchFila.checked = isMayor;
-                }
-                
+            // Función corregida para usar el elemento directamente e integrar Venta al por Mayor
+            function actualizarPrecioFila(element) {
+                const fila = element.closest('tr');
                 const select = fila.querySelector('.producto-select');
-                if (select && select.value !== "") {
-                    actualizarPrecioFila(select);
+                const option = select.options[select.selectedIndex];
+                const labelUnidad = fila.querySelector('.unidad-medida');
+                const inputCantidad = fila.querySelector('.cantidad-input');
+                const switchGlobal = document.getElementById('switchVentaMayor');
+                const switchFila = fila.querySelector('.switch-mayor');
+
+                if (!select.value) {
+                    fila.querySelector('.precio-unitario').value = "";
+                    fila.querySelector('.impuesto-producto').value = "";
+                    labelUnidad.innerText = "Unidad: Und";
+                    return;
                 }
-            });
-        }
-        // Esto hace que si llamas a calcularTotales, ejecute calcularTotal
-        function calcularTotales() {
-            calcularTotal();
-        }
-    </script>
-</th:block>
+
+                const pNormal = parseFloat(option.getAttribute("data-precio")) || 0;
+                const pMayor = parseFloat(option.getAttribute("data-preciomayor")) || pNormal;
+
+                // Si el switch global está activo, forzamos precio mayor en todas las filas
+                // Si no, respetamos el switch individual de la fila
+                const isMayor = switchGlobal.checked || (switchFila && switchFila.checked);
+                const precioFinal = isMayor ? pMayor : pNormal;
+
+                const impuesto = option.getAttribute("data-impuesto") || 0;
+                const tipoVenta = option.getAttribute("data-tipo");
+
+                fila.querySelector('.precio-unitario').value = precioFinal.toFixed(2);
+                fila.querySelector('.impuesto-producto').value = impuesto;
+
+                // Si el código es KGM (Kilogramo) o LTR (Litro)
+                if (tipoVenta === 'KGM' || tipoVenta === 'LTR') {
+                    labelUnidad.innerText = (tipoVenta === 'KGM') ? "Unidad: Gramos" : "Unidad: Mililitros";
+                    labelUnidad.className = "badge badge-warning unidad-medida";
+                    inputCantidad.step = "1";
+                } else {
+                    labelUnidad.innerText = "Unidad: Und";
+                    labelUnidad.className = "text-muted small unidad-medida";
+                    inputCantidad.step = "1";
+                }
+
+                calcularSubtotalFila(inputCantidad);
+            }
+            // Función corregida para calcular subtotal por fila
+            function calcularSubtotalFila(input) {
+                const fila = input.closest('tr');
+                const select = fila.querySelector('.producto-select');
+                const option = select.options[select.selectedIndex];
+
+                if (!option || select.value === "") return;
+
+                // --- CAMBIO AQUÍ: Lógica de conversión basada en códigos ---
+                const tipoVenta = option.getAttribute("data-tipo");
+                let cant = parseFloat(input.value) || 0;
+                const precio = parseFloat(fila.querySelector('.precio-unitario').value) || 0;
+
+                // KGM = Kilos, LTR = Litros. En ambos casos dividimos gramos/ml entre 1000
+                if (tipoVenta === 'KGM' || tipoVenta === 'LTR') {
+                    cant = cant / 1000;
+                }
+
+                fila.querySelector('.subtotal-item').value = (cant * precio).toFixed(2);
+                calcularTotal();
+            }
+
+            function calcularTotal() {
+                let subtotalGlobal = 0;
+                let impuestoGlobal = 0;
+
+                // 1. Sumar totales de cada fila
+                document.querySelectorAll('.detalle-item').forEach(fila => {
+                    const subtotalFila = parseFloat(fila.querySelector('.subtotal-item').value) || 0;
+                    const porcImpuesto = parseFloat(fila.querySelector('.impuesto-producto').value) || 0;
+
+                    subtotalGlobal += subtotalFila;
+                    impuestoGlobal += (subtotalFila * (porcImpuesto / 100));
+                });
+
+                // 2. Lógica de DESCUENTO
+                const inputDescuento = document.getElementById('inputDescuento');
+                const porcentajeDescuento = parseFloat(inputDescuento.value) || 0;
+                const valorDescuento = subtotalGlobal * (porcentajeDescuento / 100);
+
+                // 3. Lógica de VALORES ADICIONALES (NUEVO)
+                const inputAdicionales = document.getElementById('inputValoresAdicionales');
+                const valoresAdicionales = parseFloat(inputAdicionales.value) || 0;
+
+                // 4. Mostrar el valor del descuento calculado visualmente
+                const spanValorDesc = document.getElementById('valorDescuentoCalculado');
+                if (spanValorDesc) {
+                    spanValorDesc.textContent = valorDescuento.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                }
+
+                // 5. Calcular Total Final
+                // Total = (Subtotal - Descuento) + Impuestos + Valores Adicionales
+                const totalFinal = (subtotalGlobal - valorDescuento) + impuestoGlobal + valoresAdicionales;
+
+                // 6. Actualizar los campos en la interfaz
+                document.getElementById('subtotalGeneral').value = subtotalGlobal.toFixed(2);
+                document.getElementById('impuesto').value = impuestoGlobal.toFixed(2);
+                document.getElementById('totalVenta').value = totalFinal.toFixed(2);
+            }
+
+            function calcularDiferenciaCierre() {
+                // Obtenemos el valor esperado directamente del texto que muestra el resumen para asegurar consistencia
+                const montoEsperadoTexto = document.getElementById('montoEsperado').innerText.replace('$', '').replace(',', '').trim();
+                const montoEsperado = parseFloat(montoEsperadoTexto) || 0;
+                const montoReal = parseFloat(document.getElementById('montoRealInput').value) || 0;
+
+                const alertDiv = document.getElementById('alertDiferencia');
+                const textoDif = document.getElementById('textoDiferencia');
+                const mensajeDif = document.getElementById('mensajeDiferencia');
+                const requiereObs = document.getElementById('requiereObservacion');
+
+                // Si el usuario ingresó un monto real (aunque sea 0)
+                if (document.getElementById('montoRealInput').value !== "") {
+                    const diferencia = montoReal - montoEsperado;
+                    const diferenciaAbsoluta = Math.abs(diferencia).toFixed(2);
+
+                    // Mostrar el contenedor principal
+                    alertDiv.style.display = 'block';
+
+                    // Lógica de comparación
+                    if (diferencia === 0) {
+                        alertDiv.className = 'alert alert-success';
+                        textoDif.className = 'mb-0 font-weight-bold text-success';
+                        textoDif.textContent = "$ 0.00";
+                        mensajeDif.textContent = '✓ Cuadre perfecto - No hay diferencia';
+                        if (requiereObs) requiereObs.style.display = 'none';
+
+                    } else if (diferencia > 0) {
+                        alertDiv.className = 'alert alert-warning';
+                        textoDif.className = 'mb-0 font-weight-bold text-warning';
+                        textoDif.textContent = "+ $ " + diferenciaAbsoluta;
+                        mensajeDif.textContent = '⚠️ Sobrante en caja (Ingresó más de lo esperado)';
+                        if (requiereObs) requiereObs.style.display = 'block';
+
+                    } else {
+                        alertDiv.className = 'alert alert-danger';
+                        textoDif.className = 'mb-0 font-weight-bold text-danger';
+                        textoDif.textContent = "- $ " + diferenciaAbsoluta;
+                        mensajeDif.textContent = '⚠️ Faltante en caja (Falta dinero según sistema)';
+                        if (requiereObs) requiereObs.style.display = 'block';
+                    }
+                } else {
+                    // Si el campo está vacío, ocultamos los avisos
+                    alertDiv.style.display = 'none';
+                    if (requiereObs) requiereObs.style.display = 'none';
+                }
+            }
+            function alternarPreciosGlobal() {
+                const isMayor = document.getElementById('switchVentaMayor').checked;
+                const label = document.getElementById('labelVenta');
+
+                label.innerText = isMayor ? "VENTA AL POR MAYOR" : "VENTA AL DETAL";
+                label.className = isMayor ? "font-weight-bold text-success" : "font-weight-bold text-danger";
+
+                // Actualiza todas las filas existentes con el nuevo modo de precio
+                document.querySelectorAll('.detalle-item').forEach(fila => {
+                    const switchFila = fila.querySelector('.switch-mayor');
+                    if (switchFila) {
+                        // Sincronizamos el switch de la fila con el switch global
+                        switchFila.checked = isMayor;
+                    }
+
+                    const select = fila.querySelector('.producto-select');
+                    if (select && select.value !== "") {
+                        actualizarPrecioFila(select);
+                    }
+                });
+            }
+            // Esto hace que si llamas a calcularTotales, ejecute calcularTotal
+            function calcularTotales() {
+                calcularTotal();
+            }
+        </script>
+    </th:block>
 </body>
+
 </html>

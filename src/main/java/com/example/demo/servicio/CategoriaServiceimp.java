@@ -24,8 +24,8 @@ public class CategoriaServiceimp implements CategoriaService{
 
     @Override
     public List<Categoria> Listarcategoria() {
-        Long empresaId=securityService.obtenerEmpresaId();
-        return repositorio.findByEmpresaIdAndEstado(securityService.obtenerEmpresaId(),true);
+        // Long empresaId=securityService.obtenerEmpresaId(); // No necesario
+        return repositorio.findByEstado(true);
     }
 
     @Override

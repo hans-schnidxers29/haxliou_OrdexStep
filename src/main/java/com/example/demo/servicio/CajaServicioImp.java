@@ -43,7 +43,7 @@ public class CajaServicioImp implements CajaServicio{
 
     @Override
     public Caja CajaAbierta(Usuario user) {
-        return cajaRepositorio.findByUsuarioAndEstadoAndEmpresaId(user,EstadoDeCaja.EN_PROCESO,securityService.obtenerEmpresaId()).orElse(null);
+        return cajaRepositorio.findByUsuarioAndEstado(user,EstadoDeCaja.EN_PROCESO).orElse(null);
     }
 
     @Transactional
@@ -65,9 +65,9 @@ public class CajaServicioImp implements CajaServicio{
         LocalDateTime fin = LocalDateTime.now();
 
         // Cálculos (Tus consultas actuales)
-        BigDecimal totalEgresos = nvl(egresoRepositorio.sumarEgresosPorDia(inicio, fin,securityService.obtenerEmpresaId()));
-        BigDecimal totalCompras = nvl(comprasRepositorio.sumTotalCompras(inicio, fin,securityService.obtenerEmpresaId()));
-        BigDecimal totalVentas = nvl(ventarepositorio.sumaVentasRango(inicio, fin,securityService.obtenerEmpresaId()));
+        BigDecimal totalEgresos = nvl(egresoRepositorio.sumarEgresosPorDia(inicio, fin));
+        BigDecimal totalCompras = nvl(comprasRepositorio.sumTotalCompras(inicio, fin));
+        BigDecimal totalVentas = nvl(ventarepositorio.sumaVentasRango(inicio, fin));
 
         BigDecimal saldoTeorico = caja.getMontoInicial().add(totalVentas).subtract(totalEgresos).subtract(totalCompras);
 
@@ -88,7 +88,7 @@ public class CajaServicioImp implements CajaServicio{
     @Override
     public void EjecutarCaja(Usuario user, BigDecimal MontoInicial) {
 
-        boolean CajaEnEjecucion = cajaRepositorio.existsByUsuarioAndEstadoAndEmpresaId(user, EstadoDeCaja.EN_PROCESO,securityService.obtenerEmpresaId());
+        boolean CajaEnEjecucion = cajaRepositorio.existsByUsuarioAndEstado(user, EstadoDeCaja.EN_PROCESO);
         if (CajaEnEjecucion) {
             throw new IllegalStateException("Ya existe una caja abierta para este usuario" + user.getEmail());
         }
@@ -115,14 +115,14 @@ public class CajaServicioImp implements CajaServicio{
             LocalDateTime fin = LocalDateTime.now();
 
             // Protección contra nulos
-            BigDecimal egresos = nvl(egresoRepositorio.sumarEgresosPorDia(inicio, fin,securityService.obtenerEmpresaId()));
-            BigDecimal compras = nvl(comprasRepositorio.sumTotalCompras(inicio, fin,securityService.obtenerEmpresaId()));
+            BigDecimal egresos = nvl(egresoRepositorio.sumarEgresosPorDia(inicio, fin));
+            BigDecimal compras = nvl(comprasRepositorio.sumTotalCompras(inicio, fin));
 
             // Obtención de ventas por método
-            BigDecimal efectivo = nvl(ventarepositorio.sumaPorMetodoPago(inicio, fin, "EFECTIVO",securityService.obtenerEmpresaId()));
-            BigDecimal tarjeta = nvl(ventarepositorio.sumaPorMetodoPago(inicio, fin, "TARJETA",securityService.obtenerEmpresaId()));
-            BigDecimal transferencia = nvl(ventarepositorio.sumaPorMetodoPago(inicio, fin, "TRANSFERENCIA",securityService.obtenerEmpresaId()));
-            BigDecimal mixto = nvl(ventarepositorio.sumaPorMetodoPago(inicio, fin, "MIXTO",securityService.obtenerEmpresaId()));
+            BigDecimal efectivo = nvl(ventarepositorio.sumaPorMetodoPago(inicio, fin, "EFECTIVO"));
+            BigDecimal tarjeta = nvl(ventarepositorio.sumaPorMetodoPago(inicio, fin, "TARJETA"));
+            BigDecimal transferencia = nvl(ventarepositorio.sumaPorMetodoPago(inicio, fin, "TRANSFERENCIA"));
+            BigDecimal mixto = nvl(ventarepositorio.sumaPorMetodoPago(inicio, fin, "MIXTO"));
 
             // El saldo en CAJA FÍSICA solo debe sumar el EFECTIVO (y quizás una parte del mixto)
             // Aquí corregimos la duplicidad que tenías:

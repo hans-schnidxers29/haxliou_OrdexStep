@@ -8,5 +8,6 @@ import java.util.List;
 
 @Repository
 public interface ProveedorRepositorio extends JpaRepository<Proveedores,Long> {
-    List<Proveedores> findByEmpresaId(Long empresa_id);
+    // ✅ Simplificado: usar findAll() con filtro automático
+    // List<Proveedores> findByEmpresaId(Long empresa_id);
 }

@@ -1,14 +1,19 @@
 package com.example.demo.entidad;
 
 import com.example.demo.entidad.Enum.TipoVenta;
+import com.example.demo.multitenancy.TenantAware;
+import com.example.demo.multitenancy.TenantEntityListener;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import org.hibernate.annotations.Filter;
 import java.math.BigDecimal;
 
 @Entity
 @Table(name = "productos")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-public class Productos {
+@Filter(name = "tenantFilter", condition = "empresa_id = :tenantId")
+@EntityListeners(TenantEntityListener.class)
+public class Productos implements TenantAware {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

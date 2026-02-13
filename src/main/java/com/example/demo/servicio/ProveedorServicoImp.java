@@ -26,7 +26,7 @@ public class ProveedorServicoImp implements ProveedorServicio{
 
     @Override
     public List<Proveedores> listarproveedores() {
-        return repositorio.findByEmpresaId(securityService.obtenerEmpresaId()).stream()
+        return repositorio.findAll().stream()
                 .filter(Proveedores::isEstado).toList();
     }
 

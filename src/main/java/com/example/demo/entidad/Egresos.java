@@ -2,14 +2,19 @@ package com.example.demo.entidad;
 
 
 import com.example.demo.entidad.Enum.TipoEgreso;
+import com.example.demo.multitenancy.TenantAware;
+import com.example.demo.multitenancy.TenantEntityListener;
 import jakarta.persistence.*;
+import org.hibernate.annotations.Filter;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 
 @Entity
 @Table(name = "egresos")
-public class Egresos {
+@Filter(name = "tenantFilter", condition = "empresa_id = :tenantId")
+@EntityListeners(TenantEntityListener.class)
+public class Egresos implements TenantAware {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)

@@ -16,20 +16,18 @@ public interface Cajarepositorio extends JpaRepository<Caja, Long> {
       @Query("""
     SELECT (COUNT(c) > 0)
     FROM Caja c
-    WHERE c.usuario = :usuario AND c.Estado = :estado AND c.empresa.id = :empresaId
+    WHERE c.usuario = :usuario AND c.Estado = :estado
     """)
-      boolean existsByUsuarioAndEstadoAndEmpresaId(@Param("usuario") Usuario usuario,
-                                                   @Param("estado") EstadoDeCaja estado,
-                                                   @Param("empresaId") Long empresaId);
+      boolean existsByUsuarioAndEstado(@Param("usuario") Usuario usuario,
+                                       @Param("estado") EstadoDeCaja estado);
 
       @Query("""
                 SELECT c
                 FROM Caja c
-                WHERE c.usuario = :usuario AND c.Estado = :estado AND c.empresa.id = :empresaId
+                WHERE c.usuario = :usuario AND c.Estado = :estado
              """)
-      Optional<Caja> findByUsuarioAndEstadoAndEmpresaId(@Param("usuario") Usuario usuario,
-                                                        @Param("estado") EstadoDeCaja estado,
-                                                        @Param("empresaId") Long empresaId);
+      Optional<Caja> findByUsuarioAndEstado(@Param("usuario") Usuario usuario,
+                                            @Param("estado") EstadoDeCaja estado);
 }
 
 

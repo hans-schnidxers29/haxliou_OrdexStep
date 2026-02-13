@@ -36,7 +36,7 @@ public class VentaServicioImp implements VentaServicio {
 
     @Override
     public List<Venta> ListarVenta() {
-        return repositorioVenta.findByEmpresaId(securityService.obtenerEmpresaId());
+        return repositorioVenta.findAll();
     }
 
     @Override
@@ -113,12 +113,12 @@ public class VentaServicioImp implements VentaServicio {
     public BigDecimal totalVentas() {
         LocalDateTime inicio = LocalDate.now().atStartOfDay(); // Hoy a las 00:00
         LocalDateTime fin = inicio.plusDays(1);
-        return repositorioVenta.sumaVentasRango(inicio,fin,securityService.obtenerEmpresaId());
+        return repositorioVenta.sumaVentasRango(inicio,fin);
     }
 
     @Override
     public BigDecimal sumapormes(LocalDateTime mes, LocalDateTime anio) {
-        BigDecimal totalmess= repositorioVenta.sumaPorMes(mes, anio,securityService.obtenerEmpresaId());
+        BigDecimal totalmess= repositorioVenta.sumaPorMes(mes, anio);
         return totalmess != null ? totalmess : BigDecimal.ZERO;
     }
 
@@ -131,13 +131,13 @@ public class VentaServicioImp implements VentaServicio {
     public List<Object[]> sumaproductosPordia() {
         LocalDateTime inicio = LocalDate.now().atStartOfDay(); // Hoy a las 00:00
         LocalDateTime fin = inicio.plusDays(1);
-        return repositorioVenta.obtenerVentasPorRango(inicio, fin,securityService.obtenerEmpresaId());
+        return repositorioVenta.obtenerVentasPorRango(inicio, fin);
     }
 
     @Override
     public List<String> ListaMeses() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM", new Locale("es", "ES"));
-        return repositorioVenta.listarFechasUnicasPorMes(securityService.obtenerEmpresaId())
+        return repositorioVenta.listarFechasUnicasPorMes()
                 .stream()
                 .map(fecha -> fecha.format(formatter))
                 .collect(Collectors.toList());
@@ -145,24 +145,24 @@ public class VentaServicioImp implements VentaServicio {
 
     @Override
     public List<BigDecimal>listarTotalVentas() {
-        return repositorioVenta.listarTotalesAgrupadosPorMes(securityService.obtenerEmpresaId()).stream().toList();
+        return repositorioVenta.listarTotalesAgrupadosPorMes().stream().toList();
     }
 
     @Override
     public List<String> NombreProductos() {
-        List<Object[]>resultado =repositorioVenta.listarProductosVendidos(securityService.obtenerEmpresaId());
+        List<Object[]>resultado =repositorioVenta.listarProductosVendidos();
         return resultado.stream().map(objeto ->(String) objeto[0]).toList();
     }
 
     @Override
     public List<Number> CantidadProductos() {
-        List<Object[]>resultado =repositorioVenta.listarProductosVendidos(securityService.obtenerEmpresaId());
+        List<Object[]>resultado =repositorioVenta.listarProductosVendidos();
         return resultado.stream().map(objeto -> (Number) objeto[1]).toList();
     }
 
     @Override
     public BigDecimal TotalVentasMesActual() {
-        return repositorioVenta.TotaVentasMes(securityService.obtenerEmpresaId());
+        return repositorioVenta.TotaVentasMes();
     }
 
     /**
@@ -170,7 +170,7 @@ public class VentaServicioImp implements VentaServicio {
      */
     @Override
     public List<String> ListaMetodosPago() {
-        List<Object[]> resultado = repositorioVenta.ListaMetodosPago(securityService.obtenerEmpresaId());
+        List<Object[]> resultado = repositorioVenta.ListaMetodosPago();
         return resultado.stream()
                 .map(objeto -> objeto[0] == null ? "Desconocido" : objeto[0].toString())
                 .toList();
@@ -178,7 +178,7 @@ public class VentaServicioImp implements VentaServicio {
 
     @Override
     public List<Number> ListaMetodosPagoValores() {
-        List<Object[]> resultado = repositorioVenta.ListaMetodosPago(securityService.obtenerEmpresaId());
+        List<Object[]> resultado = repositorioVenta.ListaMetodosPago();
         return resultado.stream()
                 .map(objeto -> {
                     // Convertimos de forma segura a Double para que JS no tenga problemas

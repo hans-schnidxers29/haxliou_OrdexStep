@@ -3,9 +3,12 @@ package com.example.demo.entidad;
 
 import com.example.demo.PaisesAndCitys.Municipios;
 import com.example.demo.PaisesAndCitys.Paises;
+import com.example.demo.multitenancy.TenantAware;
+import com.example.demo.multitenancy.TenantEntityListener;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.Filter;
 import org.hibernate.proxy.HibernateProxy;
 
 import java.time.LocalDate;
@@ -16,7 +19,9 @@ import java.util.Objects;
 
 @Entity
 @Table(name = "cliente")
-public class Cliente {
+@Filter(name = "tenantFilter", condition = "empresa_id = :tenantId")
+@EntityListeners(TenantEntityListener.class)
+public class Cliente implements TenantAware {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

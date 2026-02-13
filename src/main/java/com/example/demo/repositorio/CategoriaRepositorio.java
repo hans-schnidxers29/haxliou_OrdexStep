@@ -8,5 +8,5 @@ import java.util.List;
 @Repository
 public interface CategoriaRepositorio extends JpaRepository<Categoria,Long> {
 
-    List<Categoria> findByEmpresaIdAndEstado(Long empresa_Id, boolean estado);
+    List<Categoria> findByEstado(boolean estado);
 }

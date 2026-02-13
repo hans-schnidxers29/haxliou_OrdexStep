@@ -1,11 +1,16 @@
 package com.example.demo.entidad;
 
 
+import com.example.demo.multitenancy.TenantAware;
+import com.example.demo.multitenancy.TenantEntityListener;
 import jakarta.persistence.*;
+import org.hibernate.annotations.Filter;
 
 @Entity
 @Table(name = "categoria")
-public class Categoria {
+@Filter(name = "tenantFilter", condition = "empresa_id = :tenantId")
+@EntityListeners(TenantEntityListener.class)
+public class Categoria implements TenantAware {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

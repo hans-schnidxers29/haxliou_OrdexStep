@@ -43,7 +43,7 @@ public class CompraServicioImp implements CompraServicio{
 
     @Override
     public List<Compras> listarCompra() {
-        return repositorio.findByEmpresaId(securityservice.obtenerEmpresaId()).stream().toList();
+        return repositorio.findAll().stream().toList();
     }
 
     @Override
@@ -120,26 +120,29 @@ public class CompraServicioImp implements CompraServicio{
         Map<String, Object> datos = new HashMap<>();
 
         // Gasto total (este ya te funciona)
-        datos.put("TotalEgresos", repositorio.sumTotalCompras(inicio, fin, securityservice.obtenerEmpresaId()));
+        datos.put("TotalEgresos", repositorio.sumTotalCompras(inicio, fin));
 
         // Cantidades (usando los nombres de los Enums)
-        BigDecimal unidades = repositorio.sumarTotalEntrantePorTipoYRango(
+        BigDecimal unidades = nvl(repositorio.sumarTotalEntrantePorTipoYRango(
                 "94", // Convertir a String
-                EstadoCompra.CONFIRMADA.name(), // Convertir a String
+                EstadoCompra.CONFIRMADA, // Pasar Enum
                 inicio,
-                fin, securityservice.obtenerEmpresaId()
-        );
+                fin
+        ));
 
-        BigDecimal peso = repositorio.sumarTotalEntrantePorTipoYRango(
+        BigDecimal peso = nvl(repositorio.sumarTotalEntrantePorTipoYRango(
                 "KGM", // O el nombre exacto de tu enum para peso
-                EstadoCompra.CONFIRMADA.name(),
+                EstadoCompra.CONFIRMADA,
                 inicio,
-                fin,securityservice.obtenerEmpresaId()
-        );
+                fin
+        ));
 
         datos.put("EntradasEnUnidades", unidades);
         datos.put("EntradasEnKg", peso);
 
         return datos;
      }
+    private BigDecimal nvl(BigDecimal valor) {
+        return valor == null ? BigDecimal.ZERO : valor;
+    }
 }

@@ -1,7 +1,10 @@
 package com.example.demo.entidad;
 
 
+import com.example.demo.multitenancy.TenantAware;
+import com.example.demo.multitenancy.TenantEntityListener;
 import jakarta.persistence.*;
+import org.hibernate.annotations.Filter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -10,7 +13,9 @@ import java.util.List;
 
 @Entity
 @Table(name = "venta")
-public class Venta {
+@Filter(name = "tenantFilter", condition = "empresa_id = :tenantId")
+@EntityListeners(TenantEntityListener.class)
+public class Venta implements TenantAware {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

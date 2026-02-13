@@ -13,55 +13,51 @@ import java.util.List;
 @Repository
 public interface VentaRepositorio extends JpaRepository<Venta, Long> {
 
-    List<Venta>findByEmpresaId(Long empresaId);
+    // ✅ Simplificado: findAll() ya aplica filtro automático
+    // List<Venta> findByEmpresaId(Long empresaId); // Ya no necesario, usar findAll()
 
     @Query(value = "SELECT COALESCE(SUM(v.total), 0) " +
             "FROM venta v " +
             "WHERE v.fecha_venta >= :inicio " +
-            "  AND v.fecha_venta < :fin AND v.empresa_id = :empresaId",
+            "  AND v.fecha_venta < :fin",
             nativeQuery = true)
-    BigDecimal sumaVentasRango(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin,@Param("empresaId") Long empresaId);
+    BigDecimal sumaVentasRango(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin);
 
-    @Query("SELECT COALESCE(SUM(v.total), 0) FROM Venta v WHERE v.fechaVenta BETWEEN :inicio AND :fin AND v.empresa.id = :empresaId")
-    BigDecimal sumaPorMes(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin,@Param("empresaId") Long empresaId);
+    @Query("SELECT COALESCE(SUM(v.total), 0) FROM Venta v WHERE v.fechaVenta BETWEEN :inicio AND :fin")
+    BigDecimal sumaPorMes(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin);
 
-    // Query adicional para los impuestos del mes
-    @Query("SELECT COALESCE(SUM(v.total - (v.total / (1 + v.impuesto/100))), 0) FROM Venta v WHERE v.fechaVenta BETWEEN :inicio AND :fin AND v.empresa.id = :empresaId" )
-    BigDecimal sumaImpuestosMes(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin,@Param("empresaId") Long empresaId);
+    @Query("SELECT COALESCE(SUM(v.total - (v.total / (1 + v.impuesto/100))), 0) FROM Venta v WHERE v.fechaVenta BETWEEN :inicio AND :fin")
+    BigDecimal sumaImpuestosMes(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin);
 
     @Query("SELECT DISTINCT function('date_trunc', 'month', v.fechaVenta) " +
             "FROM Venta v " +
-            "WHERE v.empresa.id = :empresaId " +
             "ORDER BY function('date_trunc', 'month', v.fechaVenta) ASC")
-    List<LocalDateTime> listarFechasUnicasPorMes(@Param("empresaId") Long empresaId);
+    List<LocalDateTime> listarFechasUnicasPorMes();
 
     @Query(value = "SELECT SUM(consolidad.total_mes) " +
             "FROM (" +
             "  SELECT SUM(total) as total_mes, date_trunc('month', fecha_venta) as mes " +
-            "  FROM venta WHERE empresa_id = :empresaId GROUP BY mes " +
+            "  FROM venta GROUP BY mes " +
             "  UNION ALL " +
             "  SELECT SUM(p.total) as total_mes, date_trunc('month', p.fecha_pedido) as mes " +
-            "  FROM pedidos p WHERE p.estado = 'ENTREGADO' AND p.empresa_id = :empresaId GROUP BY mes " +
+            "  FROM pedidos p WHERE p.estado = 'ENTREGADO' GROUP BY mes " +
             ") AS consolidad " +
             "GROUP BY consolidad.mes " +
             "ORDER BY consolidad.mes ASC", nativeQuery = true)
-    List<BigDecimal> listarTotalesAgrupadosPorMes(@Param("empresaId") Long empresaId);
+    List<BigDecimal> listarTotalesAgrupadosPorMes();
 
     @Query(value = "SELECT p.nombre, SUM(d.cantidad) as productos_vendidos " +
             "FROM productos p " +
             "JOIN detalle_venta d ON p.id = d.producto_id " +
-            "JOIN venta v ON d.venta_id = v.id " + // Unimos con la tabla de ventas
-            "WHERE v.empresa_id = :empresaId " +   // Filtramos por la empresa del plan
-            "AND p.empresa_id = :empresaId " +
+            "JOIN venta v ON d.venta_id = v.id " +
             "GROUP BY p.nombre " +
             "ORDER BY productos_vendidos DESC", nativeQuery = true)
-    List<Object[]> listarProductosVendidos(@Param("empresaId") Long empresaId);
+    List<Object[]> listarProductosVendidos();
 
-    @Query(value = "SELECT\n" +
-            "  SUM(total) AS total_ventas\n" +
-            "FROM venta\n" +
-            "WHERE DATE_TRUNC('month', fecha_venta) = DATE_TRUNC('month', CURRENT_DATE) AND empresa_id = :empresaId", nativeQuery = true)
-    BigDecimal TotaVentasMes(@Param("empresaId") Long empresaId);
+    @Query(value = "SELECT SUM(total) AS total_ventas " +
+            "FROM venta " +
+            "WHERE DATE_TRUNC('month', fecha_venta) = DATE_TRUNC('month', CURRENT_DATE)", nativeQuery = true)
+    BigDecimal TotaVentasMes();
 
     @Query(value = "SELECT " +
             "    COALESCE(SUM(CASE WHEN um.code = '94' THEN d.cantidad ELSE 0 END), 0) as total_unidades, " +
@@ -69,43 +65,41 @@ public interface VentaRepositorio extends JpaRepository<Venta, Long> {
             "FROM detalle_venta d " +
             "JOIN venta v ON d.venta_id = v.id " +
             "JOIN productos p ON d.producto_id = p.id " +
-            "JOIN unidad_medida um ON p.unidad_medida_id = um.id " + // Se une con la tabla de unidades
+            "JOIN unidad_medida um ON p.unidad_medida_id = um.id " +
             "WHERE v.fecha_venta >= :inicio " +
-            "  AND v.fecha_venta < :fin  AND v.empresa_id = :empresaId AND p.empresa_id = v.empresa_id", nativeQuery = true)
-    List<Object[]> obtenerVentasPorRango(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin, @Param("empresaId") Long empresaId);
+            "  AND v.fecha_venta < :fin", nativeQuery = true)
+    List<Object[]> obtenerVentasPorRango(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin);
 
-    @Query(value = "SELECT v.metodo_pago as  Metodos, SUM(v.total) as totalpor_metodo\n" +
-            "FROM venta as v\n" +
-            "WHERE v.empresa_id = :empresaId\n" +
-            "GROUP BY metodos\n" +
-            "ORDER BY totalpor_metodo  ASC", nativeQuery = true)
-    List<Object[]>ListaMetodosPago(@Param("empresaId") Long empresaId);
+    @Query(value = "SELECT v.metodo_pago as Metodos, SUM(v.total) as totalpor_metodo " +
+            "FROM venta as v " +
+            "GROUP BY metodos " +
+            "ORDER BY totalpor_metodo ASC", nativeQuery = true)
+    List<Object[]> ListaMetodosPago();
 
     @Query("SELECT COALESCE(SUM(v.total), 0) FROM Venta v " +
             "WHERE v.fechaVenta BETWEEN :inicio AND :fin " +
-            "AND v.metodoPago = :metodoPago AND v.empresa.id = :empresaId")
+            "AND v.metodoPago = :metodoPago")
     BigDecimal sumaPorMetodoPago(
             @Param("inicio") LocalDateTime inicio,
             @Param("fin") LocalDateTime fin,
-            @Param("metodoPago") String metodoPago,
-            @Param("empresaId") Long empresaId
+            @Param("metodoPago") String metodoPago
     );
 
-    @Query("SELECT COALESCE((COUNT(v)),0) FROM Venta v WHERE v.fechaVenta BETWEEN :inicio AND :fin AND v.empresa.id = :empresaId")
-    BigDecimal CantidadDeVentas(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin, @Param("empresaId") Long empresaId);
+    @Query("SELECT COALESCE((COUNT(v)),0) FROM Venta v WHERE v.fechaVenta BETWEEN :inicio AND :fin")
+    BigDecimal CantidadDeVentas(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin);
 
-    @Query(value = "select sum(total_ventas_mayor) as total_mayor\n" +
-            "from(\n" +
-            "    select sum(v.total) as total_ventas_mayor,  date_trunc('month', fecha_venta) as mes\n" +
-            "    FROM venta v \n" +
-            "    WHERE v.venta_al_por_mayor  = 'TRUE' AND v.empresa_id = :empresaId GROUP BY mes\n" +
-            "\n" +
-            "    UNION \n" +
-            "    SELECT SUM(p.total) as total_ventas_mayor, date_trunc('month', p.fecha_pedido) as mes\n" +
-            "    FROM pedidos p \n" +
-            "    WHERE p.estado = 'ENTREGADO' AND p.venta_por_mayor = 'TRUE' AND p.empresa_id = :empresaId GROUP BY mes\n" +
-            "  \n" +
-            ") AS consolidado \n" +
+    @Query(value = "select sum(total_ventas_mayor) as total_mayor " +
+            "from(" +
+            "    select sum(v.total) as total_ventas_mayor, date_trunc('month', fecha_venta) as mes " +
+            "    FROM venta v " +
+            "    WHERE v.venta_al_por_mayor = 'TRUE' GROUP BY mes " +
+            "" +
+            "    UNION " +
+            "    SELECT SUM(p.total) as total_ventas_mayor, date_trunc('month', p.fecha_pedido) as mes " +
+            "    FROM pedidos p " +
+            "    WHERE p.estado = 'ENTREGADO' AND p.venta_por_mayor = 'TRUE' GROUP BY mes " +
+            "  " +
+            ") AS consolidado " +
             "GROUP BY mes ORDER BY mes ASC", nativeQuery = true)
-    BigDecimal VentasTotalesAlMayor(@Param("empresaId") Long empresaId);
+    BigDecimal VentasTotalesAlMayor();
 }

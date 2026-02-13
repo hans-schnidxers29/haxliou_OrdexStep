@@ -1,16 +1,21 @@
 package com.example.demo.entidad;
 
+import com.example.demo.multitenancy.TenantAware;
+import com.example.demo.multitenancy.TenantEntityListener;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import org.hibernate.annotations.Filter;
 
 @Entity
 @Table(name = "proveedores")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-public class Proveedores {
+@Filter(name = "tenantFilter", condition = "empresa_id = :tenantId")
+@EntityListeners(TenantEntityListener.class)
+public class Proveedores implements TenantAware {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

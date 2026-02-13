@@ -197,14 +197,14 @@
       <tr th:each="prod : ${productos}">
         <td th:text="${prod.codigo}"></td>
         <td th:text="${prod.nombre}"></td>
-        <td th:text="${prod.categoria.nombrecategoria}"></td>
+        <td th:text="${prod.categoria?.nombrecategoria}"></td>
         <td th:text="${prod.cantidad}"></td>
-        <td th:text="${prod.tipoVenta.name}"></td>
+        <td th:text="${prod.tipoVenta?.name}"></td>
         <td th:text="${prod.precioCompra}"></td>
         <td th:text="${prod.precioPorMayor}"></td>
         <td th:text="${prod.precio}"></td>
-        <td th:text="${prod.proveedor.nombre}"></td>
-        <td th:text="${prod.tipo_Impuesto.name}"></td>
+        <td th:text="${prod.proveedor?.nombre ?: 'Sin Proveedor'}"></td>
+        <td th:text="${prod.tipo_Impuesto?.name}"></td>
         <td th:text="${prod.impuesto}"></td>
       </tr>
       </tbody>
@@ -238,7 +238,7 @@
       <tr th:each="comp : ${compras}">
         <td th:text="${comp.id}"></td>
         <td th:text="${comp.numeroReferencia}"></td>
-        <td th:text="${comp.proveedor.nombre}"></td>
+        <td th:text="${comp.proveedor?.nombre ?: 'Sin Proveedor'}"></td>
         <td th:text="${#temporals.format(comp.fechaCompra, 'dd/MM/yyyy')}"></td>
         <td th:text="${comp.estado}"></td>
         <td th:text="${comp.total}"></td>

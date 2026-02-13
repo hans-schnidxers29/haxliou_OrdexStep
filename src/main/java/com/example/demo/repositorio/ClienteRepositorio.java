@@ -14,16 +14,17 @@ import java.util.List;
 @Repository
 public interface ClienteRepositorio  extends JpaRepository<Cliente,Long> {
 
-    boolean existsByNumeroIdentificacionAndEmpresaId(String numeroIdentificacion, Long empresaId);
-    Cliente findByNumeroIdentificacionAndEmpresaId(String numeroIdentificacion, Long empresaId);
+    boolean existsByNumeroIdentificacion(String numeroIdentificacion);
+    Cliente findByNumeroIdentificacion(String numeroIdentificacion);
 
-    @Query("SELECT c FROM Cliente c WHERE c.empresa.id = :empresaId AND " +
+    @Query("SELECT c FROM Cliente c WHERE " +
             "(LOWER(c.nombre) LIKE LOWER(CONCAT('%', :term, '%')) OR " +
             "LOWER(c.apellido) LIKE LOWER(CONCAT('%', :term, '%')) OR " +
             "c.numeroIdentificacion LIKE CONCAT('%', :term, '%'))")
-    List<Cliente> buscarPorTerminoYEmpresa(@Param("term") String term, @Param("empresaId") Long empresaId);
+    List<Cliente> buscarPorTermino(@Param("term") String term);
 
-    List<Cliente>findByEmpresaId(Long empresa_id);
+    // ✅ Simplificado: usar findAll() con filtro automático
+    // List<Cliente> findByEmpresaId(Long empresa_id);
 
     @Query(value = "SELECT \n" +
             "    nombre, \n" +
@@ -34,8 +35,7 @@ public interface ClienteRepositorio  extends JpaRepository<Cliente,Long> {
             "    FROM pedidos p\n" +
             "    JOIN cliente c ON p.id_cliente = c.id\n" +
             "    WHERE p.estado = 'ENTREGADO'\n" +
-            "    AND c.numero_identificacion != '222222222222' -- Excluir Consumidor Final\n" +
-            "    AND p.empresa_id = :empresaId\n" +
+            "    AND c.numero_identificacion != '222222222222'\n" +
             "\n" +
             "    UNION ALL\n" +
             "\n" +
@@ -43,19 +43,17 @@ public interface ClienteRepositorio  extends JpaRepository<Cliente,Long> {
             "    SELECT c.nombre, v.total as total_movimiento\n" +
             "    FROM venta v\n" +
             "    JOIN cliente c ON v.cliente_id = c.id\n" +
-            "    WHERE c.numero_identificacion != '222222222222' -- Excluir Consumidor Final\n" +
-            "    AND v.empresa_id = :empresaId\n" +
+            "    WHERE c.numero_identificacion != '222222222222'\n" +
             ") as consolidado_ventas\n" +
             "GROUP BY nombre\n" +
             "ORDER BY total_ventas DESC\n" +
-            "LIMIT 5;", nativeQuery = true) // Agregamos LIMIT 5 para el Top 5
-    List<Object []> CantidadPorPedidos(@Param("empresaId") Long empresaId);
+            "LIMIT 5;", nativeQuery = true)
+    List<Object []> CantidadPorPedidos();
 
-    @Query("SELECT COUNT(c) FROM Cliente c WHERE c.fechaRegistro BETWEEN :inicio AND :fin AND c.empresa.id = :empresaId")
+    @Query("SELECT COUNT(c) FROM Cliente c WHERE c.fechaRegistro BETWEEN :inicio AND :fin")
     Integer contarNuevosClientesPorRango(
             @Param("inicio") LocalDateTime inicio,
-            @Param("fin") LocalDateTime fin,
-            @Param("empresaId") Long empresaId
+            @Param("fin") LocalDateTime fin
     );
 
 }

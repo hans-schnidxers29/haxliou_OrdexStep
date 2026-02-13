@@ -16,9 +16,11 @@ public interface CierreMensualRepositorio extends JpaRepository<CierreMensual, L
     boolean existsByMesAndAnioAndEmpresaId(int mes, int anio, Long empresaId);
 
     // 2. Borrar el cierre previo (Query Nativo para asegurar la eliminación)
+    // 2. Borrar el cierre previo (JPQL para que aplique el filtro de tenant automáticamente si es UPDATE/DELETE con filtro habilitado, pero cuidado: Hibernate Filters NO se aplican a DELETE JPQL por defecto, sin embargo, Spring Data JPA suele manejarlo si se usa derived query o si se hace con cuidado.
+    // MEJOR: Usar deleteByMesAndAnio. Spring Data JPA provee deleteBy...
+    
     @Modifying
     @Transactional
-    @Query(value = "DELETE FROM cierre_mensual WHERE mes = :mes AND anio = :anio AND empresa_id = :empresaId", nativeQuery = true)
-    void eliminarCierreExistente(@Param("mes") int mes, @Param("anio") int anio, @Param("empresaId") Long empresaId);
+    void deleteByMesAndAnio(int mes, int anio);
 }
 

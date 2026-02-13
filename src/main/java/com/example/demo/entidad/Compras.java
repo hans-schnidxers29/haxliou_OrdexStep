@@ -3,7 +3,10 @@ package com.example.demo.entidad;
 
 import com.example.demo.entidad.Enum.EstadoCompra;
 import com.example.demo.entidad.Enum.MetodoPago;
+import com.example.demo.multitenancy.TenantAware;
+import com.example.demo.multitenancy.TenantEntityListener;
 import jakarta.persistence.*;
+import org.hibernate.annotations.Filter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -12,7 +15,9 @@ import java.util.List;
 
 @Entity
 @Table(name = "compras")
-public class Compras {
+@Filter(name = "tenantFilter", condition = "empresa_id = :tenantId")
+@EntityListeners(TenantEntityListener.class)
+public class Compras implements TenantAware {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

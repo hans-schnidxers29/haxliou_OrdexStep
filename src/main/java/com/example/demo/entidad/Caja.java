@@ -1,14 +1,19 @@
 package com.example.demo.entidad;
 
 import com.example.demo.entidad.Enum.EstadoDeCaja;
+import com.example.demo.multitenancy.TenantAware;
+import com.example.demo.multitenancy.TenantEntityListener;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import org.hibernate.annotations.Filter;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "cierre_caja")
-public class Caja {
+@Filter(name = "tenantFilter", condition = "empresa_id = :tenantId")
+@EntityListeners(TenantEntityListener.class)
+public class Caja implements TenantAware {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

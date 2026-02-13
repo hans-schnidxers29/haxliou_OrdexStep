@@ -24,7 +24,7 @@ public class ProductoServiceImpl implements ProductoServicio{
 
     @Override
     public List<Productos> listarProductos() {
-        return repositorio.findByEmpresaIdAndEstado(securityService.obtenerEmpresaId(),true);
+        return repositorio.findByEstado(true);
     }
 
     @Override
@@ -74,20 +74,20 @@ public class ProductoServiceImpl implements ProductoServicio{
 
     @Override
     public List<String> NombreProductosVentas() {
-        List<Object[]>resultado = repositorio.ListarProductosMasVendidos(securityService.obtenerEmpresaId());
+        List<Object[]>resultado = repositorio.ListarProductosMasVendidos();
         return resultado.stream().map(objeto ->(String) objeto[0]).toList();
     }
 
     @Override
     public List<BigDecimal> CantidadProductosVentas() {
-        List<Object[]>resultado = repositorio.ListarProductosMasVendidos(securityService.obtenerEmpresaId());
+        List<Object[]>resultado = repositorio.ListarProductosMasVendidos();
         return resultado.stream().map(objeto ->(BigDecimal) objeto[1]).toList();
     }
 
 
     @Override
     public List<Productos> verificarStock() {
-        return repositorio.StockBajoList(securityService.obtenerEmpresaId()).stream()
+        return repositorio.StockBajoList().stream()
                 .filter(Productos::isEstado)
                 .collect(Collectors.toList());
     }
@@ -134,7 +134,7 @@ public class ProductoServiceImpl implements ProductoServicio{
 
     private String CodigoProductos(){
         String prefrijo = "PROD-";
-        Long IdFormateado = repositorio.obtenerMaximoCodigoNumerico(securityService.obtenerEmpresaId()) + 1 ;
+        Long IdFormateado = repositorio.obtenerMaximoCodigoNumerico() + 1 ;
         return prefrijo + String.format("%05d", IdFormateado);
     }
 }

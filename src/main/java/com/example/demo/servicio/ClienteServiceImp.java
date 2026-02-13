@@ -26,8 +26,8 @@ public class ClienteServiceImp implements ClienteService {
 
     @Override
     public List<Cliente> listarcliente() {
-        Long EmpresaId = securityService.obtenerEmpresaId();
-        return repositorio.findByEmpresaId(EmpresaId);
+        // Long EmpresaId = securityService.obtenerEmpresaId(); // Ya no es necesario
+        return repositorio.findAll();
     }
 
     @Override
@@ -55,7 +55,7 @@ public class ClienteServiceImp implements ClienteService {
 
     @Override
     public boolean VerifcarCliente(String numeroIdentificacion) {
-        return repositorio.existsByNumeroIdentificacionAndEmpresaId(numeroIdentificacion,securityService.obtenerEmpresaId());
+        return repositorio.existsByNumeroIdentificacion(numeroIdentificacion);
     }
 
     @Override
@@ -74,7 +74,7 @@ public class ClienteServiceImp implements ClienteService {
     @Override
     public Map<String, Object> CantidadPedidosPorPersonas() {
         // 1. Obtenemos la lista de objetos del repositorio
-        List<Object[]> resultados = repositorio.CantidadPorPedidos(securityService.obtenerEmpresaId());
+        List<Object[]> resultados = repositorio.CantidadPorPedidos();
 
         // 2. Creamos las listas para separar los datos
         List<String> nombres = new ArrayList<>();
@@ -96,6 +96,6 @@ public class ClienteServiceImp implements ClienteService {
 
     @Override
     public List<Cliente> ClienteParaJax(String term) {
-        return repositorio.buscarPorTerminoYEmpresa(term,securityService.obtenerEmpresaId());
+        return repositorio.buscarPorTermino(term);
     }
 }

@@ -61,14 +61,9 @@ public class ProductoControlador {
 
     @PostMapping("/crearproducto")
     public String guardarproducto(@ModelAttribute("productos") Productos producto, RedirectAttributes redirectAttributes){
-        Empresa empresa = securityService.ObtenerEmpresa();
-
-        if (empresa == null) {
-            redirectAttributes.addFlashAttribute("error", "Sesión inválida o empresa no encontrada");
-            return "redirect:/login";
-        }
-        System.out.println("id empresa detectado " + empresa.getId());
-        producto.setEmpresa(empresa);
+        // ✅ Ya NO es necesario setear la empresa manualmente
+        // El TenantEntityListener lo hace automáticamente usando TenantContext
+        
         try {
             Productos productoGuardado = service.save(producto);
             redirectAttributes.addFlashAttribute("success", "Producto guardado correctamente");

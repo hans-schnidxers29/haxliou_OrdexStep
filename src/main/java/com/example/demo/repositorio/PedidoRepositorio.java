@@ -14,32 +14,33 @@ import java.util.List;
 @Repository
 public interface PedidoRepositorio extends JpaRepository<Pedidos,Long> {
 
-    List<Pedidos>findByEmpresaId(Long empresa_id);
+    // ✅ Simplificado: usar findAll() con filtro automático
+    // List<Pedidos> findByEmpresaId(Long empresa_id);
 
-    @Query("SELECT COUNT(p) FROM Pedidos p WHERE p.estado = :estado AND p.empresa.id = :empresa_id")
-    long contarPorEstado(@Param("estado") EstadoPedido estado, @Param("empresa_id") Long empresa_id);
+    @Query("SELECT COUNT(p) FROM Pedidos p WHERE p.estado = :estado")
+    long contarPorEstado(@Param("estado") EstadoPedido estado);
 
 
     @Query("SELECT COALESCE(SUM(p.total - (p.total / (1 + p.impuesto/100))), 0) " +
             "FROM Pedidos p " +
             "WHERE p.fechaPedido BETWEEN :inicio AND :fin " +
-            "AND p.estado = 'COMPLETADO' AND p.empresa.id = :empresaId")
-    BigDecimal sumaImpuestosPedidos(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin, @Param("empresaId") Long empresaId);
+            "AND p.estado = 'COMPLETADO'")
+    BigDecimal sumaImpuestosPedidos(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin);
 
     @Query("SELECT COALESCE(SUM(p.total), 0) FROM Pedidos p " +
             "WHERE p.fechaPedido BETWEEN :inicio AND :fin " +
-            "AND p.estado = :estado AND p.empresa.id = :empresaId")
+            "AND p.estado = :estado")
     BigDecimal sumaTotalPedidosPorEstado(
             @Param("inicio") LocalDateTime inicio,
-            @Param("fin") LocalDateTime fin, @Param("estado") EstadoPedido estado, @Param("empresaId") Long empresaId);
+            @Param("fin") LocalDateTime fin, @Param("estado") EstadoPedido estado);
 
 
     @Query("SELECT COUNT(p) FROM Pedidos p " +
             "WHERE p.fechaPedido BETWEEN :inicio AND :fin " +
-            "AND p.estado = :estado AND p.empresa.id = :empresaId")
+            "AND p.estado = :estado")
     Long cantidadPedidosPorRango(
             @Param("inicio") LocalDateTime inicio,
             @Param("fin") LocalDateTime fin,
-            @Param("estado") EstadoPedido estado, @Param("empresaId") Long empresaId);
+            @Param("estado") EstadoPedido estado);
 
 }

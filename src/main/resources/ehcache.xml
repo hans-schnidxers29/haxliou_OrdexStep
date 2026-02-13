@@ -1,0 +1,70 @@
+<config xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
+        xmlns='http://www.ehcache.org/v3'
+        xsi:schemaLocation="http://www.ehcache.org/v3 http://www.ehcache.org/schema/ehcache-core-3.0.xsd">
+
+    <!-- Configuración de caché por defecto -->
+    <cache-template name="default">
+        <expiry>
+            <ttl unit="minutes">10</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">1000</heap>
+        </resources>
+    </cache-template>
+
+    <!-- Caché para entidades frecuentemente accedidas -->
+    <cache alias="com.example.demo.entidad.Empresa" uses-template="default">
+        <expiry>
+            <ttl unit="hours">1</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">100</heap>
+        </resources>
+    </cache>
+
+    <cache alias="com.example.demo.entidad.Productos" uses-template="default">
+        <expiry>
+            <ttl unit="minutes">15</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">500</heap>
+        </resources>
+    </cache>
+
+    <cache alias="com.example.demo.entidad.Categoria" uses-template="default">
+        <expiry>
+            <ttl unit="hours">2</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">200</heap>
+        </resources>
+    </cache>
+
+    <cache alias="com.example.demo.entidad.Cliente" uses-template="default">
+        <expiry>
+            <ttl unit="minutes">20</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">300</heap>
+        </resources>
+    </cache>
+
+    <!-- Caché para queries -->
+    <cache alias="default-query-results-region" uses-template="default">
+        <expiry>
+            <ttl unit="minutes">5</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">500</heap>
+        </resources>
+    </cache>
+
+    <cache alias="default-update-timestamps-region" uses-template="default">
+        <expiry>
+            <none/>
+        </expiry>
+        <resources>
+            <heap unit="entries">5000</heap>
+        </resources>
+    </cache>
+</config>

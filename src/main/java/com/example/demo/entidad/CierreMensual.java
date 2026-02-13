@@ -2,6 +2,9 @@ package com.example.demo.entidad;
 
 import groovy.transform.builder.Builder;
 import jakarta.persistence.*;
+import com.example.demo.multitenancy.TenantAware;
+import com.example.demo.multitenancy.TenantEntityListener;
+import org.hibernate.annotations.Filter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -9,7 +12,9 @@ import java.time.LocalDate;
 @Entity
 @Table(name = "cierre_mensual")
 @Builder
-public class CierreMensual {
+@EntityListeners(TenantEntityListener.class)
+@Filter(name = "tenantFilter", condition = "empresa_id = :tenantId")
+public class CierreMensual implements TenantAware {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

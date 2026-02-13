@@ -2,8 +2,11 @@ package com.example.demo.entidad;
 
 
 import com.example.demo.entidad.Enum.EstadoPedido;
+import com.example.demo.multitenancy.TenantAware;
+import com.example.demo.multitenancy.TenantEntityListener;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
+import org.hibernate.annotations.Filter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -14,7 +17,9 @@ import java.util.List;
 
 @Entity
 @Table(name = "pedidos")
-public class Pedidos {
+@Filter(name = "tenantFilter", condition = "empresa_id = :tenantId")
+@EntityListeners(TenantEntityListener.class)
+public class Pedidos implements TenantAware {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
