@@ -516,8 +516,6 @@
             // IMPORTANTE: e.params.data YA TIENE toda la información que envió el backend
             const cliente = e.params.data;
 
-            console.log("Cliente seleccionado:", cliente);
-
             // Asignar ID al input oculto
             const inputId = document.getElementById('clienteIdHidden');
             if (inputId) inputId.value = cliente.id;
