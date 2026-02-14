@@ -187,5 +187,11 @@ public class VentaServicioImp implements VentaServicio {
                 .toList();
     }
 
+    @Override
+    @Transactional
+    public void UpdateVenta(Venta venta) {
+        repositorioVenta.save(venta);
+    }
+
 
 }

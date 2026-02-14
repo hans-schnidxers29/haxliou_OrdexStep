@@ -294,6 +294,161 @@ public class VentaControlador {
         }
     }
 
+    @GetMapping("/editar/{id}")
+    public String MostrarFormEditar(@PathVariable Long id,Model model, RedirectAttributes flash){
+        try {
+            Venta venta = servicio.buscarVenta(id);
+            if (venta == null) {
+                flash.addFlashAttribute("info", "venta no encontrada");
+                return "redirect:/ventas/listar";
+            }
+            if(venta.getCliente() == null || venta.getDetalles() ==  null){
+                flash.addFlashAttribute("info","productos no encotrados o requiere cliente");
+                return "redirect:/vebtas/listar";
+            }
+            model.addAttribute("clientes", clienteService.clienteSimple());
+            model.addAttribute("productos", productoServicio.listarProductos());
+            model.addAttribute("categorias", categoriaService.Listarcategoria());
+            model.addAttribute("venta", venta);
+            return "ViewVentas/VentasEditar";
+
+        }catch(Exception e ){
+            flash.addFlashAttribute("error", "error al editar venta "+ e.getMessage());
+            return "redirect:/ventas/listar";
+        }
+    }
+
+    @PostMapping("/editar/venta/{id}")
+    public String EditarVenta(@PathVariable Long id, @ModelAttribute("venta") Venta venta,
+                              RedirectAttributes flash, @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            // 1. Cargar la venta original para gestionar Stock y Detalles antiguos
+            Venta ventaExistente = servicio.buscarVenta(id);
+            if (ventaExistente == null) {
+                flash.addFlashAttribute("error", "La venta no existe.");
+                return "redirect:/ventas/listar";
+            }
+
+            // Devolver el stock original antes de validar el nuevo
+            // Esto es vital: si el usuario compró 5 y ahora quiere 3, primero devolvemos los 5 al inventario.
+            for (DetalleVenta antiguo : ventaExistente.getDetalles()) {
+                productoServicio.AgregarStock(antiguo.getProducto().getId(), antiguo.getCantidad(),BigDecimal.ZERO,BigDecimal.ZERO);
+            }
+
+            // 2. Validaciones básicas de la nueva data
+            if (venta.getDetalles() == null || venta.getDetalles().isEmpty()) {
+                flash.addFlashAttribute("info", "Debe agregar productos a la venta");
+                return "redirect:/ventas/editar/" + id;
+            }
+
+            if (venta.getCliente() == null || venta.getCliente().getId() == null) {
+                flash.addFlashAttribute("info", "Debe seleccionar un cliente");
+                return "redirect:/ventas/editar/" + id;
+            }
+
+            Cliente clienteCompleto = clienteService.clientdById(venta.getCliente().getId());
+            venta.setCliente(clienteCompleto);
+            // Mantener datos originales que no cambian
+            venta.setId(id);
+            venta.setFechaVenta(ventaExistente.getFechaVenta()); // Mantener fecha original o LocalDateTime.now() si prefieres fecha de edición
+            venta.setEmpresa(ventaExistente.getEmpresa());
+
+            // 3. Procesamiento de Detalles
+            BigDecimal subtotalFormulario = venta.getSubtotal(); // Capturamos el valor del formulario
+            List<DetalleVenta> nuevosDetalles = new ArrayList<>();
+            BigDecimal subtotalGeneral = BigDecimal.ZERO;
+            BigDecimal totalImpuestosAcumulado = BigDecimal.ZERO;
+
+            for (DetalleVenta detalle : venta.getDetalles()) {
+                if (detalle.getProducto() == null || detalle.getProducto().getId() == null ||
+                        detalle.getCantidad() == null || detalle.getCantidad().compareTo(BigDecimal.ZERO) <= 0) {
+                    continue;
+                }
+
+                Productos producto = productoServicio.productoById(detalle.getProducto().getId());
+
+                // Lógica de conversión Gramos a Kilos
+                BigDecimal cantidadOriginal = detalle.getCantidad();
+                BigDecimal cantidadProcesada = "KGM".equals(producto.getTipoVenta().getCode())
+                        ? cantidadOriginal.divide(new BigDecimal("1000"), 3, RoundingMode.HALF_UP)
+                        : cantidadOriginal;
+
+                // Validar Stock (Ahora que ya devolvimos lo de la venta anterior)
+                if (producto.getCantidad().compareTo(cantidadProcesada) < 0) {
+                    flash.addFlashAttribute("error", "Stock insuficiente para " + producto.getNombre());
+                    return "redirect:/ventas/editar/" + id;
+                }
+
+                // Descontar nuevo Stock
+                servicio.descontarStock(venta);
+
+                // Precios y Subtotales
+                // Precios y Subtotales
+                BigDecimal precioAplicado = detalle.getPrecioUnitario();
+
+                // Si no viene precio, calculamos según reglas de negocio (Mayorista/Detal)
+                if (precioAplicado == null) {
+                     precioAplicado = (Boolean.TRUE.equals(venta.getVentaAlPorMayor()) && producto.getPrecioPorMayor() != null)
+                            ? producto.getPrecioPorMayor()
+                            : producto.getPrecio();
+                }
+
+                BigDecimal subtotalFila = precioAplicado.multiply(cantidadProcesada);
+                BigDecimal porcentajeImp = producto.getImpuesto() != null ? producto.getImpuesto() : BigDecimal.ZERO;
+                BigDecimal impuestoFila = subtotalFila.multiply(porcentajeImp).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+
+                detalle.setVenta(venta);
+                detalle.setProducto(producto);
+                detalle.setCantidad(cantidadProcesada);
+                detalle.setPrecioUnitario(precioAplicado);
+                detalle.setSubtotal(subtotalFila);
+
+                subtotalGeneral = subtotalGeneral.add(subtotalFila);
+                totalImpuestosAcumulado = totalImpuestosAcumulado.add(impuestoFila);
+                nuevosDetalles.add(detalle);
+            }
+
+            // 4. Totales Finales
+            venta.setDetalles(nuevosDetalles);
+
+            // Lógica para respetar el subtotal manual si el usuario lo editó
+            if (subtotalFormulario != null && subtotalFormulario.compareTo(BigDecimal.ZERO) > 0) {
+                 venta.setSubtotal(subtotalFormulario);
+                 subtotalGeneral = subtotalFormulario; // Usamos este valor para el cálculo de descuentos/total
+            } else {
+                 venta.setSubtotal(subtotalGeneral.setScale(2, RoundingMode.HALF_UP));
+            }
+
+            // Valores adicionales y Descuentos
+            BigDecimal adicionales = venta.getValoresAdicionales() != null ? venta.getValoresAdicionales() : BigDecimal.ZERO;
+            BigDecimal descPorcentaje = venta.getDescuento() != null ? venta.getDescuento() : BigDecimal.ZERO;
+            BigDecimal valorDescuento = subtotalGeneral.multiply(descPorcentaje).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+
+            BigDecimal totalCalculado = subtotalGeneral.add(totalImpuestosAcumulado).subtract(valorDescuento).add(adicionales);
+            venta.setTotal(RoundingUtil.roundToColombianPeso(totalCalculado));
+            venta.setImpuesto(totalImpuestosAcumulado); // Guardamos el valor monetario del impuesto acumulado
+
+            // 5. Guardar Cambios
+            Usuario vendedor = servicioUsuario.findByEmail(userDetails.getUsername());
+            venta.setVendedor(vendedor);
+
+            // Limpiar detalles antiguos en la DB antes de guardar los nuevos (Orphan Removal)
+            servicio.UpdateVenta(venta);
+
+            flash.addFlashAttribute("success", "Venta actualizada correctamente");
+            return "redirect:/ventas/listar";
+
+        } catch (Exception e) {
+            flash.addFlashAttribute("error", "Error al editar la venta: " + e.getMessage());
+            return "redirect:/ventas/listar";
+        }
+    }
+
+
+
+
+
+
     // ============================
     // PDF TICKET DE VENTA
     // ============================

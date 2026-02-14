@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layouts/adminlte}">
+
+<head>
+    <title>Editar Venta</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@x.x.x/dist/select2-bootstrap4.min.css" />
+    <style>
+        .cliente-card {
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+            transition: all 0.3s;
+        }
+
+        .cliente-card.encontrado {
+            border: 2px solid #28a745;
+            background-color: #d4edda;
+        }
+
+        .cliente-info {
+            display: none;
+        }
+
+        .cliente-info.show {
+            display: block;
+        }
+
+        body.modal-open .content {
+            filter: none !important;
+        }
+
+        .modal-backdrop {
+            background-color: rgba(0, 0, 0, 0.1) !important;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div layout:fragment="content">
+        <section class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2 align-items-center">
+                    <div class="col-sm-6">
+                        <h1><i class="fas fa-edit mr-2"></i> Editar Venta #<span th:text="${venta.id}"></span></h1>
+                    </div>
+                    <div class="col-sm-6 text-right">
+                        <a th:href="@{/ventas/listar}" class="btn btn-secondary shadow">
+                            <i class="fas fa-arrow-left mr-1"></i> Volver
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="content">
+            <div class="container-fluid">
+                <form th:action="@{/ventas/editar/venta/{id}(id=${venta.id})}" th:object="${venta}" method="POST"
+                    id="formVenta">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <!-- BUSCAR CLIENTE -->
+                            <div class="card card-outline card-warning shadow">
+                                <div class="card-header">
+                                    <h3 class="card-title font-weight-bold">
+                                        <i class="fas fa-user-edit mr-1"></i> Cliente
+                                    </h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Cliente (No editable)</label>
+                                                <input type="text" class="form-control"
+                                                    th:value="${venta.cliente.nombre + ' - ' + (venta.cliente.numeroIdentificacion != null ? venta.cliente.numeroIdentificacion : '')}"
+                                                    readonly>
+                                                <input type="hidden" th:field="*{cliente.id}">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="cliente-card border rounded p-3 bg-light" id="clienteCard"
+                                                style="min-height: 150px;"
+                                                th:classappend="${venta.cliente != null} ? 'encontrado' : ''">
+
+                                                <div class="text-center text-muted" id="clienteNoSeleccionado"
+                                                    th:classappend="${venta.cliente != null} ? 'd-none' : ''">
+                                                    <i class="fas fa-user-slash fa-2x mb-2"></i>
+                                                    <p class="mb-0">Sin cliente seleccionado</p>
+                                                </div>
+
+                                                <div class="cliente-info" id="clienteInfo"
+                                                    th:classappend="${venta.cliente != null} ? 'show d-block' : 'd-none'">
+                                                    <h5 class="text-success mb-2 font-weight-bold">
+                                                        <i class="fas fa-check-circle mr-1"></i> Cliente Actual
+                                                    </h5>
+                                                    <div class="pl-2">
+                                                        <p class="mb-1"><strong>Nombre:</strong>
+                                                            <span id="clienteNombre"
+                                                                th:text="${venta.cliente != null ? venta.cliente.nombre : ''}"></span>
+                                                        </p>
+                                                        <p class="mb-1"><strong>Email:</strong>
+                                                            <span id="clienteEmail"
+                                                                th:text="${venta.cliente != null ? venta.cliente.email : ''}"></span>
+                                                        </p>
+                                                        <p class="mb-1"><strong>Teléfono:</strong>
+                                                            <span id="clienteTelefono"
+                                                                th:text="${venta.cliente != null ? venta.cliente.telefono : ''}"></span>
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <input type="hidden" th:field="*{cliente.id}" id="clienteIdHidden">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- DETALLE DE PRODUCTOS -->
+                            <div class="card card-warning shadow">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h3 class="card-title font-weight-bold">
+                                        <i class="fas fa-boxes mr-1"></i> Ítems del Pedido
+                                    </h3>
+                                    <button type="button" class="btn btn-warning btn-sm ml-auto"
+                                        onclick="agregarDetalle()">
+                                        <i class="fas fa-plus mr-1"></i> Agregar Producto
+                                    </button>
+                                </div>
+                                <div class="card-body p-0">
+                                    <table class="table table-striped mb-0">
+                                        <thead class="bg-light">
+                                            <tr>
+                                                <th style="width: 25%">Categoría</th>
+                                                <th style="width: 25%">Producto</th>
+                                                <th style="width: 10%">Cant.</th>
+                                                <th style="width: 15%">P. Unit</th>
+                                                <th style="width: 10%">IVA %</th>
+                                                <th style="width: 15%">Subtotal</th>
+                                                <th style="width: 40px"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="detallesContainer">
+                                            <!-- Iterar sobre los detalles existentes -->
+                                            <tr th:each="detalle, stat : *{detalles}" class="detalle-item">
+                                                <td>
+                                                    <select class="form-control categoria-filter"
+                                                        onchange="filtrarProductos(this)">
+                                                        <option value="">-- Ver Todas --</option>
+                                                        <option th:each="cat : ${categorias}" th:value="${cat.id}"
+                                                            th:text="${cat.nombrecategoria}"
+                                                            th:selected="${detalle.producto.categoria.id == cat.id}">
+                                                        </option>
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <select th:field="*{detalles[__${stat.index}__].producto.id}"
+                                                        class="form-control producto-select" required
+                                                        onchange="actualizarPrecioFila(this)">
+                                                        <option value="" disabled>-- Seleccionar --</option>
+                                                        <option th:each="p : ${productos}" th:value="${p.id}"
+                                                            th:text="${p.nombre}"
+                                                            th:selected="${p.id == detalle.producto.id}"
+                                                            th:data-categoria="${p.categoria.id}"
+                                                            th:data-precio="${p.precio}"
+                                                            th:data-preciomayor="${p.precioPorMayor}"
+                                                            th:data-impuesto="${p.impuesto}"
+                                                            th:data-tipo="${p.tipoVenta.code}"></option>
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <!-- Ajuste Visual para la cantidad (si es Kilo mostrar x1000 visualmente no, en BD se guarda en Kilos pero el input espera la unidad humana?) -->
+                                                    <!-- NO, la lógica actual del controller convierte. Si guardó 0.5kg, en el input mostramos 0.5. PERO el JS espera la unidad según KGM/LTR.
+                                                 Si es KGM, el JS divide por 1000 al calcular subtotal.
+                                                 Si viene de BD 0.5 (Kg), y el usuario ve 0.5, y el JS divide por 1000 -> 0.0005. ERROR.
+                                                 Necesitamos una lógica inversa si vamos a usar la misma función JS.
+                                                 O ajustar la función JS para no dividir si ya está cargado?
+                                                 Lo más fácil: Mostrar el valor tal cual está en BD (0.5) y ajustar el JS para detectar si es cambio o carga inicial.
+                                                 PERO el JS se activa 'onchange'. La carga inicial renderiza el valor de BD.
+                                                 El problema es 'calcularSubtotalFila' que divide por 1000 si es KGM.
+                                                 Si el valor en el input es 0.5, el JS calculará 0.0005 * precio.
+                                                 La lógica de creación asume que el usuario ingresa GRAMOS (500) y se guardan KILOS (0.5).
+                                                 Entonces aqui deberiamos mostrar GRAMOS (500) para que el JS funcione igual.
+                                            -->
+                                                    <input type="number"
+                                                        th:field="*{detalles[__${stat.index}__].cantidad}"
+                                                        class="form-control cantidad-input" min="0.01" step="0.01"
+                                                        required onchange="calcularSubtotalFila(this)"
+                                                        th:value="${detalle.producto.tipoVenta.code == 'KGM' || detalle.producto.tipoVenta.code == 'LTR' ? detalle.cantidad * 1000 : detalle.cantidad}">
+                                                    <small class="text-muted unidad-medida"
+                                                        th:text="${detalle.producto.tipoVenta.code == 'KGM' ? 'Unidad: Gramos' : (detalle.producto.tipoVenta.code == 'LTR' ? 'Unidad: Mililitros' : 'Unidad: Und')}"></small>
+                                                </td>
+                                                <td>
+                                                    <!-- Precio Unitario -->
+                                                    <input type="number"
+                                                        th:field="*{detalles[__${stat.index}__].precioUnitario}"
+                                                        class="form-control precio-unitario bg-light" step="0.01"
+                                                        readonly>
+                                                    <div class="custom-control custom-switch mt-1">
+                                                        <!-- Detectar si se aplicó precio mayorista comparando -->
+                                                        <input type="checkbox" class="custom-control-input switch-mayor"
+                                                            th:id="'switchMayor_' + ${stat.index}"
+                                                            onchange="actualizarPrecioFila(this)"
+                                                            th:checked="${detalle.precioUnitario == detalle.producto.precioPorMayor}">
+                                                        <label class="custom-control-label small font-weight-normal"
+                                                            th:for="'switchMayor_' + ${stat.index}">¿P. Mayor?</label>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <!-- IVA producto (recuperar del producto, no se guarda en detalle explicitamente porcentaje, pero se puede inferir o traer del producto) -->
+                                                    <input type="number" class="form-control impuesto-producto bg-light"
+                                                        step="0.01" readonly th:value="${detalle.producto.impuesto}">
+                                                </td>
+                                                <td>
+                                                    <input type="number"
+                                                        th:field="*{detalles[__${stat.index}__].subtotal}"
+                                                        class="form-control subtotal-item bg-light text-bold"
+                                                        step="0.01" onchange="calcularPrecioDesdeSubtotal(this)">
+                                                </td>
+                                                <td class="text-center">
+                                                    <button type="button" class="btn btn-link text-danger"
+                                                        onclick="eliminarFila(this)"><i class="fas fa-trash-alt"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- PANEL DE FACTURACIÓN -->
+                        <div class="col-md-4">
+                            <div class="card card-warning card-outline shadow">
+                                <div class="card-header">
+                                    <h3 class="card-title font-weight-bold">Datos de Facturación</h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="form-group mb-3 text-center border-bottom pb-3">
+                                        <label
+                                            class="d-block small font-weight-bold text-primary mb-2 text-uppercase">Tipo
+                                            de Operación</label>
+                                        <div
+                                            class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
+                                            <input type="checkbox" th:field="*{ventaAlPorMayor}"
+                                                class="custom-control-input" id="switchVentaMayor"
+                                                onchange="alternarPreciosGlobal()">
+                                            <label class="custom-control-label" for="switchVentaMayor">
+                                                <span id="labelVenta"
+                                                    th:text="*{ventaAlPorMayor} ? 'VENTA AL POR MAYOR' : 'VENTA AL DETAL'"
+                                                    th:classappend="*{ventaAlPorMayor} ? 'font-weight-bold text-success' : 'font-weight-bold text-danger'">VENTA
+                                                    AL DETAL</span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Método de Pago <span class="text-danger">*</span></label>
+                                        <select class="form-control" th:field="*{metodoPago}" id="metodoPagoSelect"
+                                            required>
+                                            <option value="" disabled>Seleccione pago...</option>
+                                            <option value="EFECTIVO">Efectivo</option>
+                                            <option value="TRANSFERENCIA">Transferencia</option>
+                                            <option value="TARJETA">Tarjeta</option>
+                                            <option value="MIXTO">Mixto</option>
+                                        </select>
+                                    </div>
+
+                                    <hr>
+
+                                    <div class="bg-light p-3 rounded">
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span class="text-muted">Subtotal:</span>
+                                            <div class="font-weight-bold">
+                                                $ <input type="number" id="subtotalGeneral"
+                                                    class="d-inline text-right font-weight-bold" th:field="*{subtotal}"
+                                                    style="width: 100px; background: transparent; border-bottom: 1px solid #ccc;"
+                                                    step="0.01" oninput="actualizarDesdeSubtotalManual()">
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group mb-2 border-top pt-2">
+                                            <label class="small font-weight-bold text-danger">DESCUENTO (%)</label>
+                                            <div class="input-group input-group-sm">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text bg-danger text-white border-danger"><i
+                                                            class="fas fa-percent"></i></span>
+                                                </div>
+                                                <input type="number" th:field="*{descuento}" id="inputDescuento"
+                                                    class="form-control text-right font-weight-bold border-danger"
+                                                    placeholder="0" min="0" max="100" step="0.1"
+                                                    oninput="calcularTotales()">
+                                            </div>
+                                            <div class="text-right small text-danger mt-1">
+                                                - $ <span id="valorDescuentoCalculado"></span>
+                                            </div>
+                                        </div>
+
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span class="text-muted">Impuesto Total:</span>
+                                            <div class="font-weight-bold">
+                                                $ <input type="number" id="impuesto" th:field="*{impuesto}"
+                                                    class="d-inline text-right bg-transparent border-0 font-weight-bold"
+                                                    readonly style="width: 100px;">
+                                            </div>
+                                        </div>
+                                        <div class="form-group mb-2 border-top pt-2">
+                                            <label class="small font-weight-bold text-secondary">VALORES ADICIONALES
+                                                ($)</label>
+                                            <div class="input-group input-group-sm">
+                                                <div class="input-group-prepend">
+                                                    <span
+                                                        class="input-group-text bg-secondary text-white border-secondary"><i
+                                                            class="fas fa-plus-circle"></i></span>
+                                                </div>
+                                                <input type="number" th:field="*{valoresAdicionales}"
+                                                    id="inputValoresAdicionales"
+                                                    class="form-control text-right font-weight-bold border-secondary"
+                                                    placeholder="0.00" min="0" step="0.01" oninput="calcularTotales()">
+                                            </div>
+                                        </div>
+
+                                        <div
+                                            class="d-flex justify-content-between text-lg text-primary font-weight-bold mt-3 border-top pt-2">
+                                            <span>TOTAL:</span>
+                                            <div>
+                                                $ <input type="number" id="totalVenta" th:field="*{total}"
+                                                    class="d-inline text-right border-0 bg-transparent font-weight-bold text-primary text-xl"
+                                                    readonly style="width: 140px;">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="card-footer">
+                                    <button type="button" onclick="validarYProcesar()"
+                                        class="btn btn-warning btn-block shadow btn-lg">
+                                        <i class="fas fa-save mr-1"></i> Actualizar Venta
+                                    </button>
+                                    <a href="/ventas/listar" class="btn btn-default btn-block mt-2">Cancelar</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+    </div>
+
+    <th:block layout:fragment="scripts">
+
+        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+        <script th:inline="javascript">
+            // Inicializar contador con el tamaño actual de la lista de detalles
+            // Thymeleaf renderiza el número directamente
+            let detalleCount = /*[[${venta.detalles.size()}]]*/ 0;
+
+            $(document).ready(function () {
+                // Notificaciones
+                const s = /*[[${success}]]*/ null;
+                const e = /*[[${error}]]*/ null;
+                const i = /*[[${info}]]*/ null;
+                const w = /*[[${warning}]]*/ null;
+                if (typeof checkNotifications === 'function') {
+                    checkNotifications(s, e, i, w);
+                }
+
+                // Inicializar Select2 Clientes
+                const $selectCliente = $('.select2-ajax');
+                $selectCliente.select2({
+                    theme: 'bootstrap4',
+                    placeholder: "Buscar cliente...",
+                    minimumInputLength: 3,
+                    allowClear: true,
+                    ajax: {
+                        url: '/api/clientes/buscar',
+                        dataType: 'json',
+                        delay: 400,
+                        data: function (params) {
+                            return { term: params.term };
+                        },
+                        processResults: function (data) {
+                            return { results: data.results || data };
+                        },
+                        cache: true
+                    }
+                });
+
+                // Eventos Select2 Cliente (Misma lógica que crear)
+                $selectCliente.on('select2:select', function (e) {
+                    const cliente = e.params.data;
+                    $('#clienteIdHidden').val(cliente.id);
+                    $('#clienteNombre').text(cliente.text || 'N/A');
+                    $('#clienteEmail').text(cliente.email || 'N/A');
+                    $('#clienteTelefono').text(cliente.telefono || 'N/A');
+                    $('#clienteInfo').addClass('show d-block').removeClass('d-none');
+                    $('#clienteNoSeleccionado').addClass('d-none');
+                    $('#clienteCard').addClass('encontrado');
+                });
+
+                $selectCliente.on('select2:unselect', function () {
+                    $('#clienteIdHidden').val('');
+                    $('#clienteInfo').removeClass('show d-block').addClass('d-none');
+                    $('#clienteNoSeleccionado').removeClass('d-none');
+                    $('#clienteCard').removeClass('encontrado');
+                });
+
+                // Calcular totales iniciales (para renderizar valor correcto de descuento)
+                calcularTotales();
+            });
+
+            // ==========================================
+            // FUNCIONES COMPARTIDAS (Reutilizadas)
+            // ==========================================
+
+            function filtrarProductos(selectElement) {
+                const catId = selectElement.value;
+                const fila = selectElement.closest('tr');
+                const productoSelect = fila.querySelector('.producto-select');
+                const options = productoSelect.querySelectorAll('option');
+
+                options.forEach(opt => {
+                    if (opt.value === "" || catId === "" || opt.getAttribute('data-categoria') === catId) {
+                        opt.style.display = "block";
+                    } else {
+                        opt.style.display = "none";
+                    }
+                });
+                // Si el producto seleccionado no coincide con la categoría, resetear
+                // PERO en edición, cuidado con resetear si ya venía cargado.
+                // Solo resetear si el usuario CAMBIA la categoría activamente.
+                // Para simplificar: al cambiar categoría, resetear producto.
+                productoSelect.value = "";
+                actualizarPrecioFila(productoSelect);
+            }
+
+            function agregarDetalle() {
+                const container = document.getElementById('detallesContainer');
+                // Clonar opciones de la primera fila si existe, o extraer de un template oculto si no hay filas
+                // Para simplificar, asumimos que siempre hay al menos una fila o usamos el HTML de las opciones renderizadas por Thymeleaf en un template js
+                // Como Thymeleaf procesa en servidor, necesitamos renderizar las opciones en una variable JS o clonar.
+                // Usaremos el truco de clonar la estructura de una fila limpia, pero aqui es complejo porque depende de Thymeleaf.
+                // MEJOR ESTRATEGIA: Usar un template string con las opciones pre-renderizadas.
+
+                // Obtenemos las opciones de productos y categorias del DOM (hack rápido: buscar primer select existente o variables globales)
+                // Si no hay filas, esto fallará. Deberíamos haber guardado las opciones en variables JS.
+                // Vamos a reconstruir.
+
+                // Nota: En un entorno real complex, mejor usar un fragmento th:fragment y ajax, o variables JS.
+                // Aquí intentaremos clonar la estructura si existe, o alertar error.
+                const primeraFila = document.querySelector('.detalle-item');
+                let opcionesCat = "";
+                let opcionesProd = "";
+
+                if (primeraFila) {
+                    opcionesCat = primeraFila.querySelector('.categoria-filter').innerHTML;
+                    opcionesProd = primeraFila.querySelector('.producto-select').innerHTML;
+                } else {
+                    // Fallback si borró todas las filas: recargar página o prevenir borrar última
+                    // OJO: Si borra todas, no puede agregar más con este método simple de clonación de HTML.
+                    // Podríamos guardar el HTML en una variable al inicio.
+                    Swal.fire('Error', 'No se pueden agregar productos si la lista está vacía. Recargue la página.', 'error');
+                    return;
+                }
+
+                const tr = document.createElement('tr');
+                tr.className = 'detalle-item';
+                tr.innerHTML = `
+                <td><select class="form-control categoria-filter" onchange="filtrarProductos(this)">${opcionesCat}</select></td>
+                <td><select name="detalles[${detalleCount}].producto.id" class="form-control producto-select" required onchange="actualizarPrecioFila(this)">${opcionesProd}</select></td>
+                <td>
+                    <input type="number" name="detalles[${detalleCount}].cantidad" class="form-control cantidad-input" min="0.01" value="1.00" step="0.01" required onchange="calcularSubtotalFila(this)">
+                    <small class="text-muted unidad-medida">Unidad: Und</small>
+                </td>
+                <td>
+                    <input type="number" name="detalles[${detalleCount}].precioUnitario" class="form-control precio-unitario bg-light" step="0.01" readonly>
+                    <div class="custom-control custom-switch mt-1">
+                        <input type="checkbox" class="custom-control-input switch-mayor" id="switchMayor_${detalleCount}" onchange="actualizarPrecioFila(this)">
+                        <label class="custom-control-label small font-weight-normal" for="switchMayor_${detalleCount}">¿P. Mayor?</label>
+                    </div>
+                </td>
+                <td><input type="number" class="form-control impuesto-producto bg-light" readonly></td>
+                <td><input type="number" name="detalles[${detalleCount}].subtotal" class="form-control subtotal-item bg-light text-bold" readonly step="0.01"></td>
+                <td class="text-center"><button type="button" class="btn btn-link text-danger" onclick="eliminarFila(this)"><i class="fas fa-trash-alt"></i></button></td>
+            `;
+
+                // Limpiar valores seleccionados en el clon
+                const nuevoSelectProd = tr.querySelector('.producto-select');
+                nuevoSelectProd.value = "";
+                // Resetear opciones ocultas por filtro previo
+                Array.from(nuevoSelectProd.options).forEach(opt => opt.style.display = 'block');
+
+                container.appendChild(tr);
+                detalleCount++;
+            }
+
+            function eliminarFila(btn) {
+                // Verificar que no sea la única fila (opcional)
+                const filas = document.querySelectorAll('.detalle-item');
+                if (filas.length <= 1) {
+                    Swal.fire('Atención', 'Debe haber al menos un producto en la venta.', 'warning');
+                    return;
+                }
+                btn.closest('tr').remove();
+                calcularTotal();
+            }
+
+            // Misma lógica de actualización de precios, impuestos y unidades
+            function actualizarPrecioFila(element) {
+                const fila = element.closest('tr');
+                const select = fila.querySelector('.producto-select');
+                const option = select.options[select.selectedIndex];
+                const labelUnidad = fila.querySelector('.unidad-medida');
+                const inputCantidad = fila.querySelector('.cantidad-input');
+                const switchGlobal = document.getElementById('switchVentaMayor');
+                const switchFila = fila.querySelector('.switch-mayor');
+
+                if (!select.value) return;
+
+                const pNormal = parseFloat(option.getAttribute("data-precio")) || 0;
+                const pMayor = parseFloat(option.getAttribute("data-preciomayor")) || pNormal;
+                const isMayor = switchGlobal.checked || (switchFila && switchFila.checked);
+                const precioFinal = isMayor ? pMayor : pNormal;
+                const impuesto = option.getAttribute("data-impuesto") || 0;
+                const tipoVenta = option.getAttribute("data-tipo");
+
+                fila.querySelector('.precio-unitario').value = precioFinal.toFixed(2);
+                fila.querySelector('.impuesto-producto').value = impuesto;
+
+                if (tipoVenta === 'KGM' || tipoVenta === 'LTR') {
+                    labelUnidad.innerText = (tipoVenta === 'KGM') ? "Unidad: Gramos" : "Unidad: Mililitros";
+                    labelUnidad.className = "badge badge-warning unidad-medida";
+                    // inputCantidad.step = "1"; // Opcional
+                } else {
+                    labelUnidad.innerText = "Unidad: Und";
+                    labelUnidad.className = "text-muted small unidad-medida";
+                }
+                calcularSubtotalFila(inputCantidad);
+            }
+
+            // Nueva función: Calcular Precio Unitario al editar Subtotal
+            function calcularPrecioDesdeSubtotal(inputSubtotal) {
+                const fila = inputSubtotal.closest('tr');
+                const select = fila.querySelector('.producto-select');
+                const option = select.options[select.selectedIndex];
+                const inputCantidad = fila.querySelector('.cantidad-input');
+                const inputPrecio = fila.querySelector('.precio-unitario');
+
+                if (!option || select.value === "") return;
+
+                const tipoVenta = option.getAttribute("data-tipo");
+                let cant = parseFloat(inputCantidad.value) || 0;
+                const subtotal = parseFloat(inputSubtotal.value) || 0;
+
+                if (cant === 0) return; // Evitar división por cero
+
+                // Ajustar cantidad si es KGM/LTR
+                if (tipoVenta === 'KGM' || tipoVenta === 'LTR') {
+                    cant = cant / 1000;
+                }
+
+                // Precio = Subtotal / Cantidad
+                const nuevoPrecio = subtotal / cant;
+
+                inputPrecio.value = nuevoPrecio.toFixed(2);
+
+                // Recalcular el resto de totales
+                calcularTotal();
+            }
+
+            function calcularSubtotalFila(input) {
+                const fila = input.closest('tr');
+                const select = fila.querySelector('.producto-select');
+                const option = select.options[select.selectedIndex];
+
+                if (!option || select.value === "") return;
+
+                const tipoVenta = option.getAttribute("data-tipo");
+                let cant = parseFloat(input.value) || 0;
+                const precio = parseFloat(fila.querySelector('.precio-unitario').value) || 0;
+
+                // Conversión para cálculo: si es KGM/LTR, el input son gramos/ml, dividimos por 1000
+                if (tipoVenta === 'KGM' || tipoVenta === 'LTR') {
+                    cant = cant / 1000;
+                }
+
+                fila.querySelector('.subtotal-item').value = (cant * precio).toFixed(2);
+                calcularTotal();
+            }
+
+
+            function calcularTotal() {
+                let subtotalGlobal = 0;
+                let impuestoGlobal = 0;
+
+                document.querySelectorAll('.detalle-item').forEach(fila => {
+                    const subtotalFila = parseFloat(fila.querySelector('.subtotal-item').value) || 0;
+                    // Impuesto se calcula sobre el subtotal de la fila
+                    const porcImpuesto = parseFloat(fila.querySelector('.impuesto-producto').value) || 0;
+
+                    subtotalGlobal += subtotalFila;
+                    impuestoGlobal += (subtotalFila * (porcImpuesto / 100));
+                });
+
+                // Descuento
+                const inputDescuento = document.getElementById('inputDescuento');
+                const porcentajeDescuento = parseFloat(inputDescuento.value) || 0;
+                const valorDescuento = subtotalGlobal * (porcentajeDescuento / 100);
+
+                // Adicionales
+                const inputAdicionales = document.getElementById('inputValoresAdicionales');
+                const valoresAdicionales = parseFloat(inputAdicionales.value) || 0;
+
+                // Visualizar
+                const spanValorDesc = document.getElementById('valorDescuentoCalculado');
+                if (spanValorDesc) {
+                    spanValorDesc.textContent = valorDescuento.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                }
+
+                const totalFinal = (subtotalGlobal - valorDescuento) + impuestoGlobal + valoresAdicionales;
+
+                document.getElementById('subtotalGeneral').value = subtotalGlobal.toFixed(2);
+                document.getElementById('impuesto').value = impuestoGlobal.toFixed(2);
+                document.getElementById('totalVenta').value = totalFinal.toFixed(2);
+            }
+
+            // Trigger para recalcular si cambia el switch global
+            function alternarPreciosGlobal() {
+                const isMayor = document.getElementById('switchVentaMayor').checked;
+                document.querySelectorAll('.detalle-item').forEach(fila => {
+                    const switchFila = fila.querySelector('.switch-mayor');
+                    if (switchFila) switchFila.checked = isMayor;
+                    const select = fila.querySelector('.producto-select');
+                    if (select && select.value) actualizarPrecioFila(select);
+                });
+                // Update Label
+                const label = document.getElementById('labelVenta');
+                label.innerText = isMayor ? "VENTA AL POR MAYOR" : "VENTA AL DETAL";
+                label.className = isMayor ? "font-weight-bold text-success" : "font-weight-bold text-danger";
+            }
+
+            function calcularTotales() {
+                calcularTotal();
+            }
+
+            function actualizarDesdeSubtotalManual() {
+                const subtotalInput = document.getElementById('subtotalGeneral');
+                const subtotalGlobal = parseFloat(subtotalInput.value) || 0;
+
+                // Recalculate global figures based on this new subtotal
+                // We kept the tax from the rows? Or should we adjust? 
+                // For now, keep tax as is (sum of rows) because tax is per-product. 
+                // If subtotal changes, tax technically should change if it's a discount, 
+                // but user said "general subtotal".
+
+                const impuestoGlobal = parseFloat(document.getElementById('impuesto').value) || 0;
+
+                // Descuento
+                const inputDescuento = document.getElementById('inputDescuento');
+                const porcentajeDescuento = parseFloat(inputDescuento.value) || 0;
+                const valorDescuento = subtotalGlobal * (porcentajeDescuento / 100);
+
+                // Adicionales
+                const inputAdicionales = document.getElementById('inputValoresAdicionales');
+                const valoresAdicionales = parseFloat(inputAdicionales.value) || 0;
+
+                const totalFinal = (subtotalGlobal - valorDescuento) + impuestoGlobal + valoresAdicionales;
+
+                // Update views
+                const spanValorDesc = document.getElementById('valorDescuentoCalculado');
+                if (spanValorDesc) {
+                    spanValorDesc.textContent = valorDescuento.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                }
+
+                document.getElementById('totalVenta').value = totalFinal.toFixed(2);
+            }
+
+            function validarYProcesar() {
+                const clienteId = document.getElementById('clienteIdHidden').value;
+                if (!clienteId) {
+                    Swal.fire({ icon: 'warning', title: 'Cliente requerido', text: 'Debe seleccionar un cliente' });
+                    return;
+                }
+                document.getElementById('formVenta').submit();
+            }
+
+        </script>
+    </th:block>
+</body>
+
+</html>

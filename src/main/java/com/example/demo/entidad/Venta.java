@@ -39,7 +39,7 @@ public class Venta {
     @JoinColumn(name = "vendedor_id", nullable = false)
     private Usuario Vendedor;
 
-    @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DetalleVenta> detalles = new ArrayList<>();
 
     @Column(name = "venta_al_por_mayor")

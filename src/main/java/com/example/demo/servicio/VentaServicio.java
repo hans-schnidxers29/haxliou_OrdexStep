@@ -25,4 +25,5 @@ public interface VentaServicio {
     BigDecimal TotalVentasMesActual();
     List<String>ListaMetodosPago();
     List<Number> ListaMetodosPagoValores();
+    void UpdateVenta(Venta venta);
 }
