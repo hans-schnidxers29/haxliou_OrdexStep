@@ -1,6 +1,7 @@
 package com.example.demo.repositorio;
 
 import com.example.demo.entidad.Compras;
+import com.example.demo.entidad.Enum.MetodoPago;
 import com.example.demo.entidad.Enum.TipoVenta;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -29,8 +30,9 @@ public interface ComprasRepositorio extends JpaRepository<Compras,Long> {
             "WHERE empresa_id = :empresaId", nativeQuery = true)
     Long obtenerNumeroSigReferencia(@Param("empresaId") Long empresaId);
 
-    @Query("SELECT COALESCE(SUM(c.total), 0) FROM Compras c WHERE c.fechaCompra BETWEEN :inicio AND :fin AND c.empresa.id = :empresaId")
-    BigDecimal sumTotalCompras(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin,@Param("empresaId") Long empresaId);
+    @Query("SELECT COALESCE(SUM(c.total), 0) FROM Compras c WHERE c.fechaCompra BETWEEN :inicio AND :fin AND c.empresa.id = :empresaId ")
+    BigDecimal sumTotalCompras(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin,
+                               @Param("empresaId") Long empresaId);
 
     @Query(value = "SELECT SUM(d.cantidad) " +
             "FROM detalle_compra d " +

@@ -2,6 +2,7 @@ package com.example.demo.servicio;
 
 import com.example.demo.Seguridad.SecurityService;
 import com.example.demo.entidad.Empresa;
+import com.example.demo.entidad.Enum.MetodoPago;
 import com.example.demo.entidad.Usuario;
 import com.example.demo.repositorio.VentaRepositorio;
 import com.example.demo.entidad.Caja;
@@ -118,11 +119,22 @@ public class CajaServicioImp implements CajaServicio{
             BigDecimal egresos = nvl(egresoRepositorio.sumarEgresosPorDia(inicio, fin,securityService.obtenerEmpresaId()));
             BigDecimal compras = nvl(comprasRepositorio.sumTotalCompras(inicio, fin,securityService.obtenerEmpresaId()));
 
+            //Valores en metodo Mixto
+            BigDecimal EfectivoMixto = nvl(ventarepositorio.ValoresPorVentasMixtas(inicio, fin, MetodoPago.EFECTIVO,
+                    securityService.obtenerEmpresaId()));
+            BigDecimal TarjetaMixto = nvl(ventarepositorio.ValoresPorVentasMixtas(inicio, fin, MetodoPago.TARJETA,
+                    securityService.obtenerEmpresaId()));
+            BigDecimal TranferenciaMixto = nvl(ventarepositorio.ValoresPorVentasMixtas(inicio, fin, MetodoPago.TRANFERENCIA,
+                    securityService.obtenerEmpresaId()));
+
+
             // Obtención de ventas por método
-            BigDecimal efectivo = nvl(ventarepositorio.sumaPorMetodoPago(inicio, fin, "EFECTIVO",securityService.obtenerEmpresaId()));
-            BigDecimal tarjeta = nvl(ventarepositorio.sumaPorMetodoPago(inicio, fin, "TARJETA",securityService.obtenerEmpresaId()));
-            BigDecimal transferencia = nvl(ventarepositorio.sumaPorMetodoPago(inicio, fin, "TRANSFERENCIA",securityService.obtenerEmpresaId()));
-            BigDecimal mixto = nvl(ventarepositorio.sumaPorMetodoPago(inicio, fin, "MIXTO",securityService.obtenerEmpresaId()));
+            BigDecimal efectivo = nvl(ventarepositorio.sumaPorMetodoPago(inicio, fin, "EFECTIVO",
+                    securityService.obtenerEmpresaId()).add(EfectivoMixto));
+            BigDecimal tarjeta = nvl(ventarepositorio.sumaPorMetodoPago(inicio, fin, "TARJETA",
+                    securityService.obtenerEmpresaId()).add(TarjetaMixto));
+            BigDecimal transferencia = nvl(ventarepositorio.sumaPorMetodoPago(inicio, fin, "TRANSFERENCIA",
+                    securityService.obtenerEmpresaId()).add(TranferenciaMixto));
 
             // El saldo en CAJA FÍSICA solo debe sumar el EFECTIVO (y quizás una parte del mixto)
             // Aquí corregimos la duplicidad que tenías:
@@ -132,7 +144,7 @@ public class CajaServicioImp implements CajaServicio{
                     .subtract(compras);
 
             // Total de todas las ventas (para estadística)
-            BigDecimal totalVentas = efectivo.add(tarjeta).add(transferencia).add(mixto);
+            BigDecimal totalVentas = efectivo.add(tarjeta).add(transferencia);
 
             Map<String, Object> resumenCaja = new HashMap<>();
             resumenCaja.put("montoInicial", caja.getMontoInicial());
@@ -144,7 +156,6 @@ public class CajaServicioImp implements CajaServicio{
             resumenCaja.put("totalVentas", totalVentas);
             resumenCaja.put("ventasTarjeta", tarjeta);
             resumenCaja.put("ventasTransferencia", transferencia);
-            resumenCaja.put("ventasMixto", mixto);
             resumenCaja.put("fechaConsulta", fin);
             resumenCaja.put("fechaApertura", caja.getFechaApertura());
 

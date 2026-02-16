@@ -240,13 +240,42 @@
                                     <div class="form-group">
                                         <label>Método de Pago <span class="text-danger">*</span></label>
                                         <select class="form-control" th:field="*{metodoPago}" id="metodoPagoSelect"
-                                            required>
+                                                onchange="alternarPanelMixto()" required>
                                             <option value="" disabled selected>Seleccione pago...</option>
                                             <option value="EFECTIVO">Efectivo</option>
-                                            <option value="TRANSFERENCIA">Transferencia</option>
+                                            <option value="TRANFERENCIA">Transferencia</option>
                                             <option value="TARJETA">Tarjeta</option>
                                             <option value="MIXTO">Mixto</option>
                                         </select>
+                                    </div>
+
+                                    <div id="panelMontosMixtos" class="d-none border p-2 mb-3 bg-white rounded shadow-sm">
+                                        <label class="small font-weight-bold text-muted text-uppercase mb-2">Desglose de Pago</label>
+
+                                        <div class="form-group mb-2">
+                                            <div class="input-group input-group-sm">
+                                                <div class="input-group-prepend"><span class="input-group-text w-100">Efectivo</span></div>
+                                                <input type="number" name="montoEfectivo" id="montoEfectivo" class="form-control text-right input-mixto" value="0" step="0.01">
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group mb-2">
+                                            <div class="input-group input-group-sm">
+                                                <div class="input-group-prepend"><span class="input-group-text">Tarjeta</span></div>
+                                                <input type="number" name="montoTarjeta" id="montoTarjeta" class="form-control text-right input-mixto" value="0" step="0.01">
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group mb-0">
+                                            <div class="input-group input-group-sm">
+                                                <div class="input-group-prepend"><span class="input-group-text">Transf.</span></div>
+                                                <input type="number" name="montoTransferencia" id="montoTransferencia" class="form-control text-right input-mixto" value="0" step="0.01">
+                                            </div>
+                                        </div>
+
+                                        <div id="errorSumaMixta" class="text-danger small font-weight-bold mt-2 d-none">
+                                            <i class="fas fa-exclamation-triangle"></i> La suma debe ser igual al total.
+                                        </div>
                                     </div>
 
                                     <hr>
@@ -528,20 +557,25 @@
                 actualizarPrecioFila(productoSelect);
             }
 
+            // MODIFICAR tu función validarYProcesar() para incluir la validación de pagos
             async function validarYProcesar() {
-                const necesitaAbrir = /*[[${necesitaAbrirCaja}]]*/ false;
-                if (necesitaAbrir) {
-                    Swal.fire({ icon: 'error', title: 'Caja cerrada', text: 'Debe abrir la caja primero.' });
-                    $('#modalAbrirCaja').modal('show');
-                    return;
+                // ... tus validaciones existentes de caja y cliente ...
+
+                // Nueva validación de Pago Mixto
+                if (document.getElementById('metodoPagoSelect').value === 'MIXTO') {
+                    if (!validarSumaPagos()) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error en Pago Mixto',
+                            text: 'La suma de efectivo, tarjeta y transferencia debe ser igual al total de la venta.'
+                        });
+                        return;
+                    }
                 }
-                const clienteId = document.getElementById('clienteIdHidden').value;
-                if (!clienteId) {
-                    Swal.fire({ icon: 'warning', title: 'Cliente requerido', text: 'Debe seleccionar un cliente' });
-                    return;
-                }
+
                 document.getElementById('formVenta').submit();
             }
+
             // 2. Inicialización de Select2 con AJAX (UNIFICADO)
             // 1. Definición de la variable (Asegúrate de que esté dentro de $(document).ready)
             const $selectCliente = $('.select2-ajax');
@@ -825,6 +859,52 @@
             // Esto hace que si llamas a calcularTotales, ejecute calcularTotal
             function calcularTotales() {
                 calcularTotal();
+            }
+            // Función para mostrar/ocultar el desglose de pago
+            function alternarPanelMixto() {
+                const metodo = document.getElementById('metodoPagoSelect').value;
+                const panel = document.getElementById('panelMontosMixtos');
+
+                if (metodo === 'MIXTO') {
+                    panel.classList.remove('d-none');
+                    // Opcional: inicializar con el total en efectivo para ahorrar tiempo
+                    const totalActual = document.getElementById('totalVenta').value;
+                    document.getElementById('montoEfectivo').value = totalActual;
+                } else {
+                    panel.classList.add('d-none');
+                    // Limpiar valores si cambia a pago simple
+                    document.querySelectorAll('.input-mixto').forEach(i => i.value = 0);
+                }
+            }
+
+            // Escuchar cambios en los inputs mixtos para validar la suma
+            $(document).on('input', '.input-mixto', function() {
+                validarSumaPagos();
+            });
+
+            function validarSumaPagos() {
+                const totalVenta = parseFloat(document.getElementById('totalVenta').value) || 0;
+                const efe = parseFloat(document.getElementById('montoEfectivo').value) || 0;
+                const tar = parseFloat(document.getElementById('montoTarjeta').value) || 0;
+                const tra = parseFloat(document.getElementById('montoTransferencia').value) || 0;
+
+                const suma = (efe + tar + tra);
+                const errorMsg = document.getElementById('errorSumaMixta');
+
+                // Si el método es MIXTO, comparamos la suma con el total (margen de 1 centavo)
+                if (document.getElementById('metodoPagoSelect').value === 'MIXTO') {
+                    if (Math.abs(suma - totalVenta) > 0.01) {
+                        errorMsg.classList.remove('d-none');
+                        errorMsg.innerHTML = `<i class="fas fa-times-circle"></i> Faltan: $${(totalVenta - suma).toFixed(2)}`;
+                        return false;
+                    } else {
+                        errorMsg.classList.remove('d-none');
+                        errorMsg.className = "text-success small font-weight-bold mt-2";
+                        errorMsg.innerHTML = `<i class="fas fa-check-circle"></i> Suma correcta`;
+                        return true;
+                    }
+                }
+                return true;
             }
         </script>
     </th:block>

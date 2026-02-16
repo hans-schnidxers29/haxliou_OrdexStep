@@ -1,5 +1,6 @@
 package com.example.demo.repositorio;
 
+import com.example.demo.entidad.Enum.MetodoPago;
 import com.example.demo.entidad.Venta;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -108,4 +109,9 @@ public interface VentaRepositorio extends JpaRepository<Venta, Long> {
             ") AS consolidado \n" +
             "GROUP BY mes ORDER BY mes ASC", nativeQuery = true)
     BigDecimal VentasTotalesAlMayor(@Param("empresaId") Long empresaId);
+
+    @Query("select sum (p.monto) from Pagos as p join Venta as v on v.id = p.venta.id where v.metodoPago = 'MIXTO' " +
+            "and p.metodoPago = :metodo and p.fechaPago between :inicio and :fin and v.empresa.id = :empresaId")
+    BigDecimal  ValoresPorVentasMixtas(@Param("inicio")LocalDateTime inicio, @Param("fin") LocalDateTime fin,
+                                       @Param("metodo") MetodoPago metodo, @Param("empresaId") Long empresaId);
 }

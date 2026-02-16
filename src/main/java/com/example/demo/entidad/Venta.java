@@ -1,6 +1,7 @@
 package com.example.demo.entidad;
 
 
+import com.example.demo.entidad.Enum.MetodoPago;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
@@ -54,6 +55,22 @@ public class Venta {
 
     @Column(name="adiciones")
     private BigDecimal  valoresAdicionales;
+
+    @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Pagos> pagos = new ArrayList<>();
+
+    // Método de conveniencia para agregar pagos
+    public void addPago(String metodo, BigDecimal monto) {
+        if(monto == null ) monto = BigDecimal.ZERO;
+        Pagos pago = new Pagos();
+        pago.setMetodoPago(MetodoPago.valueOf(metodo));
+        pago.setMonto(monto);
+        pago.setVenta(this);
+        this.pagos.add(pago);
+    }
+    public void limpiarPagos() {
+        this.pagos.clear();
+    }
 
     public Venta() {
     }

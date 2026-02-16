@@ -171,19 +171,6 @@
                                                     </select>
                                                 </td>
                                                 <td>
-                                                    <!-- Ajuste Visual para la cantidad (si es Kilo mostrar x1000 visualmente no, en BD se guarda en Kilos pero el input espera la unidad humana?) -->
-                                                    <!-- NO, la lógica actual del controller convierte. Si guardó 0.5kg, en el input mostramos 0.5. PERO el JS espera la unidad según KGM/LTR.
-                                                 Si es KGM, el JS divide por 1000 al calcular subtotal.
-                                                 Si viene de BD 0.5 (Kg), y el usuario ve 0.5, y el JS divide por 1000 -> 0.0005. ERROR.
-                                                 Necesitamos una lógica inversa si vamos a usar la misma función JS.
-                                                 O ajustar la función JS para no dividir si ya está cargado?
-                                                 Lo más fácil: Mostrar el valor tal cual está en BD (0.5) y ajustar el JS para detectar si es cambio o carga inicial.
-                                                 PERO el JS se activa 'onchange'. La carga inicial renderiza el valor de BD.
-                                                 El problema es 'calcularSubtotalFila' que divide por 1000 si es KGM.
-                                                 Si el valor en el input es 0.5, el JS calculará 0.0005 * precio.
-                                                 La lógica de creación asume que el usuario ingresa GRAMOS (500) y se guardan KILOS (0.5).
-                                                 Entonces aqui deberiamos mostrar GRAMOS (500) para que el JS funcione igual.
-                                            -->
                                                     <input type="number"
                                                         th:field="*{detalles[__${stat.index}__].cantidad}"
                                                         class="form-control cantidad-input" min="0.01" step="0.01"
@@ -259,13 +246,36 @@
                                     <div class="form-group">
                                         <label>Método de Pago <span class="text-danger">*</span></label>
                                         <select class="form-control" th:field="*{metodoPago}" id="metodoPagoSelect"
-                                            required>
+                                                onchange="alternarPanelMixto()" required>
                                             <option value="" disabled>Seleccione pago...</option>
                                             <option value="EFECTIVO">Efectivo</option>
-                                            <option value="TRANSFERENCIA">Transferencia</option>
+                                            <option value="TRANFERENCIA">Transferencia</option>
                                             <option value="TARJETA">Tarjeta</option>
                                             <option value="MIXTO">Mixto</option>
                                         </select>
+                                    </div>
+
+                                    <div id="panelMontosMixtos" class="d-none border p-2 mb-3 bg-white rounded shadow-sm">
+                                        <label class="small font-weight-bold text-muted text-uppercase mb-2">Desglose de Pago</label>
+                                        <div class="form-group mb-2">
+                                            <div class="input-group input-group-sm">
+                                                <div class="input-group-prepend"><span class="input-group-text w-100" style="width:90px !important;">Efectivo</span></div>
+                                                <input type="number" name="montoEfectivo" id="montoEfectivo" class="form-control text-right input-mixto" value="0" step="0.01">
+                                            </div>
+                                        </div>
+                                        <div class="form-group mb-2">
+                                            <div class="input-group input-group-sm">
+                                                <div class="input-group-prepend"><span class="input-group-text" style="width:90px !important;">Tarjeta</span></div>
+                                                <input type="number" name="montoTarjeta" id="montoTarjeta" class="form-control text-right input-mixto" value="0" step="0.01">
+                                            </div>
+                                        </div>
+                                        <div class="form-group mb-0">
+                                            <div class="input-group input-group-sm">
+                                                <div class="input-group-prepend"><span class="input-group-text" style="width:90px !important;">Transf.</span></div>
+                                                <input type="number" name="montoTransferencia" id="montoTransferencia" class="form-control text-right input-mixto" value="0" step="0.01">
+                                            </div>
+                                        </div>
+                                        <div id="errorSumaMixta" class="text-danger small font-weight-bold mt-2 d-none"></div>
                                     </div>
 
                                     <hr>
@@ -439,18 +449,6 @@
 
             function agregarDetalle() {
                 const container = document.getElementById('detallesContainer');
-                // Clonar opciones de la primera fila si existe, o extraer de un template oculto si no hay filas
-                // Para simplificar, asumimos que siempre hay al menos una fila o usamos el HTML de las opciones renderizadas por Thymeleaf en un template js
-                // Como Thymeleaf procesa en servidor, necesitamos renderizar las opciones en una variable JS o clonar.
-                // Usaremos el truco de clonar la estructura de una fila limpia, pero aqui es complejo porque depende de Thymeleaf.
-                // MEJOR ESTRATEGIA: Usar un template string con las opciones pre-renderizadas.
-
-                // Obtenemos las opciones de productos y categorias del DOM (hack rápido: buscar primer select existente o variables globales)
-                // Si no hay filas, esto fallará. Deberíamos haber guardado las opciones en variables JS.
-                // Vamos a reconstruir.
-
-                // Nota: En un entorno real complex, mejor usar un fragmento th:fragment y ajax, o variables JS.
-                // Aquí intentaremos clonar la estructura si existe, o alertar error.
                 const primeraFila = document.querySelector('.detalle-item');
                 let opcionesCat = "";
                 let opcionesProd = "";
@@ -459,9 +457,6 @@
                     opcionesCat = primeraFila.querySelector('.categoria-filter').innerHTML;
                     opcionesProd = primeraFila.querySelector('.producto-select').innerHTML;
                 } else {
-                    // Fallback si borró todas las filas: recargar página o prevenir borrar última
-                    // OJO: Si borra todas, no puede agregar más con este método simple de clonación de HTML.
-                    // Podríamos guardar el HTML en una variable al inicio.
                     Swal.fire('Error', 'No se pueden agregar productos si la lista está vacía. Recargue la página.', 'error');
                     return;
                 }
@@ -678,15 +673,81 @@
                 document.getElementById('totalVenta').value = totalFinal.toFixed(2);
             }
 
-            function validarYProcesar() {
+            async function validarYProcesar() {
                 const clienteId = document.getElementById('clienteIdHidden').value;
                 if (!clienteId) {
                     Swal.fire({ icon: 'warning', title: 'Cliente requerido', text: 'Debe seleccionar un cliente' });
                     return;
                 }
+
+                // Validar Pago Mixto
+                if (document.getElementById('metodoPagoSelect').value === 'MIXTO') {
+                    if (!validarSumaPagos()) {
+                        Swal.fire('Error', 'La suma de los pagos mixtos no coincide con el total.', 'error');
+                        return;
+                    }
+                }
+
+                // SOLUCIÓN AL PROBLEMA DEL INDEX: Re-indexar todas las filas antes del submit
+                document.querySelectorAll('.detalle-item').forEach((fila, index) => {
+                    fila.querySelectorAll('select, input').forEach(input => {
+                        let name = input.getAttribute('name');
+                        if (name && name.includes('detalles[')) {
+                            // Reemplaza detalles[x] por detalles[0, 1, 2...] correlativo
+                            input.setAttribute('name', name.replace(/detalles\[\d+\]/, 'detalles[' + index + ']'));
+                        }
+                    });
+                });
+
                 document.getElementById('formVenta').submit();
             }
+            function alternarPanelMixto() {
+                const metodo = document.getElementById('metodoPagoSelect').value;
+                const panel = document.getElementById('panelMontosMixtos');
 
+                if (metodo === 'MIXTO') {
+                    panel.classList.remove('d-none');
+                    // Si los campos están en 0, sugerimos el total en efectivo
+                    const efe = parseFloat(document.getElementById('montoEfectivo').value) || 0;
+                    const tar = parseFloat(document.getElementById('montoTarjeta').value) || 0;
+                    const tra = parseFloat(document.getElementById('montoTransferencia').value) || 0;
+
+                    if(efe + tar + tra === 0) {
+                        document.getElementById('montoEfectivo').value = document.getElementById('totalVenta').value;
+                    }
+                } else {
+                    panel.classList.add('d-none');
+                }
+            }
+
+            // Validar suma en tiempo real
+            $(document).on('input', '.input-mixto', function() {
+                validarSumaPagos();
+            });
+
+            function validarSumaPagos() {
+                const totalVenta = parseFloat(document.getElementById('totalVenta').value) || 0;
+                const efe = parseFloat(document.getElementById('montoEfectivo').value) || 0;
+                const tar = parseFloat(document.getElementById('montoTarjeta').value) || 0;
+                const tra = parseFloat(document.getElementById('montoTransferencia').value) || 0;
+
+                const suma = efe + tar + tra;
+                const errorMsg = document.getElementById('errorSumaMixta');
+
+                if (document.getElementById('metodoPagoSelect').value === 'MIXTO') {
+                    if (Math.abs(suma - totalVenta) > 0.1) {
+                        errorMsg.classList.remove('d-none');
+                        errorMsg.className = "text-danger small font-weight-bold mt-2";
+                        errorMsg.innerHTML = `<i class="fas fa-times-circle"></i> Diferencia: $${(totalVenta - suma).toFixed(2)}`;
+                        return false;
+                    } else {
+                        errorMsg.className = "text-success small font-weight-bold mt-2";
+                        errorMsg.innerHTML = `<i class="fas fa-check-circle"></i> Suma correcta`;
+                        return true;
+                    }
+                }
+                return true;
+            }
         </script>
     </th:block>
 </body>

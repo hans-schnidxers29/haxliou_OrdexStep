@@ -1,5 +1,6 @@
 package com.example.demo.controlador;
 
+import com.example.demo.entidad.Enum.MetodoPago;
 import com.example.demo.servicio.VentaServicio;
 import com.example.demo.entidad.*;
 import com.example.demo.servicio.ServicioUsuario;
@@ -139,7 +140,11 @@ public class VentaControlador {
     @PostMapping("/crear/nueva")
     public String CrearVenta(@ModelAttribute("ventas") Venta venta,
                              RedirectAttributes redirectAttributes,
-                             Model model, @AuthenticationPrincipal UserDetails userDetails) {
+                             Model model, @AuthenticationPrincipal UserDetails userDetails,
+                             @RequestParam(defaultValue = "0") BigDecimal montoEfectivo,
+                             @RequestParam(defaultValue = "0") BigDecimal montoTarjeta,
+                             @RequestParam(defaultValue = "0") BigDecimal montoTransferencia
+                             ) {
         try {
             // 1. Validaciones de integridad
             if (venta.getDetalles() == null || venta.getDetalles().isEmpty()) {
@@ -269,6 +274,30 @@ public class VentaControlador {
             // El Total sigue siendo Subtotal + Dinero del Impuesto Acumulado
             BigDecimal totalCalculado = subtotalGeneral.add(totalImpuestosAcumulado).subtract(TotalDescuento).add(valorAdicional);
             venta.setTotal(RoundingUtil.roundToColombianPeso(totalCalculado));
+            if("MIXTO".equalsIgnoreCase(venta.getMetodoPago())){
+                BigDecimal totalPagado = BigDecimal.ZERO;
+
+                if (montoEfectivo.compareTo(BigDecimal.ZERO) > 0) {
+                    venta.addPago("EFECTIVO", montoEfectivo);
+                    totalPagado = totalPagado.add(montoEfectivo);
+                }
+                if (montoTarjeta.compareTo(BigDecimal.ZERO) > 0) {
+                    venta.addPago("TARJETA", montoTarjeta);
+                    totalPagado = totalPagado.add(montoTarjeta);
+                }
+                if (montoTransferencia.compareTo(BigDecimal.ZERO) > 0) {
+                    venta.addPago("TRANFERENCIA", montoTransferencia);
+                    totalPagado = totalPagado.add(montoTransferencia);
+                }
+
+                // Validación de cuadre
+                if (totalPagado.compareTo(venta.getTotal()) != 0) {
+                    redirectAttributes.addFlashAttribute("error", "La suma de los pagos no coincide con el total de la venta.");
+                    return "redirect:/ventas/crear";
+                }
+            }else{
+                venta.addPago(venta.getMetodoPago(), totalCalculado);
+            }
 
             // 4. Gestión de Usuario y Stock
             Usuario usuarioVendedor = servicioUsuario.findByEmail(userDetails.getUsername());
@@ -320,7 +349,10 @@ public class VentaControlador {
 
     @PostMapping("/editar/venta/{id}")
     public String EditarVenta(@PathVariable Long id, @ModelAttribute("venta") Venta venta,
-                              RedirectAttributes flash, @AuthenticationPrincipal UserDetails userDetails) {
+                              RedirectAttributes flash, @AuthenticationPrincipal UserDetails userDetails,
+                              @RequestParam(defaultValue = "0") BigDecimal montoEfectivo,
+                              @RequestParam(defaultValue = "0") BigDecimal montoTarjeta,
+                              @RequestParam(defaultValue = "0") BigDecimal montoTransferencia) {
         try {
             // 1. Cargar la venta original para gestionar Stock y Detalles antiguos
             Venta ventaExistente = servicio.buscarVenta(id);
@@ -427,6 +459,34 @@ public class VentaControlador {
             BigDecimal totalCalculado = subtotalGeneral.add(totalImpuestosAcumulado).subtract(valorDescuento).add(adicionales);
             venta.setTotal(RoundingUtil.roundToColombianPeso(totalCalculado));
             venta.setImpuesto(totalImpuestosAcumulado); // Guardamos el valor monetario del impuesto acumulado
+
+
+            if("MIXTO".equalsIgnoreCase(venta.getMetodoPago())){
+                BigDecimal totalPagado = BigDecimal.ZERO;
+                venta.limpiarPagos();
+
+                if (montoEfectivo.compareTo(BigDecimal.ZERO) > 0) {
+                    venta.addPago("EFECTIVO", montoEfectivo);
+                    totalPagado = totalPagado.add(montoEfectivo);
+                }
+                if (montoTarjeta.compareTo(BigDecimal.ZERO) > 0) {
+                    venta.addPago("TARJETA", montoTarjeta);
+                    totalPagado = totalPagado.add(montoTarjeta);
+                }
+                if (montoTransferencia.compareTo(BigDecimal.ZERO) > 0) {
+                    venta.addPago("TRANFERENCIA", montoTransferencia);
+                    totalPagado = totalPagado.add(montoTransferencia);
+                }
+
+                // Validación de cuadre
+                if (totalPagado.compareTo(venta.getTotal()) != 0) {
+                    flash.addFlashAttribute("error", "La suma de los pagos no coincide con el total de la venta.");
+                    return "redirect:/ventas/crear";
+                }
+            }else {
+                venta.limpiarPagos();
+                venta.addPago(venta.getMetodoPago(), totalCalculado);
+            }
 
             // 5. Guardar Cambios
             Usuario vendedor = servicioUsuario.findByEmail(userDetails.getUsername());
