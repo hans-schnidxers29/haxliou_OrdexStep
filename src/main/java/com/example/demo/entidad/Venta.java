@@ -71,7 +71,26 @@ public class Venta {
     public void limpiarPagos() {
         this.pagos.clear();
     }
+    public void addDetalle(DetalleVenta detalle) {
+        if (detalles == null) {
+            detalles = new ArrayList<>();
+        }
+        detalles.add(detalle);
+        detalle.setVenta(this); // Sincroniza la relación bidireccional
+    }
 
+    public void removeDetalle(DetalleVenta detalle) {
+        if (detalles != null) {
+            detalles.remove(detalle);
+            detalle.setVenta(null); // Rompe la relación
+        }
+    }
+
+    public void limpiarDetalles() {
+        if (this.detalles != null) {
+            this.detalles.clear();
+        }
+    }
     public Venta() {
     }
 

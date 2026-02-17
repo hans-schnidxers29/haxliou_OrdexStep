@@ -172,12 +172,16 @@
                                                 </td>
                                                 <td>
                                                     <input type="number"
-                                                        th:field="*{detalles[__${stat.index}__].cantidad}"
-                                                        class="form-control cantidad-input" min="0.01" step="0.01"
-                                                        required onchange="calcularSubtotalFila(this)"
-                                                        th:value="${detalle.producto.tipoVenta.code == 'KGM' || detalle.producto.tipoVenta.code == 'LTR' ? detalle.cantidad * 1000 : detalle.cantidad}">
+                                                           th:name="|detalles[${stat.index}].cantidad|"
+                                                           class="form-control cantidad-input"
+                                                           min="0.01" step="0.01" required
+                                                           onchange="calcularSubtotalFila(this)"
+                                                           th:value="${detalle.producto.tipoVenta.code == 'KGM' || detalle.producto.tipoVenta.code == 'LTR' ? (detalle.cantidad * 1000) : detalle.cantidad}">
+
                                                     <small class="text-muted unidad-medida"
-                                                        th:text="${detalle.producto.tipoVenta.code == 'KGM' ? 'Unidad: Gramos' : (detalle.producto.tipoVenta.code == 'LTR' ? 'Unidad: Mililitros' : 'Unidad: Und')}"></small>
+                                                           th:classappend="${detalle.producto.tipoVenta.code == 'KGM' || detalle.producto.tipoVenta.code == 'LTR' ? 'badge badge-warning' : ''}"
+                                                           th:text="${detalle.producto.tipoVenta.code == 'KGM' ? 'Unidad: Gramos' : (detalle.producto.tipoVenta.code == 'LTR' ? 'Unidad: Mililitros' : 'Unidad: Und')}">
+                                                    </small>
                                                 </td>
                                                 <td>
                                                     <!-- Precio Unitario -->
@@ -367,6 +371,7 @@
             // Inicializar contador con el tamaño actual de la lista de detalles
             // Thymeleaf renderiza el número directamente
             let detalleCount = /*[[${venta.detalles.size()}]]*/ 0;
+            let esCargaInicial = true;
 
             $(document).ready(function () {
                 // Notificaciones
@@ -591,35 +596,55 @@
                 let subtotalGlobal = 0;
                 let impuestoGlobal = 0;
 
+                // 1. Sumar los valores de las filas (Cálculo real de los productos)
                 document.querySelectorAll('.detalle-item').forEach(fila => {
                     const subtotalFila = parseFloat(fila.querySelector('.subtotal-item').value) || 0;
-                    // Impuesto se calcula sobre el subtotal de la fila
                     const porcImpuesto = parseFloat(fila.querySelector('.impuesto-producto').value) || 0;
-
                     subtotalGlobal += subtotalFila;
                     impuestoGlobal += (subtotalFila * (porcImpuesto / 100));
                 });
 
-                // Descuento
+                const subtotalInput = document.getElementById('subtotalGeneral');
+
+                // --- LÓGICA DE PROTECCIÓN ---
+                // Si es la carga inicial, NO sobrescribimos el subtotalGlobal con la suma de filas
+                // Mantenemos el que ya tiene el input (que viene de th:field)
+                if (esCargaInicial) {
+                    subtotalGlobal = parseFloat(subtotalInput.value) || subtotalGlobal;
+                } else {
+                    // Si ya no es la carga inicial (ej. el usuario agregó un producto o cambió algo)
+                    // entonces sí actualizamos el input con la suma de las filas
+                    subtotalInput.value = subtotalGlobal.toFixed(2);
+                }
+
+                // 2. Descuento (Calculado sobre el subtotal que decidimos mantener arriba)
                 const inputDescuento = document.getElementById('inputDescuento');
                 const porcentajeDescuento = parseFloat(inputDescuento.value) || 0;
                 const valorDescuento = subtotalGlobal * (porcentajeDescuento / 100);
 
-                // Adicionales
+                // 3. Adicionales
                 const inputAdicionales = document.getElementById('inputValoresAdicionales');
                 const valoresAdicionales = parseFloat(inputAdicionales.value) || 0;
 
-                // Visualizar
+                // 4. Visualización de Descuento
                 const spanValorDesc = document.getElementById('valorDescuentoCalculado');
                 if (spanValorDesc) {
-                    spanValorDesc.textContent = valorDescuento.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    spanValorDesc.textContent = valorDescuento.toLocaleString('en-US', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
                 }
 
+                // 5. Total Final (Subtotal usado + Impuestos de filas - Descuento + Adicionales)
                 const totalFinal = (subtotalGlobal - valorDescuento) + impuestoGlobal + valoresAdicionales;
 
-                document.getElementById('subtotalGeneral').value = subtotalGlobal.toFixed(2);
                 document.getElementById('impuesto').value = impuestoGlobal.toFixed(2);
                 document.getElementById('totalVenta').value = totalFinal.toFixed(2);
+
+                // Validar si es mixto
+                if (!esCargaInicial) {
+                    validarSumaPagos();
+                }
             }
 
             // Trigger para recalcular si cambia el switch global

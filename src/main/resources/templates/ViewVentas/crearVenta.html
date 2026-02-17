@@ -284,9 +284,10 @@
                                         <div class="d-flex justify-content-between mb-2">
                                             <span class="text-muted">Subtotal:</span>
                                             <div class="font-weight-bold">
-                                                $ <input type="number" id="subtotalGeneral"
-                                                    class="d-inline text-right border-0 bg-transparent font-weight-bold"
-                                                    readonly value="0.00" style="width: 100px;">
+                                                $ <input type="number" id="subtotalGeneral" th:field="*{subtotal}"
+                                                         class="d-inline text-right font-weight-bold"
+                                                         style="width: 100px; background: transparent; border: 0; border-bottom: 1px dashed #ccc;"
+                                                         step="0.01" oninput="actualizarDesdeSubtotalManual()">
                                             </div>
                                         </div>
 
@@ -786,6 +787,7 @@
                 document.getElementById('subtotalGeneral').value = subtotalGlobal.toFixed(2);
                 document.getElementById('impuesto').value = impuestoGlobal.toFixed(2);
                 document.getElementById('totalVenta').value = totalFinal.toFixed(2);
+                document.getElementById('subtotalGeneral').value = subtotalGlobal.toFixed(2);
             }
 
             function calcularDiferenciaCierre() {
@@ -905,6 +907,40 @@
                     }
                 }
                 return true;
+            }
+            function actualizarDesdeSubtotalManual() {
+                // 1. Obtener el valor manual del subtotal
+                const subtotalInput = document.getElementById('subtotalGeneral');
+                const subtotalManual = parseFloat(subtotalInput.value) || 0;
+
+                // 2. Obtener los demás valores actuales
+                const porcentajeDescuento = parseFloat(document.getElementById('inputDescuento').value) || 0;
+                const impuestoActual = parseFloat(document.getElementById('impuesto').value) || 0;
+                const valoresAdicionales = parseFloat(document.getElementById('inputValoresAdicionales').value) || 0;
+
+                // 3. Calcular el valor del descuento basándose en el subtotal manual
+                const valorDescuento = subtotalManual * (porcentajeDescuento / 100);
+
+                // 4. Actualizar visualmente el label del descuento
+                const spanValorDesc = document.getElementById('valorDescuentoCalculado');
+                if (spanValorDesc) {
+                    spanValorDesc.textContent = valorDescuento.toLocaleString('en-US', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+                }
+
+                // 5. CALCULAR TOTAL FINAL
+                // Total = Subtotal Manual - Descuento + Impuesto (sin cambios) + Valores Adicionales
+                const totalFinal = (subtotalManual - valorDescuento) + impuestoActual + valoresAdicionales;
+
+                // 6. Reflejar en el input de Total
+                document.getElementById('totalVenta').value = totalFinal.toFixed(2);
+
+                // 7. Si el método es MIXTO, validar que los pagos coincidan con el NUEVO total
+                if (document.getElementById('metodoPagoSelect').value === 'MIXTO') {
+                    validarSumaPagos();
+                }
             }
         </script>
     </th:block>
