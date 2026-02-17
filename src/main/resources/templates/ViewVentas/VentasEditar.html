@@ -751,24 +751,41 @@
             });
 
             function validarSumaPagos() {
-                const totalVenta = parseFloat(document.getElementById('totalVenta').value) || 0;
-                const efe = parseFloat(document.getElementById('montoEfectivo').value) || 0;
-                const tar = parseFloat(document.getElementById('montoTarjeta').value) || 0;
-                const tra = parseFloat(document.getElementById('montoTransferencia').value) || 0;
-
-                const suma = efe + tar + tra;
+                // 1. Referencias al DOM
+                const inputEfe = document.getElementById('montoEfectivo');
+                const inputTar = document.getElementById('montoTarjeta');
+                const inputTra = document.getElementById('montoTransferencia');
+                // IMPORTANTE: Leemos el total, pero NO lo modificaremos
+                const totalVentaInput = document.getElementById('totalVenta');
                 const errorMsg = document.getElementById('errorSumaMixta');
 
+                // 2. Valores numéricos
+                const efe = parseFloat(inputEfe?.value) || 0;
+                const tar = parseFloat(inputTar?.value) || 0;
+                const tra = parseFloat(inputTra?.value) || 0;
+                const totalEsperado = parseFloat(totalVentaInput?.value) || 0;
+
+                // 3. Suma de lo que el cajero está digitando
+                const sumaPagos = efe + tar + tra;
+                const diferencia = totalEsperado - sumaPagos;
+
+                // 4. Lógica de validación visual (Ajuste)
                 if (document.getElementById('metodoPagoSelect').value === 'MIXTO') {
-                    if (Math.abs(suma - totalVenta) > 0.1) {
-                        errorMsg.classList.remove('d-none');
-                        errorMsg.className = "text-danger small font-weight-bold mt-2";
-                        errorMsg.innerHTML = `<i class="fas fa-times-circle"></i> Diferencia: $${(totalVenta - suma).toFixed(2)}`;
-                        return false;
-                    } else {
+                    errorMsg.classList.remove('d-none');
+
+                    // Usamos un margen pequeño (0.01) para evitar problemas de decimales
+                    if (Math.abs(diferencia) < 0.01) {
                         errorMsg.className = "text-success small font-weight-bold mt-2";
-                        errorMsg.innerHTML = `<i class="fas fa-check-circle"></i> Suma correcta`;
+                        errorMsg.innerHTML = `<i class="fas fa-check-circle"></i> Suma correcta: $${sumaPagos.toFixed(2)}`;
                         return true;
+                    } else {
+                        errorMsg.className = "text-danger small font-weight-bold mt-2";
+                        if (diferencia > 0) {
+                            errorMsg.innerHTML = `<i class="fas fa-exclamation-circle"></i> Faltan: $${diferencia.toFixed(2)}`;
+                        } else {
+                            errorMsg.innerHTML = `<i class="fas fa-exclamation-circle"></i> Sobran: $${Math.abs(diferencia).toFixed(2)}`;
+                        }
+                        return false;
                     }
                 }
                 return true;

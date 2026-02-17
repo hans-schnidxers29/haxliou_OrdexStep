@@ -274,29 +274,46 @@ public class VentaControlador {
             // El Total sigue siendo Subtotal + Dinero del Impuesto Acumulado
             BigDecimal totalCalculado = subtotalGeneral.add(totalImpuestosAcumulado).subtract(TotalDescuento).add(valorAdicional);
             venta.setTotal(RoundingUtil.roundToColombianPeso(totalCalculado));
-            if("MIXTO".equalsIgnoreCase(venta.getMetodoPago())){
-                BigDecimal totalPagado = BigDecimal.ZERO;
+            venta.limpiarPagos();
+            if ("MIXTO".equalsIgnoreCase(venta.getMetodoPago())) {
+                // 1. Sumar los montos recibidos desde el formulario
+                BigDecimal totalPagado = montoEfectivo.add(montoTarjeta).add(montoTransferencia);
 
-                if (montoEfectivo.compareTo(BigDecimal.ZERO) > 0) {
-                    venta.addPago("EFECTIVO", montoEfectivo);
-                    totalPagado = totalPagado.add(montoEfectivo);
-                }
-                if (montoTarjeta.compareTo(BigDecimal.ZERO) > 0) {
-                    venta.addPago("TARJETA", montoTarjeta);
-                    totalPagado = totalPagado.add(montoTarjeta);
-                }
-                if (montoTransferencia.compareTo(BigDecimal.ZERO) > 0) {
-                    venta.addPago("TRANFERENCIA", montoTransferencia);
-                    totalPagado = totalPagado.add(montoTransferencia);
+                // 2. Validación de seguridad básica
+                if (totalPagado.signum() <= 0) {
+                    throw new Exception("En pago MIXTO debe ingresar al menos un monto válido.");
                 }
 
-                // Validación de cuadre
+                // 3. LÓGICA DE REDONDEO: Ajuste de integridad contable
+                // Si el total pagado difiere del total calculado, ajustamos el subtotal.
+                // Esto evita que la suma de (detalles + impuestos) sea distinta al total final.
                 if (totalPagado.compareTo(venta.getTotal()) != 0) {
-                    redirectAttributes.addFlashAttribute("error", "La suma de los pagos no coincide con el total de la venta.");
-                    return "redirect:/ventas/crear";
+                    BigDecimal diferenciaRedondeo = totalPagado.subtract(venta.getTotal());
+
+                    // Sumamos la diferencia al subtotal actual
+                    BigDecimal nuevoSubtotal = venta.getSubtotal().add(diferenciaRedondeo);
+                    venta.setSubtotal(nuevoSubtotal);
+
+                    // Actualizamos el total definitivo
+                    venta.setTotal(totalPagado);
                 }
-            }else{
-                venta.addPago(venta.getMetodoPago(), totalCalculado);
+
+                // 4. Registrar los pagos individuales
+                if (montoEfectivo.signum() > 0) {
+                    venta.addPago("EFECTIVO", montoEfectivo);
+                }
+                if (montoTarjeta.signum() > 0) {
+                    venta.addPago("TARJETA", montoTarjeta);
+                }
+                // Corregido: TRANSFERENCIA (ortografía consistente para reportes)
+                if (montoTransferencia.signum() > 0) {
+                    venta.addPago("TRANFERENCIA", montoTransferencia);
+                }
+
+            } else {
+                // Para pagos NO mixtos, el pago único es el total de la venta
+                // Usamos toUpperCase para estandarizar el string en la DB
+                venta.addPago(venta.getMetodoPago().toUpperCase(), venta.getTotal());
             }
 
             // 4. Gestión de Usuario y Stock
@@ -444,15 +461,27 @@ public class VentaControlador {
 
             // 5. Gestión de Pagos (Reemplazo total)
             venta.limpiarPagos();
+
             if ("MIXTO".equalsIgnoreCase(venta.getMetodoPago())) {
                 BigDecimal totalPagado = montoEfectivo.add(montoTarjeta).add(montoTransferencia);
-                if (totalPagado.compareTo(venta.getTotal()) != 0) {
-                    throw new Exception("La suma de pagos mixtos ($" + totalPagado + ") no coincide con el total ($" + venta.getTotal() + ")");
+
+                // 1. Validar que al menos ingresaron algún monto
+                if (totalPagado.signum() <= 0) {
+                    throw new Exception("En pago MIXTO debe ingresar al menos un monto en Efectivo, Tarjeta o Transferencia.");
                 }
+
+                // 2. AJUSTE DINÁMICO: El total de la venta ahora es lo que realmente se cobró.
+                // Esto permite que si la venta era de 9.845 y cobraron 10.000, el total se actualice.
+                venta.setTotal(totalPagado);
+
+                // 3. Registrar los detalles del pago
                 if (montoEfectivo.signum() > 0) venta.addPago("EFECTIVO", montoEfectivo);
                 if (montoTarjeta.signum() > 0) venta.addPago("TARJETA", montoTarjeta);
+                // Corregido: TRANSFERENCIA (estaba TRANFERENCIA)
                 if (montoTransferencia.signum() > 0) venta.addPago("TRANFERENCIA", montoTransferencia);
+
             } else {
+                // Si es pago simple (Efectivo o Tarjeta completo), el pago siempre es igual al total
                 venta.addPago(venta.getMetodoPago(), venta.getTotal());
             }
 

@@ -560,15 +560,21 @@
 
             // MODIFICAR tu función validarYProcesar() para incluir la validación de pagos
             async function validarYProcesar() {
-                // ... tus validaciones existentes de caja y cliente ...
+                // Validar cliente
+                const clienteId = document.getElementById('clienteIdHidden').value;
+                if (!clienteId) {
+                    Swal.fire('Atención', 'Debe seleccionar un cliente', 'warning');
+                    return;
+                }
 
-                // Nueva validación de Pago Mixto
+                // Validar Pago Mixto
                 if (document.getElementById('metodoPagoSelect').value === 'MIXTO') {
-                    if (!validarSumaPagos()) {
+                    const pagosValidos = validarSumaPagos(); // Llamada a la función corregida
+                    if (!pagosValidos) {
                         Swal.fire({
                             icon: 'error',
                             title: 'Error en Pago Mixto',
-                            text: 'La suma de efectivo, tarjeta y transferencia debe ser igual al total de la venta.'
+                            text: 'Debe ingresar los montos de pago. El total de la venta se ajustará a lo que cobre.'
                         });
                         return;
                     }
@@ -869,12 +875,12 @@
 
                 if (metodo === 'MIXTO') {
                     panel.classList.remove('d-none');
-                    // Opcional: inicializar con el total en efectivo para ahorrar tiempo
+                    // Sugerir el total actual en efectivo por defecto
                     const totalActual = document.getElementById('totalVenta').value;
                     document.getElementById('montoEfectivo').value = totalActual;
+                    validarSumaPagos(); // Disparar validación inicial
                 } else {
                     panel.classList.add('d-none');
-                    // Limpiar valores si cambia a pago simple
                     document.querySelectorAll('.input-mixto').forEach(i => i.value = 0);
                 }
             }
@@ -885,59 +891,62 @@
             });
 
             function validarSumaPagos() {
+                // 1. Referencias al DOM
+                const inputEfe = document.getElementById('montoEfectivo');
+                const inputTar = document.getElementById('montoTarjeta');
+                const inputTra = document.getElementById('montoTransferencia');
                 const totalVenta = parseFloat(document.getElementById('totalVenta').value) || 0;
-                const efe = parseFloat(document.getElementById('montoEfectivo').value) || 0;
-                const tar = parseFloat(document.getElementById('montoTarjeta').value) || 0;
-                const tra = parseFloat(document.getElementById('montoTransferencia').value) || 0;
-
-                const suma = (efe + tar + tra);
                 const errorMsg = document.getElementById('errorSumaMixta');
 
-                // Si el método es MIXTO, comparamos la suma con el total (margen de 1 centavo)
+                // 2. Valores numéricos (Evitamos ReferenceError declarando primero)
+                const efe = parseFloat(inputEfe?.value) || 0;
+                const tar = parseFloat(inputTar?.value) || 0;
+                const tra = parseFloat(inputTra?.value) || 0;
+
+                // 3. Cálculo de la suma y diferencia
+                const sumaPagos = efe + tar + tra;
+                const diferencia = totalVenta - sumaPagos;
+
+                // 4. Lógica de visualización del ajuste
                 if (document.getElementById('metodoPagoSelect').value === 'MIXTO') {
-                    if (Math.abs(suma - totalVenta) > 0.01) {
-                        errorMsg.classList.remove('d-none');
-                        errorMsg.innerHTML = `<i class="fas fa-times-circle"></i> Faltan: $${(totalVenta - suma).toFixed(2)}`;
-                        return false;
-                    } else {
-                        errorMsg.classList.remove('d-none');
+                    errorMsg.classList.remove('d-none');
+
+                    // Usamos un margen de error mínimo para comparaciones de punto flotante
+                    if (Math.abs(diferencia) < 0.01) {
                         errorMsg.className = "text-success small font-weight-bold mt-2";
-                        errorMsg.innerHTML = `<i class="fas fa-check-circle"></i> Suma correcta`;
+                        errorMsg.innerHTML = `<i class="fas fa-check-circle"></i> Suma correcta: $${sumaPagos.toFixed(2)}`;
                         return true;
+                    } else {
+                        errorMsg.className = "text-danger small font-weight-bold mt-2";
+                        if (diferencia > 0) {
+                            errorMsg.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Faltan: $${diferencia.toFixed(2)}`;
+                        } else {
+                            errorMsg.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Sobran: $${Math.abs(diferencia).toFixed(2)}`;
+                        }
+                        return false;
                     }
                 }
                 return true;
             }
             function actualizarDesdeSubtotalManual() {
-                // 1. Obtener el valor manual del subtotal
                 const subtotalInput = document.getElementById('subtotalGeneral');
                 const subtotalManual = parseFloat(subtotalInput.value) || 0;
 
-                // 2. Obtener los demás valores actuales
                 const porcentajeDescuento = parseFloat(document.getElementById('inputDescuento').value) || 0;
                 const impuestoActual = parseFloat(document.getElementById('impuesto').value) || 0;
                 const valoresAdicionales = parseFloat(document.getElementById('inputValoresAdicionales').value) || 0;
 
-                // 3. Calcular el valor del descuento basándose en el subtotal manual
                 const valorDescuento = subtotalManual * (porcentajeDescuento / 100);
 
-                // 4. Actualizar visualmente el label del descuento
                 const spanValorDesc = document.getElementById('valorDescuentoCalculado');
                 if (spanValorDesc) {
-                    spanValorDesc.textContent = valorDescuento.toLocaleString('en-US', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2
-                    });
+                    spanValorDesc.textContent = valorDescuento.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 }
 
-                // 5. CALCULAR TOTAL FINAL
-                // Total = Subtotal Manual - Descuento + Impuesto (sin cambios) + Valores Adicionales
                 const totalFinal = (subtotalManual - valorDescuento) + impuestoActual + valoresAdicionales;
-
-                // 6. Reflejar en el input de Total
                 document.getElementById('totalVenta').value = totalFinal.toFixed(2);
 
-                // 7. Si el método es MIXTO, validar que los pagos coincidan con el NUEVO total
+                // Si es mixto, el total de la venta debe re-ajustarse a los pagos o viceversa
                 if (document.getElementById('metodoPagoSelect').value === 'MIXTO') {
                     validarSumaPagos();
                 }
