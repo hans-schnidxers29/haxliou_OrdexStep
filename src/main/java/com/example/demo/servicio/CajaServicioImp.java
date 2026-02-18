@@ -133,7 +133,7 @@ public class CajaServicioImp implements CajaServicio{
                     securityService.obtenerEmpresaId()).add(EfectivoMixto));
             BigDecimal tarjeta = nvl(ventarepositorio.sumaPorMetodoPago(inicio, fin, "TARJETA",
                     securityService.obtenerEmpresaId()).add(TarjetaMixto));
-            BigDecimal transferencia = nvl(ventarepositorio.sumaPorMetodoPago(inicio, fin, "TRANSFERENCIA",
+            BigDecimal transferencia = nvl(ventarepositorio.sumaPorMetodoPago(inicio, fin, "TRANFERENCIA",
                     securityService.obtenerEmpresaId()).add(TranferenciaMixto));
 
             // El saldo en CAJA FÍSICA solo debe sumar el EFECTIVO (y quizás una parte del mixto)
