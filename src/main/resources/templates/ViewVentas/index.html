@@ -59,6 +59,11 @@
             max-height: 60vh;
             overflow-y: auto;
         }
+
+         .bg-gradient-success-light {
+             background-color: rgba(40, 167, 69, 0.15) !important;
+             border-left: 5px solid #28a745 !important;
+         }
     </style>
 </head>
 
@@ -143,6 +148,7 @@
                                         <thead class="bg-light">
                                             <tr>
                                                 <th>ID</th>
+                                                <th>Fecha Venta</th>
                                                 <th>Cliente</th>
                                                 <th>Detalle</th>
                                                 <th>Total</th>
@@ -150,8 +156,14 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr th:each="venta : ${ventas}">
+                                            <tr th:each="venta : ${ventas}"
+                                                th:classappend="${venta.fechaVenta.toLocalDate().isEqual(T(java.time.LocalDate).now())} ? 'bg-gradient-success-light' : ''">
+
                                                 <td th:text="${venta.id}" class="font-weight-bold"></td>
+                                                <td>
+                                                    <span th:text="${#temporals.format(venta.fechaVenta, 'dd/MM/yyyy')}"></span><br>
+                                                    <small class="text-muted" th:text="${#temporals.format(venta.fechaVenta, 'HH:mm a')}"></small>
+                                                </td>
                                                 <td>
                                                     <span th:text="${venta.cliente.nombre}"></span><br>
                                                     <small class="text-muted">[[${venta.cliente.email}]]</small>
