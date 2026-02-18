@@ -203,7 +203,10 @@
         <td th:text="${prod.precioCompra}"></td>
         <td th:text="${prod.precioPorMayor}"></td>
         <td th:text="${prod.precio}"></td>
-        <td th:text="${prod.proveedor.nombre}"></td>
+        <td>
+          <span th:if="${prod.proveedor != null}" th:text="${prod.proveedor.nombre}"></span>
+          <span th:unless="${prod.proveedor != null}">N/A</span>
+        </td>
         <td th:text="${prod.tipo_Impuesto.name}"></td>
         <td th:text="${prod.impuesto}"></td>
       </tr>
