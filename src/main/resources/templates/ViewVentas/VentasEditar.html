@@ -666,38 +666,42 @@
                 calcularTotal();
             }
 
-            function actualizarDesdeSubtotalManual() {
-                const subtotalInput = document.getElementById('subtotalGeneral');
-                const subtotalGlobal = parseFloat(subtotalInput.value) || 0;
+            function calcularPrecioDesdeSubtotal(inputSubtotal) {
+                const fila = inputSubtotal.closest('tr');
+                const select = fila.querySelector('.producto-select');
 
-                // Recalculate global figures based on this new subtotal
-                // We kept the tax from the rows? Or should we adjust? 
-                // For now, keep tax as is (sum of rows) because tax is per-product. 
-                // If subtotal changes, tax technically should change if it's a discount, 
-                // but user said "general subtotal".
+                // Si no hay producto seleccionado, no hacemos nada
+                if (!select || select.value === "") return;
 
-                const impuestoGlobal = parseFloat(document.getElementById('impuesto').value) || 0;
+                const option = select.options[select.selectedIndex];
+                const inputCantidad = fila.querySelector('.cantidad-input');
+                const inputPrecio = fila.querySelector('.precio-unitario');
 
-                // Descuento
-                const inputDescuento = document.getElementById('inputDescuento');
-                const porcentajeDescuento = parseFloat(inputDescuento.value) || 0;
-                const valorDescuento = subtotalGlobal * (porcentajeDescuento / 100);
+                const tipoVenta = option.getAttribute("data-tipo");
+                let cantOriginal = parseFloat(inputCantidad.value) || 0;
+                const nuevoSubtotalFila = parseFloat(inputSubtotal.value) || 0;
 
-                // Adicionales
-                const inputAdicionales = document.getElementById('inputValoresAdicionales');
-                const valoresAdicionales = parseFloat(inputAdicionales.value) || 0;
+                if (cantOriginal <= 0) return;
 
-                const totalFinal = (subtotalGlobal - valorDescuento) + impuestoGlobal + valoresAdicionales;
-
-                // Update views
-                const spanValorDesc = document.getElementById('valorDescuentoCalculado');
-                if (spanValorDesc) {
-                    spanValorDesc.textContent = valorDescuento.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                // Ajustar cantidad para el cálculo del precio unitario (si son gramos, el precio es por Kilo)
+                let cantParaCalculo = cantOriginal;
+                if (tipoVenta === 'KGM' || tipoVenta === 'LTR') {
+                    cantParaCalculo = cantOriginal / 1000;
                 }
 
-                document.getElementById('totalVenta').value = totalFinal.toFixed(2);
-            }
+                // Precio Unitario = Nuevo Subtotal / Cantidad Convertida
+                const nuevoPrecioUnitario = nuevoSubtotalFila / cantParaCalculo;
 
+                // Actualizamos el campo de precio unitario en la fila
+                inputPrecio.value = nuevoPrecioUnitario.toFixed(2);
+
+                // IMPORTANTE: Desactivar el flag de "Carga Inicial" si el usuario interactúa
+                // para que el sistema empiece a sumar las filas normalmente
+                esCargaInicial = false;
+
+                // Recalcular el total general de la factura
+                calcularTotal();
+            }
             async function validarYProcesar() {
                 const clienteId = document.getElementById('clienteIdHidden').value;
                 if (!clienteId) {
