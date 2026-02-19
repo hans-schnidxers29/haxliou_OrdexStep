@@ -420,8 +420,7 @@ public class VentaControlador {
                 if (producto.getCantidad().compareTo(cantProcesada) < 0) {
                     throw new Exception("Stock insuficiente para: " + producto.getNombre());
                 }
-                servicio.DescontarStock(venta);
-
+               
                 // Calcular precios
                 BigDecimal precio = item.getPrecioUnitario();
                 if (precio == null) {
@@ -443,6 +442,8 @@ public class VentaControlador {
                 subtotalCalculado = subtotalCalculado.add(subtotalFila);
                 totalImpuestosAcumulado = totalImpuestosAcumulado.add(impFila);
             }
+
+             servicio.DescontarStock(venta);
 
             // 4. Totales Finales
             // Priorizar subtotal manual del formulario si existe
