@@ -94,24 +94,28 @@ public class ProductoServiceImpl implements ProductoServicio{
 
     @Transactional
     @Override
-    public void AgregarStock(Long id, BigDecimal cantidad,BigDecimal nuevoImpuesto,BigDecimal precioCompraN) {
+    public void AgregarStock(Long id, BigDecimal cantidad, BigDecimal nuevoImpuesto, BigDecimal precioCompraN) {
         Productos producto = repositorio.findById(id)
                 .orElseThrow(() -> new RuntimeException("Producto No Encontrado con ID: " + id));
 
-
         BigDecimal stockActual = (producto.getCantidad() == null) ? BigDecimal.ZERO : producto.getCantidad();
+
+        // Actualizamos el stock
         producto.setCantidad(stockActual.add(cantidad));
 
+        // Actualizamos impuesto si viene en la petición
         if (nuevoImpuesto != null && nuevoImpuesto.compareTo(BigDecimal.ZERO) >= 0) {
             producto.setImpuesto(nuevoImpuesto);
         }
-        
-        // ACTUALIZACIÓN: Guardar el precio de compra enviado desde la factura
+
+        // Actualizamos precio de compra si viene en la petición
         if (precioCompraN != null && precioCompraN.compareTo(BigDecimal.ZERO) > 0) {
             producto.setPrecioCompra(precioCompraN);
         }
 
-        repositorio.save(producto);
+        // USAR saveAndFlush para que el cambio sea visible INMEDIATAMENTE
+        // en la misma transacción del controlador
+        repositorio.saveAndFlush(producto);
     }
 
     @Override
@@ -130,6 +134,20 @@ public class ProductoServiceImpl implements ProductoServicio{
             map.put("EmpresaId",p.getEmpresa().getId());
             return map;
         }).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public void DescontarStock(BigDecimal cantidad, Long id) {
+        Productos producto = repositorio.findById(id).orElseThrow(()-> new RuntimeException("producto no encontrado"));
+        BigDecimal StockActual = (producto.getCantidad() == null )? BigDecimal.ZERO : producto.getCantidad();
+        BigDecimal nuevaCantidad =  StockActual.subtract(cantidad);
+        if(nuevaCantidad.compareTo(BigDecimal.ZERO)>=0){
+            producto.setCantidad(nuevaCantidad);
+        }else{
+            producto.setCantidad(BigDecimal.ZERO);
+        }
+        repositorio.save(producto);
     }
 
     private String CodigoProductos(){

@@ -18,4 +18,6 @@ public interface ProductoServicio {
     List<Productos> verificarStock();
     void AgregarStock(Long id,BigDecimal cantidad, BigDecimal NuevoImpuesto,BigDecimal precioCompra);
     List<Map<String,Object>>ProductoSimple();
+    void DescontarStock(BigDecimal cantidad, Long id);
+
 }
