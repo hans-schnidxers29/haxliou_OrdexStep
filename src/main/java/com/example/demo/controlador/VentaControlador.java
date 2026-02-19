@@ -137,7 +137,7 @@ public class VentaControlador {
     // ============================
     // GUARDAR NUEVA VENTA
     // ============================
-    @PostMapping("/crear/nueva")
+       @PostMapping("/crear/nueva")
     public String CrearVenta(@ModelAttribute("ventas") Venta venta,
                              RedirectAttributes redirectAttributes,
                              Model model, @AuthenticationPrincipal UserDetails userDetails,
@@ -204,22 +204,24 @@ public class VentaControlador {
                 detalle.setVenta(venta);
                 detalle.setCantidad(cantidadProcesada);
 
-                if (detalle.getPrecioUnitario() == null) {
-                    detalle.setPrecioUnitario(productoCompleto.getPrecio());
-                }
-                BigDecimal PrecioAProcesar = BigDecimal.ZERO;
-                BigDecimal subtotalFila = BigDecimal.ZERO;
+                BigDecimal precioFinal;
 
-                if(Boolean.TRUE.equals(venta.getVentaAlPorMayor()) && productoCompleto.getPrecioPorMayor() != null){
-                    PrecioAProcesar = productoCompleto.getPrecioPorMayor();
-                    venta.setVentaAlPorMayor(true);
-                }else{
-                    // Subtotal de la fila (Precio x Cantidad)
-                    PrecioAProcesar = productoCompleto.getPrecio();
+                // Lógica: Si el switch global es TRUE, forzamos precio por mayor de la DB.
+                // De lo contrario, usamos el precio que viene del input del formulario.
+                if (Boolean.TRUE.equals(venta.getVentaAlPorMayor())) {
+                    precioFinal = (productoCompleto.getPrecioPorMayor() != null)
+                            ? productoCompleto.getPrecioPorMayor()
+                            : productoCompleto.getPrecio();
+                } else {
+                    // Si el switch está apagado, tomamos el valor que el cajero ve en pantalla
+                    // Usamos el precio del producto como respaldo si el input llegara nulo
+                    precioFinal = (detalle.getPrecioUnitario() != null)
+                            ? detalle.getPrecioUnitario()
+                            : productoCompleto.getPrecio();
                 }
 
-                detalle.setPrecioUnitario(PrecioAProcesar);
-                subtotalFila = PrecioAProcesar.multiply(cantidadProcesada);
+                detalle.setPrecioUnitario(precioFinal);
+                BigDecimal subtotalFila = precioFinal.multiply(cantidadProcesada);
                 detalle.setSubtotal(subtotalFila);
 
                 // Cálculo de Impuesto de la fila (Subtotal * %Impuesto / 100)
@@ -339,7 +341,7 @@ public class VentaControlador {
             return "redirect:/ventas/crear";
         }
     }
-
+    
     @GetMapping("/editar/{id}")
     public String MostrarFormEditar(@PathVariable Long id,Model model, RedirectAttributes flash){
         try {
