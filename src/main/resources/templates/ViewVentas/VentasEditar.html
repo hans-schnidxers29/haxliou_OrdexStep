@@ -541,255 +541,262 @@
                 calcularSubtotalFila(inputCantidad);
             }
 
-            // Nueva función: Calcular Precio Unitario al editar Subtotal
-            function calcularPrecioDesdeSubtotal(inputSubtotal) {
-                const fila = inputSubtotal.closest('tr');
-                const select = fila.querySelector('.producto-select');
-                const option = select.options[select.selectedIndex];
-                const inputCantidad = fila.querySelector('.cantidad-input');
-                const inputPrecio = fila.querySelector('.precio-unitario');
+        function calcularPrecioDesdeSubtotal(inputSubtotal) {
+        const fila = inputSubtotal.closest('tr');
+        const select = fila.querySelector('.producto-select');
+        
+        // Si no hay producto seleccionado, no hacemos nada
+        if (!select || select.value === "") return;
+    
+        const option = select.options[select.selectedIndex];
+        const inputCantidad = fila.querySelector('.cantidad-input');
+        const inputPrecio = fila.querySelector('.precio-unitario');
+    
+        const tipoVenta = option.getAttribute("data-tipo");
+        let cantOriginal = parseFloat(inputCantidad.value) || 0;
+        const nuevoSubtotalFila = parseFloat(inputSubtotal.value) || 0;
+    
+        if (cantOriginal <= 0) return; 
+    
+        // Ajustar cantidad para el cálculo del precio unitario (si son gramos, el precio es por Kilo)
+        let cantParaCalculo = cantOriginal;
+        if (tipoVenta === 'KGM' || tipoVenta === 'LTR') {
+            cantParaCalculo = cantOriginal / 1000;
+        }
+    
+        // Precio Unitario = Nuevo Subtotal / Cantidad Convertida
+        const nuevoPrecioUnitario = nuevoSubtotalFila / cantParaCalculo;
+    
+        // Actualizamos el campo de precio unitario en la fila
+        inputPrecio.value = nuevoPrecioUnitario.toFixed(2);
+    
+        // IMPORTANTE: Desactivar el flag de "Carga Inicial" si el usuario interactúa
+        // para que el sistema empiece a sumar las filas normalmente
+        esCargaInicial = false;
+    
+        // Recalcular el total general de la factura
+        calcularTotal();
+    }
 
-                if (!option || select.value === "") return;
+        function calcularSubtotalFila(input) {
+            const fila = input.closest('tr');
+            const select = fila.querySelector('.producto-select');
+            const option = select.options[select.selectedIndex];
 
-                const tipoVenta = option.getAttribute("data-tipo");
-                let cant = parseFloat(inputCantidad.value) || 0;
-                const subtotal = parseFloat(inputSubtotal.value) || 0;
+            if (!option || select.value === "") return;
 
-                if (cant === 0) return; // Evitar división por cero
+            const tipoVenta = option.getAttribute("data-tipo");
+            let cant = parseFloat(input.value) || 0;
+            const precio = parseFloat(fila.querySelector('.precio-unitario').value) || 0;
 
-                // Ajustar cantidad si es KGM/LTR
-                if (tipoVenta === 'KGM' || tipoVenta === 'LTR') {
-                    cant = cant / 1000;
-                }
-
-                // Precio = Subtotal / Cantidad
-                const nuevoPrecio = subtotal / cant;
-
-                inputPrecio.value = nuevoPrecio.toFixed(2);
-
-                // Recalcular el resto de totales
-                calcularTotal();
+            // Conversión para cálculo: si es KGM/LTR, el input son gramos/ml, dividimos por 1000
+            if (tipoVenta === 'KGM' || tipoVenta === 'LTR') {
+                cant = cant / 1000;
             }
 
-            function calcularSubtotalFila(input) {
-                const fila = input.closest('tr');
-                const select = fila.querySelector('.producto-select');
-                const option = select.options[select.selectedIndex];
-
-                if (!option || select.value === "") return;
-
-                const tipoVenta = option.getAttribute("data-tipo");
-                let cant = parseFloat(input.value) || 0;
-                const precio = parseFloat(fila.querySelector('.precio-unitario').value) || 0;
-
-                // Conversión para cálculo: si es KGM/LTR, el input son gramos/ml, dividimos por 1000
-                if (tipoVenta === 'KGM' || tipoVenta === 'LTR') {
-                    cant = cant / 1000;
-                }
-
-                fila.querySelector('.subtotal-item').value = (cant * precio).toFixed(2);
-                calcularTotal();
-            }
+            fila.querySelector('.subtotal-item').value = (cant * precio).toFixed(2);
+            calcularTotal();
+        }
 
 
-            function calcularTotal() {
-                let subtotalGlobal = 0;
-                let impuestoGlobal = 0;
+        function calcularTotal() {
+            let subtotalGlobal = 0;
+            let impuestoGlobal = 0;
 
-                // 1. Sumar los valores de las filas (Cálculo real de los productos)
-                document.querySelectorAll('.detalle-item').forEach(fila => {
-                    const subtotalFila = parseFloat(fila.querySelector('.subtotal-item').value) || 0;
-                    const porcImpuesto = parseFloat(fila.querySelector('.impuesto-producto').value) || 0;
-                    subtotalGlobal += subtotalFila;
-                    impuestoGlobal += (subtotalFila * (porcImpuesto / 100));
-                });
-
-                const subtotalInput = document.getElementById('subtotalGeneral');
-
-                // --- LÓGICA DE PROTECCIÓN ---
-                // Si es la carga inicial, NO sobrescribimos el subtotalGlobal con la suma de filas
-                // Mantenemos el que ya tiene el input (que viene de th:field)
-                if (esCargaInicial) {
-                    subtotalGlobal = parseFloat(subtotalInput.value) || subtotalGlobal;
-                } else {
-                    // Si ya no es la carga inicial (ej. el usuario agregó un producto o cambió algo)
-                    // entonces sí actualizamos el input con la suma de las filas
-                    subtotalInput.value = subtotalGlobal.toFixed(2);
-                }
-
-                // 2. Descuento (Calculado sobre el subtotal que decidimos mantener arriba)
-                const inputDescuento = document.getElementById('inputDescuento');
-                const porcentajeDescuento = parseFloat(inputDescuento.value) || 0;
-                const valorDescuento = subtotalGlobal * (porcentajeDescuento / 100);
-
-                // 3. Adicionales
-                const inputAdicionales = document.getElementById('inputValoresAdicionales');
-                const valoresAdicionales = parseFloat(inputAdicionales.value) || 0;
-
-                // 4. Visualización de Descuento
-                const spanValorDesc = document.getElementById('valorDescuentoCalculado');
-                if (spanValorDesc) {
-                    spanValorDesc.textContent = valorDescuento.toLocaleString('en-US', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2
-                    });
-                }
-
-                // 5. Total Final (Subtotal usado + Impuestos de filas - Descuento + Adicionales)
-                const totalFinal = (subtotalGlobal - valorDescuento) + impuestoGlobal + valoresAdicionales;
-
-                document.getElementById('impuesto').value = impuestoGlobal.toFixed(2);
-                document.getElementById('totalVenta').value = totalFinal.toFixed(2);
-
-                // Validar si es mixto
-                if (!esCargaInicial) {
-                    validarSumaPagos();
-                }
-            }
-
-            // Trigger para recalcular si cambia el switch global
-            function alternarPreciosGlobal() {
-                const isMayor = document.getElementById('switchVentaMayor').checked;
-                document.querySelectorAll('.detalle-item').forEach(fila => {
-                    const switchFila = fila.querySelector('.switch-mayor');
-                    if (switchFila) switchFila.checked = isMayor;
-                    const select = fila.querySelector('.producto-select');
-                    if (select && select.value) actualizarPrecioFila(select);
-                });
-                // Update Label
-                const label = document.getElementById('labelVenta');
-                label.innerText = isMayor ? "VENTA AL POR MAYOR" : "VENTA AL DETAL";
-                label.className = isMayor ? "font-weight-bold text-success" : "font-weight-bold text-danger";
-            }
-
-            function calcularTotales() {
-                calcularTotal();
-            }
-
-            function actualizarDesdeSubtotalManual() {
-                const subtotalInput = document.getElementById('subtotalGeneral');
-                const subtotalGlobal = parseFloat(subtotalInput.value) || 0;
-
-                // Recalculate global figures based on this new subtotal
-                // We kept the tax from the rows? Or should we adjust? 
-                // For now, keep tax as is (sum of rows) because tax is per-product. 
-                // If subtotal changes, tax technically should change if it's a discount, 
-                // but user said "general subtotal".
-
-                const impuestoGlobal = parseFloat(document.getElementById('impuesto').value) || 0;
-
-                // Descuento
-                const inputDescuento = document.getElementById('inputDescuento');
-                const porcentajeDescuento = parseFloat(inputDescuento.value) || 0;
-                const valorDescuento = subtotalGlobal * (porcentajeDescuento / 100);
-
-                // Adicionales
-                const inputAdicionales = document.getElementById('inputValoresAdicionales');
-                const valoresAdicionales = parseFloat(inputAdicionales.value) || 0;
-
-                const totalFinal = (subtotalGlobal - valorDescuento) + impuestoGlobal + valoresAdicionales;
-
-                // Update views
-                const spanValorDesc = document.getElementById('valorDescuentoCalculado');
-                if (spanValorDesc) {
-                    spanValorDesc.textContent = valorDescuento.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                }
-
-                document.getElementById('totalVenta').value = totalFinal.toFixed(2);
-            }
-
-            async function validarYProcesar() {
-                const clienteId = document.getElementById('clienteIdHidden').value;
-                if (!clienteId) {
-                    Swal.fire({ icon: 'warning', title: 'Cliente requerido', text: 'Debe seleccionar un cliente' });
-                    return;
-                }
-
-                // Validar Pago Mixto
-                if (document.getElementById('metodoPagoSelect').value === 'MIXTO') {
-                    if (!validarSumaPagos()) {
-                        Swal.fire('Error', 'La suma de los pagos mixtos no coincide con el total.', 'error');
-                        return;
-                    }
-                }
-
-                // SOLUCIÓN AL PROBLEMA DEL INDEX: Re-indexar todas las filas antes del submit
-                document.querySelectorAll('.detalle-item').forEach((fila, index) => {
-                    fila.querySelectorAll('select, input').forEach(input => {
-                        let name = input.getAttribute('name');
-                        if (name && name.includes('detalles[')) {
-                            // Reemplaza detalles[x] por detalles[0, 1, 2...] correlativo
-                            input.setAttribute('name', name.replace(/detalles\[\d+\]/, 'detalles[' + index + ']'));
-                        }
-                    });
-                });
-
-                document.getElementById('formVenta').submit();
-            }
-            function alternarPanelMixto() {
-                const metodo = document.getElementById('metodoPagoSelect').value;
-                const panel = document.getElementById('panelMontosMixtos');
-
-                if (metodo === 'MIXTO') {
-                    panel.classList.remove('d-none');
-                    // Si los campos están en 0, sugerimos el total en efectivo
-                    const efe = parseFloat(document.getElementById('montoEfectivo').value) || 0;
-                    const tar = parseFloat(document.getElementById('montoTarjeta').value) || 0;
-                    const tra = parseFloat(document.getElementById('montoTransferencia').value) || 0;
-
-                    if(efe + tar + tra === 0) {
-                        document.getElementById('montoEfectivo').value = document.getElementById('totalVenta').value;
-                    }
-                } else {
-                    panel.classList.add('d-none');
-                }
-            }
-
-            // Validar suma en tiempo real
-            $(document).on('input', '.input-mixto', function() {
-                validarSumaPagos();
+            // 1. Sumar los valores de las filas (Cálculo real de los productos)
+            document.querySelectorAll('.detalle-item').forEach(fila => {
+                const subtotalFila = parseFloat(fila.querySelector('.subtotal-item').value) || 0;
+                const porcImpuesto = parseFloat(fila.querySelector('.impuesto-producto').value) || 0;
+                subtotalGlobal += subtotalFila;
+                impuestoGlobal += (subtotalFila * (porcImpuesto / 100));
             });
 
-            function validarSumaPagos() {
-                // 1. Referencias al DOM
-                const inputEfe = document.getElementById('montoEfectivo');
-                const inputTar = document.getElementById('montoTarjeta');
-                const inputTra = document.getElementById('montoTransferencia');
-                // IMPORTANTE: Leemos el total, pero NO lo modificaremos
-                const totalVentaInput = document.getElementById('totalVenta');
-                const errorMsg = document.getElementById('errorSumaMixta');
+            const subtotalInput = document.getElementById('subtotalGeneral');
 
-                // 2. Valores numéricos
-                const efe = parseFloat(inputEfe?.value) || 0;
-                const tar = parseFloat(inputTar?.value) || 0;
-                const tra = parseFloat(inputTra?.value) || 0;
-                const totalEsperado = parseFloat(totalVentaInput?.value) || 0;
-
-                // 3. Suma de lo que el cajero está digitando
-                const sumaPagos = efe + tar + tra;
-                const diferencia = totalEsperado - sumaPagos;
-
-                // 4. Lógica de validación visual (Ajuste)
-                if (document.getElementById('metodoPagoSelect').value === 'MIXTO') {
-                    errorMsg.classList.remove('d-none');
-
-                    // Usamos un margen pequeño (0.01) para evitar problemas de decimales
-                    if (Math.abs(diferencia) < 0.01) {
-                        errorMsg.className = "text-success small font-weight-bold mt-2";
-                        errorMsg.innerHTML = `<i class="fas fa-check-circle"></i> Suma correcta: $${sumaPagos.toFixed(2)}`;
-                        return true;
-                    } else {
-                        errorMsg.className = "text-danger small font-weight-bold mt-2";
-                        if (diferencia > 0) {
-                            errorMsg.innerHTML = `<i class="fas fa-exclamation-circle"></i> Faltan: $${diferencia.toFixed(2)}`;
-                        } else {
-                            errorMsg.innerHTML = `<i class="fas fa-exclamation-circle"></i> Sobran: $${Math.abs(diferencia).toFixed(2)}`;
-                        }
-                        return false;
-                    }
-                }
-                return true;
+            // --- LÓGICA DE PROTECCIÓN ---
+            // Si es la carga inicial, NO sobrescribimos el subtotalGlobal con la suma de filas
+            // Mantenemos el que ya tiene el input (que viene de th:field)
+            if (esCargaInicial) {
+                subtotalGlobal = parseFloat(subtotalInput.value) || subtotalGlobal;
+            } else {
+                // Si ya no es la carga inicial (ej. el usuario agregó un producto o cambió algo)
+                // entonces sí actualizamos el input con la suma de las filas
+                subtotalInput.value = subtotalGlobal.toFixed(2);
             }
+
+            // 2. Descuento (Calculado sobre el subtotal que decidimos mantener arriba)
+            const inputDescuento = document.getElementById('inputDescuento');
+            const porcentajeDescuento = parseFloat(inputDescuento.value) || 0;
+            const valorDescuento = subtotalGlobal * (porcentajeDescuento / 100);
+
+            // 3. Adicionales
+            const inputAdicionales = document.getElementById('inputValoresAdicionales');
+            const valoresAdicionales = parseFloat(inputAdicionales.value) || 0;
+
+            // 4. Visualización de Descuento
+            const spanValorDesc = document.getElementById('valorDescuentoCalculado');
+            if (spanValorDesc) {
+                spanValorDesc.textContent = valorDescuento.toLocaleString('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            }
+
+            // 5. Total Final (Subtotal usado + Impuestos de filas - Descuento + Adicionales)
+            const totalFinal = (subtotalGlobal - valorDescuento) + impuestoGlobal + valoresAdicionales;
+
+            document.getElementById('impuesto').value = impuestoGlobal.toFixed(2);
+            document.getElementById('totalVenta').value = totalFinal.toFixed(2);
+
+            // Validar si es mixto
+            if (!esCargaInicial) {
+                validarSumaPagos();
+            }
+        }
+
+        // Trigger para recalcular si cambia el switch global
+        function alternarPreciosGlobal() {
+            const isMayor = document.getElementById('switchVentaMayor').checked;
+            document.querySelectorAll('.detalle-item').forEach(fila => {
+                const switchFila = fila.querySelector('.switch-mayor');
+                if (switchFila) switchFila.checked = isMayor;
+                const select = fila.querySelector('.producto-select');
+                if (select && select.value) actualizarPrecioFila(select);
+            });
+            // Update Label
+            const label = document.getElementById('labelVenta');
+            label.innerText = isMayor ? "VENTA AL POR MAYOR" : "VENTA AL DETAL";
+            label.className = isMayor ? "font-weight-bold text-success" : "font-weight-bold text-danger";
+        }
+
+        function calcularTotales() {
+            calcularTotal();
+        }
+
+        function actualizarDesdeSubtotalManual() {
+            const subtotalInput = document.getElementById('subtotalGeneral');
+            const subtotalGlobal = parseFloat(subtotalInput.value) || 0;
+
+            // Recalculate global figures based on this new subtotal
+            // We kept the tax from the rows? Or should we adjust? 
+            // For now, keep tax as is (sum of rows) because tax is per-product. 
+            // If subtotal changes, tax technically should change if it's a discount, 
+            // but user said "general subtotal".
+
+            const impuestoGlobal = parseFloat(document.getElementById('impuesto').value) || 0;
+
+            // Descuento
+            const inputDescuento = document.getElementById('inputDescuento');
+            const porcentajeDescuento = parseFloat(inputDescuento.value) || 0;
+            const valorDescuento = subtotalGlobal * (porcentajeDescuento / 100);
+
+            // Adicionales
+            const inputAdicionales = document.getElementById('inputValoresAdicionales');
+            const valoresAdicionales = parseFloat(inputAdicionales.value) || 0;
+
+            const totalFinal = (subtotalGlobal - valorDescuento) + impuestoGlobal + valoresAdicionales;
+
+            // Update views
+            const spanValorDesc = document.getElementById('valorDescuentoCalculado');
+            if (spanValorDesc) {
+                spanValorDesc.textContent = valorDescuento.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+
+            document.getElementById('totalVenta').value = totalFinal.toFixed(2);
+        }
+
+        async function validarYProcesar() {
+            const clienteId = document.getElementById('clienteIdHidden').value;
+            if (!clienteId) {
+                Swal.fire({ icon: 'warning', title: 'Cliente requerido', text: 'Debe seleccionar un cliente' });
+                return;
+            }
+
+            // Validar Pago Mixto
+            if (document.getElementById('metodoPagoSelect').value === 'MIXTO') {
+                if (!validarSumaPagos()) {
+                    Swal.fire('Error', 'La suma de los pagos mixtos no coincide con el total.', 'error');
+                    return;
+                }
+            }
+
+            // SOLUCIÓN AL PROBLEMA DEL INDEX: Re-indexar todas las filas antes del submit
+            document.querySelectorAll('.detalle-item').forEach((fila, index) => {
+                fila.querySelectorAll('select, input').forEach(input => {
+                    let name = input.getAttribute('name');
+                    if (name && name.includes('detalles[')) {
+                        // Reemplaza detalles[x] por detalles[0, 1, 2...] correlativo
+                        input.setAttribute('name', name.replace(/detalles\[\d+\]/, 'detalles[' + index + ']'));
+                    }
+                });
+            });
+
+            document.getElementById('formVenta').submit();
+        }
+        function alternarPanelMixto() {
+            const metodo = document.getElementById('metodoPagoSelect').value;
+            const panel = document.getElementById('panelMontosMixtos');
+
+            if (metodo === 'MIXTO') {
+                panel.classList.remove('d-none');
+                // Si los campos están en 0, sugerimos el total en efectivo
+                const efe = parseFloat(document.getElementById('montoEfectivo').value) || 0;
+                const tar = parseFloat(document.getElementById('montoTarjeta').value) || 0;
+                const tra = parseFloat(document.getElementById('montoTransferencia').value) || 0;
+
+                if(efe + tar + tra === 0) {
+                    document.getElementById('montoEfectivo').value = document.getElementById('totalVenta').value;
+                }
+            } else {
+                panel.classList.add('d-none');
+            }
+        }
+
+        // Validar suma en tiempo real
+        $(document).on('input', '.input-mixto', function() {
+            validarSumaPagos();
+        });
+
+        function validarSumaPagos() {
+            // 1. Referencias al DOM
+            const inputEfe = document.getElementById('montoEfectivo');
+            const inputTar = document.getElementById('montoTarjeta');
+            const inputTra = document.getElementById('montoTransferencia');
+            // IMPORTANTE: Leemos el total, pero NO lo modificaremos
+            const totalVentaInput = document.getElementById('totalVenta');
+            const errorMsg = document.getElementById('errorSumaMixta');
+
+            // 2. Valores numéricos
+            const efe = parseFloat(inputEfe?.value) || 0;
+            const tar = parseFloat(inputTar?.value) || 0;
+            const tra = parseFloat(inputTra?.value) || 0;
+            const totalEsperado = parseFloat(totalVentaInput?.value) || 0;
+
+            // 3. Suma de lo que el cajero está digitando
+            const sumaPagos = efe + tar + tra;
+            const diferencia = totalEsperado - sumaPagos;
+
+            // 4. Lógica de validación visual (Ajuste)
+            if (document.getElementById('metodoPagoSelect').value === 'MIXTO') {
+                errorMsg.classList.remove('d-none');
+
+                // Usamos un margen pequeño (0.01) para evitar problemas de decimales
+                if (Math.abs(diferencia) < 0.01) {
+                    errorMsg.className = "text-success small font-weight-bold mt-2";
+                    errorMsg.innerHTML = `<i class="fas fa-check-circle"></i> Suma correcta: $${sumaPagos.toFixed(2)}`;
+                    return true;
+                } else {
+                    errorMsg.className = "text-danger small font-weight-bold mt-2";
+                    if (diferencia > 0) {
+                        errorMsg.innerHTML = `<i class="fas fa-exclamation-circle"></i> Faltan: $${diferencia.toFixed(2)}`;
+                    } else {
+                        errorMsg.innerHTML = `<i class="fas fa-exclamation-circle"></i> Sobran: $${Math.abs(diferencia).toFixed(2)}`;
+                    }
+                    return false;
+                }
+            }
+            return true;
+        }
         </script>
     </th:block>
 </body>
