@@ -138,7 +138,7 @@ public class VentaControlador {
     // ============================
     // GUARDAR NUEVA VENTA
     // ============================
-    @PostMapping("/crear/nueva")
+       @PostMapping("/crear/nueva")
     public String CrearVenta(@ModelAttribute("ventas") Venta venta,
                              RedirectAttributes redirectAttributes,
                              Model model, @AuthenticationPrincipal UserDetails userDetails,
@@ -342,7 +342,7 @@ public class VentaControlador {
             return "redirect:/ventas/crear";
         }
     }
-
+    
     @GetMapping("/editar/{id}")
     public String MostrarFormEditar(@PathVariable Long id,Model model, RedirectAttributes flash){
         try {

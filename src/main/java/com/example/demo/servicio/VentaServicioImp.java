@@ -111,18 +111,22 @@ public class VentaServicioImp implements VentaServicio {
 
     }
 
-    @Override
+   @Override
     public BigDecimal totalVentas() {
-        // 1. Especificar la zona horaria de interés
-        ZoneId zonaBogota = ZoneId.of("America/Bogota");
-        // 2. Obtener la fecha HOY en Bogotá (Independientemente de si el servidor está en UTC)
-        LocalDate fechaHoyBogota = LocalDate.now(zonaBogota);
-        // 3. Definir inicio (00:00:00) y fin (00:00:00 del día siguiente) en base a esa fecha
-        LocalDateTime inicio = fechaHoyBogota.atStartOfDay();
-        LocalDateTime fin = inicio.plusDays(1);
-        // Log de depuración (puedes verlo en la consola de producción para estar seguro)
-        System.out.println("Consultando ventas desde: " + inicio + " hasta: " + fin);
-        return repositorioVenta.sumaVentasRango(inicio, fin, securityService.obtenerEmpresaId());
+    // 1. Especificar la zona horaria de interés
+    ZoneId zonaBogota = ZoneId.of("America/Bogota");
+
+    // 2. Obtener la fecha HOY en Bogotá (Independientemente de si el servidor está en UTC)
+    LocalDate fechaHoyBogota = LocalDate.now(zonaBogota);
+
+    // 3. Definir inicio (00:00:00) y fin (00:00:00 del día siguiente) en base a esa fecha
+    LocalDateTime inicio = fechaHoyBogota.atStartOfDay();
+    LocalDateTime fin = inicio.plusDays(1);
+
+    // Log de depuración (puedes verlo en la consola de producción para estar seguro)
+    System.out.println("Consultando ventas desde: " + inicio + " hasta: " + fin);
+
+    return repositorioVenta.sumaVentasRango(inicio, fin, securityService.obtenerEmpresaId());
     }
 
     @Override
