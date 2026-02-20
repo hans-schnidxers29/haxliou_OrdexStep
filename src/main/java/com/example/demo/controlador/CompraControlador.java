@@ -1,16 +1,11 @@
 package com.example.demo.controlador;
 
-import com.example.demo.servicio.ServicioUsuario;
-import com.example.demo.entidad.Usuario;
-import com.example.demo.entidad.Compras;
-import com.example.demo.entidad.DetalleCompra;
+import com.example.demo.entidad.*;
+import com.example.demo.entidad.Enum.EstadoPedido;
+import com.example.demo.repositorio.ComprasCreditoRepositorio;
+import com.example.demo.servicio.*;
 import com.example.demo.entidad.Enum.EstadoCompra;
 import com.example.demo.entidad.Enum.MetodoPago;
-import com.example.demo.entidad.Productos;
-import com.example.demo.entidad.Proveedores;
-import com.example.demo.servicio.CompraServicio;
-import com.example.demo.servicio.ProductoServicio;
-import com.example.demo.servicio.ProveedorServicio;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -45,6 +40,13 @@ public class CompraControlador {
 
     @Autowired
     private ProductoServicio productoServicio;
+
+    @Autowired
+    private ComprasCreditoRepositorio comprasCreditoRepo;
+
+    @Autowired
+    private FinanzasServicio finanzasServicio;
+
 
     @GetMapping("/listar")
     public String listar(Model model){
@@ -94,6 +96,16 @@ public class CompraControlador {
             Usuario user = servicioUsuario.findByEmail(userDetails.getUsername());
             compras.setUsuario(user);
 
+            // 3. Validar y Asignar el Proveedor seleccionado en el Select
+            if (compras.getProveedor() == null || compras.getProveedor().getId() == null) {
+                model.addAttribute("error", "Debe seleccionar un proveedor válido.");
+                model.addAttribute("proveedores", proveedorServicio.listarproveedores());
+                model.addAttribute("productos", productoServicio.ProductoSimple());
+                return "viewCompras/crearCompras";
+            }
+            // Cargamos el proveedor completo desde la DB
+            Proveedores proveedorSeleccionado = proveedorServicio.proveedorById(compras.getProveedor().getId());
+            compras.setProveedor(proveedorSeleccionado);
 
             // 4. Procesar Detalles de Compra
             if (compras.getDetalles() == null || compras.getDetalles().isEmpty()) {
@@ -117,10 +129,6 @@ public class CompraControlador {
                 Productos productoCompleto = productoServicio.productoById(detalle.getProductos().getId());
                 if (productoCompleto == null) continue;
 
-                // Set the supplier of the purchase from the first product found
-                if (primerProveedor == null && productoCompleto.getProveedor() != null) {
-                    primerProveedor = productoCompleto.getProveedor();
-                }
 
                 if (detalle.getProductos().getImpuesto() != null) {
                     productoCompleto.setImpuesto(detalle.getProductos().getImpuesto());
@@ -138,17 +146,6 @@ public class CompraControlador {
                 detallesValidos.add(detalle);
             }
 
-            // Set the purchase's supplier based on the first product's supplier
-            if (primerProveedor != null) {
-                compras.setProveedor(primerProveedor);
-            } else {
-                // Handle case where no valid product with a supplier was found
-                result.rejectValue("proveedor.id", "error.compras", "No se pudo determinar el proveedor a partir de los productos.");
-                model.addAttribute("proveedores", proveedorServicio.listarproveedores());
-                model.addAttribute("productos", productoServicio.ProductoSimple());
-                return "viewCompras/crearCompras";
-            }
-
             if (detallesValidos.isEmpty()) {
                 model.addAttribute("error", "Debe agregar al menos un producto válido con cantidad mayor a cero");
                 model.addAttribute("proveedores", proveedorServicio.listarproveedores());
@@ -157,15 +154,34 @@ public class CompraControlador {
             }
 
             compras.setDetalles(detallesValidos);
-
-
             BigDecimal totalFinal = acumuladorSubtotales;
             compras.setTotal(totalFinal);
 
-            compras.setEstado(EstadoCompra.BORRADOR);
-            compraServicio.saveCompra(compras);
+            if(MetodoPago.CREDITO.equals(compras.getMetodoPago())){
 
-            redirectAttributes.addFlashAttribute("success", "Compra creada con éxito en estado BORRADOR");
+                compras.setEstado(EstadoCompra.CREDITO);
+                compraServicio.saveCompra(compras);
+
+                ComprasCreditos comprasCreditos = new ComprasCreditos();
+                comprasCreditos.setCompra(compras);
+                comprasCreditos.setSaldoPendiente(compras.getTotal());
+                comprasCreditos.setEstadoDeuda(EstadoPedido.PENDIENTE);
+                comprasCreditos.setMontoTotal(compras.getTotal());
+                comprasCreditos.setFechaVencimiento(LocalDate.now().plusDays(30));
+                comprasCreditoRepo.save(comprasCreditos);
+
+                for(DetalleCompra detalleCompra : detallesValidos){
+                    BigDecimal nuevoImpuesto = detalleCompra.getProductos().getImpuesto();
+                    BigDecimal nuevoPrecioCompra = detalleCompra.getProductos().getPrecioCompra();
+                    productoServicio.AgregarStock(detalleCompra.getProductos().getId(),
+                            detalleCompra.getCantidad(), nuevoImpuesto , nuevoPrecioCompra);
+                }
+                redirectAttributes.addFlashAttribute("success", "Compra a CRÉDITO registrada y stock actualizado.");
+            }else{
+                compras.setEstado(EstadoCompra.BORRADOR);
+                compraServicio.saveCompra(compras);
+                redirectAttributes.addFlashAttribute("success", "Compra creada con éxito en estado BORRADOR");
+            }
             return "redirect:/compras/listar";
 
         } catch (Exception e) {
@@ -292,4 +308,26 @@ public class CompraControlador {
         }
     }
 
+//    @GetMapping("/cuentas-por-pagar")
+//    public String listarCuentas(Model model) {
+//        model.addAttribute("cuentas", comprasCreditoRepo.findAllBySaldoPendienteGreaterThan(BigDecimal.ZERO);
+//        model.addAttribute("metodosPago", MetodoPago.values());
+//        return "viewFinanzas/cuentasPorPagar";
+//    }
+
+//    @PostMapping("/registrar-abono")
+//    public String registrarAbono(@RequestParam Long cuentaId,
+//                                 @RequestParam BigDecimal monto,
+//                                 @RequestParam MetodoPago metodoPago,
+//                                 @RequestParam(default = "false") boolean afectaCaja,
+//    RedirectAttributes ra) {
+//        try {
+//            FinanzasServicio.ProcesarAbono(cuentaId, monto, metodoPago, afectaCaja);
+//            ra.addFlashAttribute("success", "Abono registrado correctamente");
+//            return "redirect:/cuentas-por-pagar";
+//        } catch (Exception e) {
+//            ra.addFlashAttribute("error", e.getMessage());
+//        }
+//        return "redirect:/cuentas-por-pagar";
+//    }
 }

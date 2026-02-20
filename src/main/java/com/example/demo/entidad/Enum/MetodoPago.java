@@ -5,7 +5,8 @@ public enum MetodoPago {
     TARJETA("Tarjeta"),
     MIXTO("Mixto"),
     EFECTIVO("Efectivo"),
-    TRANFERENCIA("Transferencia");
+    TRANFERENCIA("Transferencia"),
+    CREDITO("credito");
 
 
     private final String descripcion;
@@ -17,4 +18,5 @@ public enum MetodoPago {
     public String getDescripcion() {
         return descripcion;
     }
+
 }

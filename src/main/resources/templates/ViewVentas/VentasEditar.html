@@ -510,37 +510,42 @@
 
             // Misma lógica de actualización de precios, impuestos y unidades
             function actualizarPrecioFila(element) {
+                esCargaInicial = false; // DESBLOQUEAR cálculos al interactuar
                 const fila = element.closest('tr');
                 const select = fila.querySelector('.producto-select');
                 const option = select.options[select.selectedIndex];
+
+                if (!select.value || !option) return;
+
                 const labelUnidad = fila.querySelector('.unidad-medida');
                 const inputCantidad = fila.querySelector('.cantidad-input');
                 const switchGlobal = document.getElementById('switchVentaMayor');
                 const switchFila = fila.querySelector('.switch-mayor');
 
-                if (!select.value) return;
-
                 const pNormal = parseFloat(option.getAttribute("data-precio")) || 0;
                 const pMayor = parseFloat(option.getAttribute("data-preciomayor")) || pNormal;
-                const isMayor = switchGlobal.checked || (switchFila && switchFila.checked);
+
+                // Identificar qué precio usar
+                const isMayor = (switchGlobal && switchGlobal.checked) || (switchFila && switchFila.checked);
                 const precioFinal = isMayor ? pMayor : pNormal;
+
                 const impuesto = option.getAttribute("data-impuesto") || 0;
                 const tipoVenta = option.getAttribute("data-tipo");
 
                 fila.querySelector('.precio-unitario').value = precioFinal.toFixed(2);
                 fila.querySelector('.impuesto-producto').value = impuesto;
 
+                // Lógica de unidades (Gramos/Litros/Und)
                 if (tipoVenta === 'KGM' || tipoVenta === 'LTR') {
                     labelUnidad.innerText = (tipoVenta === 'KGM') ? "Unidad: Gramos" : "Unidad: Mililitros";
                     labelUnidad.className = "badge badge-warning unidad-medida";
-                    // inputCantidad.step = "1"; // Opcional
                 } else {
                     labelUnidad.innerText = "Unidad: Und";
                     labelUnidad.className = "text-muted small unidad-medida";
                 }
+
                 calcularSubtotalFila(inputCantidad);
             }
-
             // Nueva función: Calcular Precio Unitario al editar Subtotal
             function calcularPrecioDesdeSubtotal(inputSubtotal) {
                 const fila = inputSubtotal.closest('tr');
@@ -593,75 +598,70 @@
 
 
             function calcularTotal() {
-                let subtotalGlobal = 0;
+                let subtotalCalculadoDeFilas = 0;
                 let impuestoGlobal = 0;
 
-                // 1. Sumar los valores de las filas (Cálculo real de los productos)
+                // 1. Sumar los valores actuales de todas las filas
                 document.querySelectorAll('.detalle-item').forEach(fila => {
                     const subtotalFila = parseFloat(fila.querySelector('.subtotal-item').value) || 0;
                     const porcImpuesto = parseFloat(fila.querySelector('.impuesto-producto').value) || 0;
-                    subtotalGlobal += subtotalFila;
+                    subtotalCalculadoDeFilas += subtotalFila;
                     impuestoGlobal += (subtotalFila * (porcImpuesto / 100));
                 });
 
                 const subtotalInput = document.getElementById('subtotalGeneral');
+                let subtotalFinalAUsar;
 
-                // --- LÓGICA DE PROTECCIÓN ---
-                // Si es la carga inicial, NO sobrescribimos el subtotalGlobal con la suma de filas
-                // Mantenemos el que ya tiene el input (que viene de th:field)
                 if (esCargaInicial) {
-                    subtotalGlobal = parseFloat(subtotalInput.value) || subtotalGlobal;
+                    // En la carga inicial usamos el valor que ya traía el input de la DB
+                    subtotalFinalAUsar = parseFloat(subtotalInput.value) || subtotalCalculadoDeFilas;
                 } else {
-                    // Si ya no es la carga inicial (ej. el usuario agregó un producto o cambió algo)
-                    // entonces sí actualizamos el input con la suma de las filas
-                    subtotalInput.value = subtotalGlobal.toFixed(2);
+                    // Si el usuario ya interactuó, mandan las filas
+                    subtotalFinalAUsar = subtotalCalculadoDeFilas;
+                    subtotalInput.value = subtotalFinalAUsar.toFixed(2);
                 }
 
-                // 2. Descuento (Calculado sobre el subtotal que decidimos mantener arriba)
-                const inputDescuento = document.getElementById('inputDescuento');
-                const porcentajeDescuento = parseFloat(inputDescuento.value) || 0;
-                const valorDescuento = subtotalGlobal * (porcentajeDescuento / 100);
+                // 2. Descuento y Adicionales
+                const porcentajeDescuento = parseFloat(document.getElementById('inputDescuento').value) || 0;
+                const valorDescuento = subtotalFinalAUsar * (porcentajeDescuento / 100);
+                const valoresAdicionales = parseFloat(document.getElementById('inputValoresAdicionales').value) || 0;
 
-                // 3. Adicionales
-                const inputAdicionales = document.getElementById('inputValoresAdicionales');
-                const valoresAdicionales = parseFloat(inputAdicionales.value) || 0;
-
-                // 4. Visualización de Descuento
-                const spanValorDesc = document.getElementById('valorDescuentoCalculado');
-                if (spanValorDesc) {
-                    spanValorDesc.textContent = valorDescuento.toLocaleString('en-US', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2
-                    });
-                }
-
-                // 5. Total Final (Subtotal usado + Impuestos de filas - Descuento + Adicionales)
-                const totalFinal = (subtotalGlobal - valorDescuento) + impuestoGlobal + valoresAdicionales;
+                // 3. Totales Finales
+                const totalFinal = (subtotalFinalAUsar - valorDescuento) + impuestoGlobal + valoresAdicionales;
 
                 document.getElementById('impuesto').value = impuestoGlobal.toFixed(2);
                 document.getElementById('totalVenta').value = totalFinal.toFixed(2);
 
-                // Validar si es mixto
-                if (!esCargaInicial) {
+                // Actualizar visualización de descuento
+                const spanValorDesc = document.getElementById('valorDescuentoCalculado');
+                if (spanValorDesc) {
+                    spanValorDesc.textContent = valorDescuento.toLocaleString('en-US', { minimumFractionDigits: 2 });
+                }
+
+                // Validar suma si es pago mixto
+                if (document.getElementById('metodoPagoSelect').value === 'MIXTO') {
                     validarSumaPagos();
                 }
             }
 
             // Trigger para recalcular si cambia el switch global
             function alternarPreciosGlobal() {
+                esCargaInicial = false; // DESBLOQUEAR cálculos al interactuar
                 const isMayor = document.getElementById('switchVentaMayor').checked;
+
                 document.querySelectorAll('.detalle-item').forEach(fila => {
                     const switchFila = fila.querySelector('.switch-mayor');
                     if (switchFila) switchFila.checked = isMayor;
                     const select = fila.querySelector('.producto-select');
                     if (select && select.value) actualizarPrecioFila(select);
                 });
-                // Update Label
+
                 const label = document.getElementById('labelVenta');
                 label.innerText = isMayor ? "VENTA AL POR MAYOR" : "VENTA AL DETAL";
                 label.className = isMayor ? "font-weight-bold text-success" : "font-weight-bold text-danger";
-            }
 
+                calcularTotal(); // Forzar el recálculo general
+            }
             function calcularTotales() {
                 calcularTotal();
             }

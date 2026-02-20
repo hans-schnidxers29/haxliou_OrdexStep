@@ -23,7 +23,7 @@ public class Compras {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "proveedor_id")
-    private Proveedores Proveedor;
+    private Proveedores proveedor;
 
     @Column(name = "fecha_compra")
     private LocalDateTime fechaCompra = LocalDateTime.now();
@@ -33,7 +33,7 @@ public class Compras {
     private Usuario usuario;
 
     @Enumerated(EnumType.STRING)
-    private EstadoCompra estado= EstadoCompra.BORRADOR;
+    private EstadoCompra estado = EstadoCompra.BORRADOR;
 
     @Column(name = "total", scale = 2, precision = 10)
     private BigDecimal total = BigDecimal.ZERO;
@@ -49,8 +49,8 @@ public class Compras {
     private MetodoPago metodoPago;
 
     @ManyToOne
-    @JoinColumn(name="empresa_id")
-    private Empresa empresa ;
+    @JoinColumn(name = "empresa_id")
+    private Empresa empresa;
 
 
     // MÉTODO HELPER: Muy importante para que el cascade funcione
@@ -66,7 +66,7 @@ public class Compras {
                    List<DetalleCompra> detalles,String observaciones,MetodoPago metodoPago) {
         this.id = id;
         this.numeroReferencia = numeroReferencia;
-        Proveedor = proveedor;
+        proveedor = proveedor;
         this.fechaCompra = fechaCompra;
         this.usuario = usuario;
         this.estado = estado;
@@ -93,11 +93,11 @@ public class Compras {
     }
 
     public Proveedores getProveedor() {
-        return Proveedor;
+        return proveedor;
     }
 
     public void setProveedor(Proveedores proveedor) {
-        Proveedor = proveedor;
+        this.proveedor = proveedor;
     }
 
     public LocalDateTime getFechaCompra() {

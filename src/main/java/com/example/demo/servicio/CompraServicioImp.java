@@ -1,11 +1,12 @@
 package com.example.demo.servicio;
 
 import com.example.demo.Seguridad.SecurityService;
-import com.example.demo.entidad.Compras;
-import com.example.demo.entidad.DetalleCompra;
-import com.example.demo.entidad.Empresa;
+import com.example.demo.entidad.*;
 import com.example.demo.entidad.Enum.EstadoCompra;
+import com.example.demo.entidad.Enum.EstadoPedido;
+import com.example.demo.entidad.Enum.MetodoPago;
 import com.example.demo.entidad.Enum.TipoVenta;
+import com.example.demo.repositorio.ComprasCreditoRepositorio;
 import com.example.demo.repositorio.ComprasRepositorio;
 import com.example.demo.repositorio.ProductoRepositorio;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 public class CompraServicioImp implements CompraServicio{
@@ -29,7 +31,7 @@ public class CompraServicioImp implements CompraServicio{
     private ProductoServicio productoServicio;
 
     @Autowired
-    private ProductoRepositorio ProductoRepositorio;
+    private ComprasCreditoRepositorio comprasCreditoRepo;
 
     @Autowired
     private SecurityService securityservice;
@@ -65,9 +67,7 @@ public class CompraServicioImp implements CompraServicio{
         if (compraExistente.getEstado() != EstadoCompra.BORRADOR) {
             throw new RuntimeException("No se puede editar una compra que ya ha sido confirmada.");
         }
-         repositorio.save(comprasNuevas);
-
-
+        repositorio.save(comprasNuevas);
     }
 
     @Override
@@ -111,9 +111,35 @@ public class CompraServicioImp implements CompraServicio{
         if(compra.getEstado() != EstadoCompra.BORRADOR){
             throw new IllegalStateException("La compra ya fue confirmada o anulada");
         }
-        String referencia = compra.getNumeroReferencia();
-        compra.setNumeroReferencia(referencia);
+        compra.setNumeroReferencia("ANUL-" + id);
+
+        for(DetalleCompra detalle : compra.getDetalles()){
+            productoServicio.DescontarStock(detalle.getCantidad(),detalle.getProductos().getId());
+        }
         compra.setEstado(EstadoCompra.ANULADA);
+        if (compra.getMetodoPago() == MetodoPago.CREDITO) {
+            ComprasCreditos comprasCreditos = comprasCreditoRepo.findCompraById(compra.getId());
+
+            // 1. Siempre verificar nulidad primero
+            if (comprasCreditos != null) {
+                // 2. Verificar abonos solo si comprasCreditos existe
+                if (comprasCreditos.getAbonos() != null && !comprasCreditos.getAbonos().isEmpty()) {
+                    BigDecimal totalAbonado = comprasCreditos.getAbonos().stream()
+                            .map(AbonosCompra::getMontoAbonado)
+                            // Filtro preventivo por si algún monto guardado es nulo
+                            .filter(Objects::nonNull)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                    throw new IllegalStateException("No se puede anular la compra porque ya existen abonos registrados por un total de: $"
+                            + totalAbonado + ". Primero debe gestionar los abonos realizados.");
+                }
+
+                // 3. Si no hay abonos, procedemos a cancelar la deuda
+                comprasCreditos.setEstadoDeuda(EstadoPedido.CANCELADO);
+                comprasCreditos.setSaldoPendiente(BigDecimal.ZERO);
+                comprasCreditoRepo.save(comprasCreditos);
+            }
+        }
     }
 
     public Map<String, Object> StokMensual(LocalDateTime inicio, LocalDateTime fin) {
