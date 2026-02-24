@@ -462,35 +462,42 @@
                     opcionesCat = primeraFila.querySelector('.categoria-filter').innerHTML;
                     opcionesProd = primeraFila.querySelector('.producto-select').innerHTML;
                 } else {
-                    Swal.fire('Error', 'No se pueden agregar productos si la lista está vacía. Recargue la página.', 'error');
+                    Swal.fire('Error', 'No se pueden agregar productos si la lista está vacía.', 'error');
                     return;
                 }
 
                 const tr = document.createElement('tr');
                 tr.className = 'detalle-item';
                 tr.innerHTML = `
-                <td><select class="form-control categoria-filter" onchange="filtrarProductos(this)">${opcionesCat}</select></td>
-                <td><select name="detalles[${detalleCount}].producto.id" class="form-control producto-select" required onchange="actualizarPrecioFila(this)">${opcionesProd}</select></td>
-                <td>
-                    <input type="number" name="detalles[${detalleCount}].cantidad" class="form-control cantidad-input" min="0.01" value="1.00" step="0.01" required onchange="calcularSubtotalFila(this)">
-                    <small class="text-muted unidad-medida">Unidad: Und</small>
-                </td>
-                <td>
-                    <input type="number" name="detalles[${detalleCount}].precioUnitario" class="form-control precio-unitario bg-light" step="0.01" readonly>
-                    <div class="custom-control custom-switch mt-1">
-                        <input type="checkbox" class="custom-control-input switch-mayor" id="switchMayor_${detalleCount}" onchange="actualizarPrecioFila(this)">
-                        <label class="custom-control-label small font-weight-normal" for="switchMayor_${detalleCount}">¿P. Mayor?</label>
-                    </div>
-                </td>
-                <td><input type="number" class="form-control impuesto-producto bg-light" readonly></td>
-                <td><input type="number" name="detalles[${detalleCount}].subtotal" class="form-control subtotal-item bg-light text-bold" readonly step="0.01"></td>
-                <td class="text-center"><button type="button" class="btn btn-link text-danger" onclick="eliminarFila(this)"><i class="fas fa-trash-alt"></i></button></td>
-            `;
+                    <td><select class="form-control categoria-filter" onchange="filtrarProductos(this)">${opcionesCat}</select></td>
+                    <td><select name="detalles[${detalleCount}].producto.id" class="form-control producto-select" required onchange="actualizarPrecioFila(this)">${opcionesProd}</select></td>
+                    <td>
+                        <input type="number" name="detalles[${detalleCount}].cantidad" class="form-control cantidad-input" min="0.01" value="1.00" step="0.01" required onchange="calcularSubtotalFila(this)">
+                        <small class="text-muted unidad-medida">Unidad: Und</small>
+                    </td>
+                    <td>
+                        <input type="number" name="detalles[${detalleCount}].precioUnitario" class="form-control precio-unitario bg-light" step="0.01" readonly>
+                        <div class="custom-control custom-switch mt-1">
+                            <input type="checkbox" class="custom-control-input switch-mayor" id="switchMayor_${detalleCount}" onchange="actualizarPrecioFila(this)">
+                            <label class="custom-control-label small font-weight-normal" for="switchMayor_${detalleCount}">¿P. Mayor?</label>
+                        </div>
+                    </td>
+                    <td><input type="number" class="form-control impuesto-producto bg-light" readonly></td>
+                    <td>
+                        <input type="number" name="detalles[${detalleCount}].subtotal"
+                               class="form-control subtotal-item bg-light text-bold"
+                               step="0.01"
+                               onchange="calcularPrecioDesdeSubtotal(this)">
+                    </td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-link text-danger" onclick="eliminarFila(this)">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                `;
 
-                // Limpiar valores seleccionados en el clon
                 const nuevoSelectProd = tr.querySelector('.producto-select');
                 nuevoSelectProd.value = "";
-                // Resetear opciones ocultas por filtro previo
                 Array.from(nuevoSelectProd.options).forEach(opt => opt.style.display = 'block');
 
                 container.appendChild(tr);
@@ -534,6 +541,8 @@
 
                 fila.querySelector('.precio-unitario').value = precioFinal.toFixed(2);
                 fila.querySelector('.impuesto-producto').value = impuesto;
+                fila.querySelector('.subtotal-item').readOnly = false;
+                fila.querySelector('.subtotal-item').classList.remove('bg-light');
 
                 // Lógica de unidades (Gramos/Litros/Und)
                 if (tipoVenta === 'KGM' || tipoVenta === 'LTR') {

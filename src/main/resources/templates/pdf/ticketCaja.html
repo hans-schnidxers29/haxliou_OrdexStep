@@ -85,6 +85,9 @@
     Ventas Transfer.: <span class="right" th:text="${'+ ' + #numbers.formatCurrency(ventasTransferencia)}">+ $0.00</span>
 </div>
 <div class="item-row">
+    Ventas TotalesVenta.: <span class="right" th:text="${'+ ' + #numbers.formatCurrency(totalVentas)}">+ $0.00</span>
+</div>
+<div class="item-row">
     Egresos/Compras: <span class="right" th:text="${'- ' + #numbers.formatCurrency(egresosTotales)}">- $0.00</span>
 </div>
 

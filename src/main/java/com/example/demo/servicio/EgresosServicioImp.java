@@ -2,6 +2,7 @@ package com.example.demo.servicio;
 
 import com.example.demo.Seguridad.SecurityService;
 import com.example.demo.entidad.Egresos;
+import com.example.demo.entidad.Enum.MetodoPago;
 import com.example.demo.entidad.Enum.TipoEgreso;
 import com.example.demo.repositorio.EgresoRepositorio;
 import org.hibernate.dialect.function.NvlCoalesceEmulation;
@@ -28,6 +29,8 @@ public class EgresosServicioImp implements EgresoServicio{
     @Override
     public void CrearGasto(Egresos egresos) {
         egresos.setEmpresa(securityService.ObtenerEmpresa());
+        egresos.setMetodoPago(egresos.getMetodoPago());
+        System.out.println(" metodo de pago guardado es " + egresos.getMetodoPago());
         repositorio.save(egresos);
     }
 
@@ -38,10 +41,11 @@ public class EgresosServicioImp implements EgresoServicio{
 
     @Override
     public Map<String, Object> DatosEgresos(LocalDateTime inicio, LocalDateTime fin) {
+        Long empresaId = securityService.obtenerEmpresaId();
 
-        BigDecimal egresosMensuales = repositorio.sumarEgresosPorDia(inicio,fin,securityService.obtenerEmpresaId());
-        BigDecimal GastosFijos = repositorio.SumaEgresosPorTipo(inicio, fin, TipoEgreso.GASTO_FIJO,securityService.obtenerEmpresaId());
-        BigDecimal GastosVariables = repositorio.SumaEgresosPorTipo(inicio,fin,TipoEgreso.GASTOS_VARIABLES,securityService.obtenerEmpresaId());
+        BigDecimal egresosMensuales = repositorio.sumarEgresosPorDia(inicio,fin,empresaId);
+        BigDecimal GastosFijos = repositorio.SumaEgresosPorTipo(inicio, fin, TipoEgreso.GASTO_FIJO,empresaId);
+        BigDecimal GastosVariables = repositorio.SumaEgresosPorTipo(inicio,fin,TipoEgreso.GASTOS_VARIABLES,empresaId);
 
         Map<String,Object> datos = new HashMap<>();
         // Lógica CORRECTA: Si es null, poner CERO. Si existe, usar el VALOR con escala 2.
@@ -57,8 +61,9 @@ public class EgresosServicioImp implements EgresoServicio{
 
     @Override
     public void deleteGasto(Long id) {
-        repositorio.existsById(id);
-        repositorio.deleteById(id);
+        if(repositorio.existsById(id)) {
+            repositorio.deleteById(id);
+        }
     }
 
     @Override

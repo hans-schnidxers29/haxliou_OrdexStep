@@ -84,7 +84,51 @@
                                         <small class="form-text text-muted">Ingrese el valor exacto del gasto</small>
                                     </div>
                                 </div>
+                                <div class="row">
+                                    <div class="col-md-6 form-group">
+                                        <label for="metodoPago"><i class="fas fa-credit-card mr-1"></i> Método de Pago <span class="text-danger">*</span></label>
+                                        <select id="metodoPago" th:field="*{metodoPago}" class="form-control custom-select" required>
+                                            <option value="" disabled selected>Seleccione método...</option>
+                                            <option th:each="metodo : ${metodosPago}"
+                                                    th:if="${metodo.toString() != 'CREDITO'}"
+                                                    th:value="${metodo}"
+                                                    th:text="${metodo}">
+                                            </option>
+                                        </select>
+                                        <div class="invalid-feedback">Seleccione el método de pago.</div>
+                                    </div>
 
+                                    <div class="col-md-6 form-group" id="contenedorCajaEgreso" style="display: none;">
+                                        <label><i class="fas fa-cash-register mr-1"></i> Control de Caja</label>
+                                        <div class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success mt-2">
+                                            <input type="checkbox" class="custom-control-input" id="salioCaja" th:field="*{salioCaja}">
+                                            <label class="custom-control-label" for="salioCaja">¿Este dinero salió de la Caja?</label>
+                                        </div>
+                                        <small class="form-text text-muted">Si está activo, restará del saldo de caja diario.</small>
+                                    </div>
+                                    <div id="panelMontosMixtos" class="col-md-12 mt-3" style="display: none;">
+                                        <div class="card card-outline card-warning bg-light shadow-sm">
+                                            <div class="card-body">
+                                                <h6 class="font-weight-bold text-warning mb-3">
+                                                    <i class="fas fa-divide mr-2"></i> Desglose de Pago Mixto
+                                                </h6>
+                                                <div class="row">
+                                                    <div class="col-md-6 form-group">
+                                                        <label>Monto en Efectivo</label>
+                                                        <input type="number" name="montoEfectivo" id="montoEfectivo"
+                                                               class="form-control input-mixto" step="0.001" value="0" min="0">
+                                                    </div>
+                                                    <div class="col-md-6 form-group">
+                                                        <label>Monto Transferencia</label>
+                                                        <input type="number" name="montoTransferencia" id="montoTransferencia"
+                                                               class="form-control input-mixto" step="0.001" value="0" min="0">
+                                                    </div>
+                                                </div>
+                                                <div id="errorSumaMixta" class="small font-weight-bold"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="row">
                                     <div class="col-md-12 form-group">
                                         <label for="descripcion"><i class="fas fa-clipboard mr-1"></i> Descripción del Gasto <span class="text-danger">*</span></label>
@@ -166,69 +210,123 @@
 <th:block layout:fragment="scripts">
     <script th:inline="javascript">
         $(document).ready(function() {
-            // Notificaciones
+            // 1. Notificaciones
             const s = /*[[${success}]]*/ null;
             const e = /*[[${error}]]*/ null;
             const i = /*[[${info}]]*/ null;
             const w = /*[[${warning}]]*/ null;
+
             checkNotifications(s, e, i, w);
 
-            // Validación de Bootstrap 4
-            $('.needs-validation').on('submit', function(event) {
-                if (this.checkValidity() === false) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                $(this).addClass('was-validated');
-            });
-
-            // Preview del monto en tiempo real
-            $('#monto').on('input', function() {
-                const valor = parseFloat($(this).val()) || 0;
-                $('#montoPreview').text('$ ' + valor.toLocaleString('es-CO', {
-                    minimumFractionDigits: 3,
-                    maximumFractionDigits: 3
-                }));
-            });
-
-            // Mostrar fecha actual
+            // 2. Fecha actual para el resumen visual
             const ahora = new Date();
             const fechaFormateada = ahora.toLocaleDateString('es-CO', {
-                day: '2-digit',
-                month: 'short',
-                year: 'numeric'
+                day: '2-digit', month: 'short', year: 'numeric'
             });
             $('#fechaActual').text(fechaFormateada);
 
-            // Confirmación antes de enviar
-            $('.needs-validation').on('submit', function(event) {
-                if (this.checkValidity() === true) {
-                    const monto = $('#monto').val();
-                    const tipo = $('#tipoEgreso option:selected').text();
+            // 3. Funciones de Lógica
+            function validarSumaMixta() {
+                if ($('#metodoPago').val() !== 'MIXTO') return true;
 
-                    event.preventDefault();
+                const totalEsperado = parseFloat($('#monto').val()) || 0;
+                const efe = parseFloat($('#montoEfectivo').val()) || 0;
+                const tra = parseFloat($('#montoTransferencia').val()) || 0;
+                const suma = efe + tra;
+                const dif = totalEsperado - suma;
+                const $error = $('#errorSumaMixta');
 
-                    Swal.fire({
-                        title: '¿Confirmar Registro?',
-                        html: `
-                            <div class="text-left">
-                                <p><strong>Tipo:</strong> ${tipo}</p>
-                                <p><strong>Monto:</strong> $${parseFloat(monto).toFixed(3)}</p>
-                            </div>
-                        `,
-                        icon: 'question',
-                        showCancelButton: true,
-                        confirmButtonColor: '#dc3545',
-                        cancelButtonColor: '#6c757d',
-                        confirmButtonText: 'Sí, registrar',
-                        cancelButtonText: 'Cancelar'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            this.submit();
-                        }
-                    });
+                if (Math.abs(dif) < 0.001) {
+                    $error.html('<i class="fas fa-check-circle"></i> Suma correcta').attr('class', 'text-success small font-weight-bold mt-1');
+                    return true;
+                } else {
+                    $error.html(`<i class="fas fa-times-circle"></i> Diferencia: $${dif.toFixed(3)}`).attr('class', 'text-danger small font-weight-bold mt-1');
+                    return false;
                 }
+            }
+
+            function gestionarMediosPago() {
+                const metodo = $('#metodoPago').val();
+                const $panelMixto = $('#panelMontosMixtos');
+                const $contenedorCaja = $('#contenedorCajaEgreso');
+
+                if (metodo === 'MIXTO') {
+                    $panelMixto.fadeIn();
+                    $contenedorCaja.fadeIn(); // Pregunta si el efectivo del mixto sale de caja
+                    validarSumaMixta();
+                } else if (metodo === 'EFECTIVO') {
+                    $panelMixto.hide();
+                    $contenedorCaja.fadeIn();
+                } else {
+                    $panelMixto.hide();
+                    $contenedorCaja.fadeOut();
+                    $('#salioCaja').prop('checked', false);
+                }
+            }
+
+            // 4. Eventos
+            $('#metodoPago, #monto').on('change input', gestionarMediosPago);
+            $('.input-mixto').on('input', validarSumaMixta);
+
+            $('#monto').on('input', function() {
+                const valor = parseFloat($(this).val()) || 0;
+                $('#montoPreview').text('$ ' + valor.toLocaleString('es-CO', {
+                    minimumFractionDigits: 3, maximumFractionDigits: 3
+                }));
             });
+
+            // 5. Envío del formulario
+            $('.needs-validation').on('submit', function(event) {
+                const form = this;
+
+                // Validación nativa
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    $(form).addClass('was-validated');
+                    return;
+                }
+
+                // Validación lógica mixta
+                if ($('#metodoPago').val() === 'MIXTO' && !validarSumaMixta()) {
+                    event.preventDefault();
+                    Swal.fire('Montos incorrectos', 'La suma de efectivo y transferencia debe ser igual al monto total.', 'error');
+                    return;
+                }
+
+                // Confirmación SweetAlert
+                event.preventDefault();
+                const monto = $('#monto').val();
+                const tipo = $('#tipoEgreso option:selected').text();
+                const metodo = $('#metodoPago option:selected').text();
+                const deCaja = $('#salioCaja').is(':checked') ?
+                    '<span class="badge badge-success">SÍ</span>' :
+                    '<span class="badge badge-secondary">NO</span>';
+
+                Swal.fire({
+                    title: '¿Confirmar Egreso?',
+                    html: `
+                        <div class="text-left border p-3 bg-light">
+                            <p class="mb-1"><strong>Tipo:</strong> ${tipo}</p>
+                            <p class="mb-1"><strong>Monto Total:</strong> $${parseFloat(monto).toLocaleString('es-CO')}</p>
+                            <p class="mb-1"><strong>Método:</strong> ${metodo}</p>
+                            <p class="mb-0"><strong>¿Salió de Caja?:</strong> ${deCaja}</p>
+                        </div>
+                    `,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    confirmButtonText: 'Registrar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            });
+
+            // Inicialización al cargar
+            gestionarMediosPago();
         });
     </script>
 </th:block>

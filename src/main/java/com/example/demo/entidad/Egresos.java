@@ -1,10 +1,13 @@
 package com.example.demo.entidad;
 
 
+import com.example.demo.entidad.Enum.MetodoPago;
 import com.example.demo.entidad.Enum.TipoEgreso;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 
 @Entity
@@ -31,9 +34,31 @@ public class Egresos {
     @Column(columnDefinition = "TEXT", name = "descripcion_gasto")
     private String descripcion;
 
+    @Enumerated(EnumType.STRING)
+    private MetodoPago metodoPago;
+
+    @Column(name = "salio_caja")
+    private boolean salioCaja = false ;
+
     @ManyToOne
     @JoinColumn(name = "empresa_id")
     private Empresa empresa ;
+
+    @OneToMany(mappedBy = "egresos", cascade = CascadeType.ALL)
+    private List<Pagos> pagos = new ArrayList<>();
+
+    // Método de conveniencia para agregar pagos
+    public void addPago(String metodo, BigDecimal monto) {
+        if(monto == null ) monto = BigDecimal.ZERO;
+        Pagos pago = new Pagos();
+        pago.setMetodoPago(MetodoPago.valueOf(metodo));
+        pago.setMonto(monto);
+        pago.setEgresos(this);
+        this.pagos.add(pago);
+    }
+    public void limpiarPagos() {
+        this.pagos.clear();
+    }
 
     public Egresos() {
     }
@@ -101,5 +126,29 @@ public class Egresos {
 
     public void setEmpresa(Empresa empresa) {
         this.empresa = empresa;
+    }
+
+    public MetodoPago getMetodoPago() {
+        return metodoPago;
+    }
+
+    public void setMetodoPago(MetodoPago metodoPago) {
+        this.metodoPago = metodoPago;
+    }
+
+    public boolean isSalioCaja() {
+        return salioCaja;
+    }
+
+    public void setSalioCaja(boolean salioCaja) {
+        this.salioCaja = salioCaja;
+    }
+
+    public List<Pagos> getPagos() {
+        return pagos;
+    }
+
+    public void setPagos(List<Pagos> pagos) {
+        this.pagos = pagos;
     }
 }

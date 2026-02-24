@@ -1,9 +1,11 @@
 package com.example.demo.controlador;
 
+import com.example.demo.entidad.Enum.MetodoPago;
 import com.example.demo.servicio.ServicioUsuario;
 import com.example.demo.entidad.Usuario;
 import com.example.demo.entidad.Egresos;
 import com.example.demo.servicio.EgresoServicio;
+import org.hibernate.annotations.Parameter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -13,6 +15,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -33,12 +36,15 @@ public class EgresosControlador {
     public String Mostrarformulario(Model model){
         Egresos egresos = new Egresos();
         model.addAttribute("egreso",egresos);
+        model.addAttribute("metodosPago", MetodoPago.values());
         return "viewEgresos/crearEgreso";
     }
 
     @PostMapping("/crear/nuevo")
     public String Crearegreso(@ModelAttribute("egreso") Egresos egresos, @AuthenticationPrincipal UserDetails userDetails,
-                              RedirectAttributes redirectAttributes){
+                              RedirectAttributes redirectAttributes, @RequestParam(defaultValue = "0") BigDecimal montoEfectivo,
+                              @RequestParam(defaultValue = "0") BigDecimal montoTarjeta,
+                              @RequestParam(defaultValue = "0") BigDecimal montoTransferencia){
         try {
             if (egresos.getMonto() == null) {
                 redirectAttributes.addFlashAttribute("error", "El monto no puede ser vacio");
@@ -50,6 +56,35 @@ public class EgresosControlador {
                 return "redirect:/egresos/crear";
             }
             egresos.setUsuario(usuario_registra);
+            if(egresos.getMetodoPago() == MetodoPago.MIXTO){
+
+                BigDecimal montoTotal = montoEfectivo.add(montoTarjeta).add(montoTransferencia);
+
+                if(montoTotal.compareTo(egresos.getMonto()) != 0){
+                    throw new RuntimeException("La suma de los medios de pago ($" + montoTotal +
+                            ") debe ser igual al total del egreso ($" + egresos.getMonto() + ")");
+                }
+                if (montoTotal.signum()<= 0){
+                    throw new RuntimeException("el monto debe ser mayor a cero");
+                }
+
+                if (montoEfectivo.signum() > 0) {
+                    egresos.addPago("EFECTIVO", montoEfectivo);
+                }
+                if (montoTarjeta.signum() > 0) {
+                    egresos.addPago("TARJETA", montoTarjeta);
+                }
+
+                if (montoTransferencia.signum() > 0) {
+                    egresos.addPago("TRANFERENCIA", montoTransferencia);
+                }
+            }else{
+                if (egresos.getMonto().signum() <= 0) {
+                    throw new RuntimeException("El monto del egreso debe ser mayor a cero");
+                }
+                egresos.addPago(egresos.getMetodoPago().name().toUpperCase(),egresos.getMonto());
+            }
+            if (egresos.isSalioCaja()) egresos.setSalioCaja(true);
             egresoServicio.CrearGasto(egresos);
             redirectAttributes.addFlashAttribute("success", "Egreso creado exitosamente");
             return "redirect:/egresos/listar";
@@ -87,12 +122,15 @@ public class EgresosControlador {
     public String mostrarFormularioEditar(@PathVariable Long id, Model model) {
         Egresos egreso = egresoServicio.ObtenerEgreso(id);
         model.addAttribute("egreso", egreso);
+        model.addAttribute("metodosPago", MetodoPago.values());
         return "viewEgresos/editarEgreso";
     }
-
     @PostMapping("/editar/{id}")
     public String editarEgreso(@PathVariable Long id,
                                @ModelAttribute("egreso") Egresos egreso,
+                               @RequestParam(defaultValue = "0") BigDecimal montoEfectivo,
+                               @RequestParam(defaultValue = "0") BigDecimal montoTarjeta,
+                               @RequestParam(defaultValue = "0") BigDecimal montoTransferencia,
                                BindingResult result,
                                RedirectAttributes redirectAttributes) {
 
@@ -101,28 +139,57 @@ public class EgresosControlador {
         }
 
         try {
-            // 1. Buscamos el egreso existente para no perder datos que no están en el form (como la fecha original)
+            // 1. Buscamos el egreso existente
             Egresos egresoExistente = egresoServicio.ObtenerEgreso(id);
-
             if (egresoExistente == null) {
                 redirectAttributes.addFlashAttribute("error", "El egreso no existe.");
                 return "redirect:/egresos/listar";
             }
 
-            // 2. Actualizamos solo los campos permitidos
+            // 2. Validación básica de monto
+            if (egreso.getMonto() == null || egreso.getMonto().signum() <= 0) {
+                throw new RuntimeException("El monto debe ser mayor a cero");
+            }
+
+            // 3. Actualizamos campos básicos
             egresoExistente.setTipoEgreso(egreso.getTipoEgreso());
             egresoExistente.setMonto(egreso.getMonto());
             egresoExistente.setDescripcion(egreso.getDescripcion());
+            egresoExistente.setMetodoPago(egreso.getMetodoPago());
 
-            // La fechaRegistro y el Usuario suelen mantenerse iguales a menos que decidas lo contrario
+            // 4. GESTIÓN DE PAGOS (Limpiamos los anteriores para re-procesar)
+            // Nota: Asegúrate de tener orphanRemoval = true en la relación de pagos en la entidad Egresos
+            egresoExistente.getPagos().clear();
 
-            // 3. Guardamos los cambios
+            if (egresoExistente.getMetodoPago() == MetodoPago.MIXTO) {
+                BigDecimal montoTotalCalculado = montoEfectivo.add(montoTarjeta).add(montoTransferencia);
+
+                if (montoTotalCalculado.compareTo(egresoExistente.getMonto()) != 0) {
+                    throw new RuntimeException("La suma de los medios ($" + montoTotalCalculado +
+                            ") debe coincidir con el total ($" + egresoExistente.getMonto() + ")");
+                }
+
+                if (montoEfectivo.signum() > 0) egresoExistente.addPago("EFECTIVO", montoEfectivo);
+                if (montoTarjeta.signum() > 0) egresoExistente.addPago("TARJETA", montoTarjeta);
+                if (montoTransferencia.signum() > 0) egresoExistente.addPago("TRANSFERENCIA", montoTransferencia);
+
+            } else {
+                // Pago único
+                egresoExistente.addPago(egresoExistente.getMetodoPago().name().toUpperCase(), egresoExistente.getMonto());
+            }
+            if(egreso.isSalioCaja()){
+                egresoExistente.setSalioCaja(true);
+            }else{
+                egresoExistente.setSalioCaja(false);
+            }
+
+            // 5. Guardar cambios
             egresoServicio.UpdateEgreso(egresoExistente);
-
-            redirectAttributes.addFlashAttribute("success", "Egreso actualizado correctamente.");
+            redirectAttributes.addFlashAttribute("success", "Egreso #" + id + " actualizado correctamente.");
 
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Error al actualizar: " + e.getMessage());
+            return "redirect:/egresos/listar";
         }
 
         return "redirect:/egresos/listar";

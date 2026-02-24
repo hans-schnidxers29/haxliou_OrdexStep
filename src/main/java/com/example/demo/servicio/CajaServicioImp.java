@@ -4,12 +4,9 @@ import com.example.demo.Seguridad.SecurityService;
 import com.example.demo.entidad.Empresa;
 import com.example.demo.entidad.Enum.MetodoPago;
 import com.example.demo.entidad.Usuario;
-import com.example.demo.repositorio.VentaRepositorio;
+import com.example.demo.repositorio.*;
 import com.example.demo.entidad.Caja;
 import com.example.demo.entidad.Enum.EstadoDeCaja;
-import com.example.demo.repositorio.Cajarepositorio;
-import com.example.demo.repositorio.ComprasRepositorio;
-import com.example.demo.repositorio.EgresoRepositorio;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
@@ -19,9 +16,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class CajaServicioImp implements CajaServicio{
@@ -40,11 +35,14 @@ public class CajaServicioImp implements CajaServicio{
 
     @Autowired
     private SecurityService securityService;
+    
+    @Autowired
+    private FinanzasRepositorio finanzasRepositorio;
 
 
     @Override
-    public Caja CajaAbierta(Usuario user) {
-        return cajaRepositorio.findByUsuarioAndEstadoAndEmpresaId(user,EstadoDeCaja.EN_PROCESO,securityService.obtenerEmpresaId()).orElse(null);
+    public Caja CajaAbierta(Long  EmpresaId) {
+        return cajaRepositorio.findByUsuarioAndEstadoAndEmpresaId(EstadoDeCaja.EN_PROCESO,securityService.obtenerEmpresaId()).orElse(null);
     }
 
     @Transactional
@@ -58,17 +56,13 @@ public class CajaServicioImp implements CajaServicio{
             return caja; // Si ya está cerrada, solo la devolvemos para el PDF
         }
 
-        Empresa empresa = securityService.ObtenerEmpresa();
-        if(empresa == null){
-            throw new IllegalStateException("error al abrir caja");
-        }
         LocalDateTime inicio = caja.getFechaApertura();
         LocalDateTime fin = LocalDateTime.now();
-
         // Cálculos (Tus consultas actuales)
-        BigDecimal totalEgresos = nvl(egresoRepositorio.sumarEgresosPorDia(inicio, fin,securityService.obtenerEmpresaId()));
-        BigDecimal totalCompras = nvl(comprasRepositorio.sumTotalCompras(inicio, fin,securityService.obtenerEmpresaId()));
-        BigDecimal totalVentas = nvl(ventarepositorio.sumaVentasRango(inicio, fin,securityService.obtenerEmpresaId()));
+        Map<String, Object> resumen = obtenerResumenActual(caja.getId());
+        BigDecimal totalEgresos = (BigDecimal) resumen.get("egresosGastos");
+        BigDecimal totalCompras =  (BigDecimal) resumen.get("egresosCompras");;
+        BigDecimal totalVentas = (BigDecimal) resumen.get("totalVentas");
 
         BigDecimal saldoTeorico = caja.getMontoInicial().add(totalVentas).subtract(totalEgresos).subtract(totalCompras);
 
@@ -79,7 +73,6 @@ public class CajaServicioImp implements CajaServicio{
         caja.setMontoReal(montoEnCaja);
         caja.setDiferencia(montoEnCaja.subtract(saldoTeorico));
         caja.setFechaCierre(fin);
-        caja.setEmpresa(empresa);
         caja.setEstado(EstadoDeCaja.CERRADA);
 
          return cajaRepositorio.save(caja);
@@ -89,14 +82,17 @@ public class CajaServicioImp implements CajaServicio{
     @Override
     public void EjecutarCaja(Usuario user, BigDecimal MontoInicial) {
 
-        boolean CajaEnEjecucion = cajaRepositorio.existsByUsuarioAndEstadoAndEmpresaId(user, EstadoDeCaja.EN_PROCESO,securityService.obtenerEmpresaId());
+        Empresa empresa = securityService.ObtenerEmpresa();
+        Long empresaId = empresa.getId();
+        boolean CajaEnEjecucion = cajaRepositorio.existsByUsuarioAndEstadoAndEmpresaId(user, EstadoDeCaja.EN_PROCESO,empresaId);
         if (CajaEnEjecucion) {
             throw new IllegalStateException("Ya existe una caja abierta para este usuario" + user.getEmail());
         }
-        Empresa empresa = securityService.ObtenerEmpresa();
+
         if(empresa == null){
             throw new IllegalStateException("error al abrir caja");
         }
+
         Caja abrirCaja = new Caja();
         abrirCaja.setMontoInicial(MontoInicial);
         abrirCaja.setUsuario(user);
@@ -106,61 +102,64 @@ public class CajaServicioImp implements CajaServicio{
         cajaRepositorio.save(abrirCaja);
     }
 
-        @Override
-        public Map<String, Object> obtenerResumenActual(Long cajaId) {
+    @Override
+    public Map<String, Object> obtenerResumenActual(Long cajaId) {
 
-            Caja caja = cajaRepositorio.findById(cajaId)
-                    .orElseThrow(() -> new RuntimeException("Caja no encontrada"));
+        Caja caja = cajaRepositorio.findById(cajaId)
+                .orElseThrow(() -> new RuntimeException("Caja no encontrada"));
 
-            LocalDateTime inicio = caja.getFechaApertura();
-            LocalDateTime fin = LocalDateTime.now();
+        LocalDateTime inicio = caja.getFechaApertura();
+        LocalDateTime fin = LocalDateTime.now();
 
-            // Protección contra nulos
-            BigDecimal egresos = nvl(egresoRepositorio.sumarEgresosPorDia(inicio, fin,securityService.obtenerEmpresaId()));
-            BigDecimal compras = nvl(comprasRepositorio.sumTotalCompras(inicio, fin,securityService.obtenerEmpresaId()));
+        Long empresaId =securityService.obtenerEmpresaId();
+        // Protección contra nulos
+        BigDecimal egresos = nvl(egresoRepositorio.egresosSalioCaja(inicio, fin,
+                Arrays.asList(MetodoPago.EFECTIVO,MetodoPago.MIXTO),empresaId));
+        BigDecimal compras = nvl(finanzasRepositorio.sumarAbonosCompraBySalioCajaEfectivo(inicio, fin, empresaId,
+                Arrays.asList(MetodoPago.MIXTO, MetodoPago.EFECTIVO)));
 
-            //Valores en metodo Mixto
-            BigDecimal EfectivoMixto = nvl(ventarepositorio.ValoresPorVentasMixtas(inicio, fin, MetodoPago.EFECTIVO,
-                    securityService.obtenerEmpresaId()));
-            BigDecimal TarjetaMixto = nvl(ventarepositorio.ValoresPorVentasMixtas(inicio, fin, MetodoPago.TARJETA,
-                    securityService.obtenerEmpresaId()));
-            BigDecimal TranferenciaMixto = nvl(ventarepositorio.ValoresPorVentasMixtas(inicio, fin, MetodoPago.TRANFERENCIA,
-                    securityService.obtenerEmpresaId()));
+        //Valores en metodo Mixto
+        BigDecimal EfectivoMixto = nvl(ventarepositorio.ValoresPorVentasMixtas(inicio, fin, MetodoPago.EFECTIVO,
+                empresaId));
+        BigDecimal TarjetaMixto = nvl(ventarepositorio.ValoresPorVentasMixtas(inicio, fin, MetodoPago.TARJETA,
+                empresaId));
+        BigDecimal TranferenciaMixto = nvl(ventarepositorio.ValoresPorVentasMixtas(inicio, fin, MetodoPago.TRANFERENCIA,
+                empresaId));
 
 
-            // Obtención de ventas por método
-            BigDecimal efectivo = nvl(ventarepositorio.sumaPorMetodoPago(inicio, fin, "EFECTIVO",
-                    securityService.obtenerEmpresaId()).add(EfectivoMixto));
-            BigDecimal tarjeta = nvl(ventarepositorio.sumaPorMetodoPago(inicio, fin, "TARJETA",
-                    securityService.obtenerEmpresaId()).add(TarjetaMixto));
-            BigDecimal transferencia = nvl(ventarepositorio.sumaPorMetodoPago(inicio, fin, "TRANFERENCIA",
-                    securityService.obtenerEmpresaId()).add(TranferenciaMixto));
+        // Obtención de ventas por método
+        BigDecimal efectivo = nvl(ventarepositorio.sumaPorMetodoPago(inicio, fin, "EFECTIVO",
+                empresaId).add(EfectivoMixto));
+        BigDecimal tarjeta = nvl(ventarepositorio.sumaPorMetodoPago(inicio, fin, "TARJETA",
+                empresaId).add(TarjetaMixto));
+        BigDecimal transferencia = nvl(ventarepositorio.sumaPorMetodoPago(inicio, fin, "TRANFERENCIA",
+                empresaId).add(TranferenciaMixto));
 
-            // El saldo en CAJA FÍSICA solo debe sumar el EFECTIVO (y quizás una parte del mixto)
-            // Aquí corregimos la duplicidad que tenías:
-            BigDecimal saldoActual = caja.getMontoInicial()
-                    .add(efectivo)
-                    .subtract(egresos)
-                    .subtract(compras);
+        // El saldo en CAJA FÍSICA solo debe sumar el EFECTIVO (y quizás una parte del mixto)
+        // Aquí corregimos la duplicidad que tenías:
+        BigDecimal saldoActual = caja.getMontoInicial()
+                .add(efectivo)
+                .subtract(egresos)
+                .subtract(compras);
 
-            // Total de todas las ventas (para estadística)
-            BigDecimal totalVentas = efectivo.add(tarjeta).add(transferencia);
+        // Total de todas las ventas (para estadística)
+        BigDecimal totalVentas = efectivo.add(tarjeta).add(transferencia);
 
-            Map<String, Object> resumenCaja = new HashMap<>();
-            resumenCaja.put("montoInicial", caja.getMontoInicial());
-            resumenCaja.put("ingresosEfectivo", efectivo);
-            resumenCaja.put("egresosGastos", egresos);
-            resumenCaja.put("egresosCompras", compras);
-            resumenCaja.put("egresosTotales", egresos.add(compras));
-            resumenCaja.put("saldoActual", saldoActual);
-            resumenCaja.put("totalVentas", totalVentas);
-            resumenCaja.put("ventasTarjeta", tarjeta);
-            resumenCaja.put("ventasTransferencia", transferencia);
-            resumenCaja.put("fechaConsulta", fin);
-            resumenCaja.put("fechaApertura", caja.getFechaApertura());
+        Map<String, Object> resumenCaja = new HashMap<>();
+        resumenCaja.put("montoInicial", caja.getMontoInicial());
+        resumenCaja.put("ingresosEfectivo", efectivo);
+        resumenCaja.put("egresosGastos", egresos);
+        resumenCaja.put("egresosCompras", compras);
+        resumenCaja.put("egresosTotales", egresos.add(compras));
+        resumenCaja.put("saldoActual", saldoActual);
+        resumenCaja.put("totalVentas", totalVentas);
+        resumenCaja.put("ventasTarjeta", tarjeta);
+        resumenCaja.put("ventasTransferencia", transferencia);
+        resumenCaja.put("fechaConsulta", fin);
+        resumenCaja.put("fechaApertura", caja.getFechaApertura());
 
-            return resumenCaja;
-        }
+        return resumenCaja;
+    }
 
     private BigDecimal nvl(BigDecimal value) {
         return value != null ? value : BigDecimal.ZERO;

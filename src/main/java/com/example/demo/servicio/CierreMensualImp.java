@@ -3,6 +3,7 @@ import com.example.demo.Seguridad.SecurityService;
 import com.example.demo.entidad.CierreMensual;
 import com.example.demo.entidad.Empresa;
 import com.example.demo.entidad.Enum.EstadoPedido;
+import com.example.demo.entidad.Enum.MetodoPago;
 import com.example.demo.entidad.Productos;
 import com.example.demo.repositorio.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,39 +36,45 @@ public class CierreMensualImp implements CierreMensualServicio{
     @Override
     @Transactional
     public CierreMensual procesarCierreMes(int mes, int anio) {
+
+        Empresa empresa = securityService.ObtenerEmpresa();
+        Long empresaId = empresa.getId();
         // 1. Rango de fechas
         LocalDate primerDia = LocalDate.of(anio, mes, 1);
         LocalDateTime inicio = primerDia.atStartOfDay();
         LocalDateTime fin = primerDia.with(TemporalAdjusters.lastDayOfMonth()).atTime(LocalTime.MAX);
 
+        Map<String,Object> datosDeResumen = obtenerResumenProyectado(mes,anio);
+
         // 2. Ventas por método de pago (Flujo de Caja)
-        BigDecimal efectivo = nvl(ventaRepo.sumaPorMetodoPago(inicio, fin, "EFECTIVO",securityService.obtenerEmpresaId()));
-        BigDecimal tarjeta = nvl(ventaRepo.sumaPorMetodoPago(inicio, fin, "TARJETA",securityService.obtenerEmpresaId()));
-        BigDecimal transferencia = nvl(ventaRepo.sumaPorMetodoPago(inicio, fin, "TRANSFERENCIA",securityService.obtenerEmpresaId()));
-        BigDecimal mixto = nvl(ventaRepo.sumaPorMetodoPago(inicio, fin, "MIXTO",securityService.obtenerEmpresaId()));
-        BigDecimal TotalSalientePedidos = pedidoRepo.sumaTotalPedidosPorEstado(inicio, fin, EstadoPedido.ENTREGADO,securityService.obtenerEmpresaId());
-        BigDecimal totalRecaudado = efectivo.add(tarjeta).add(transferencia).add(mixto).add(TotalSalientePedidos);
+        BigDecimal efectivo = (BigDecimal) datosDeResumen.get("efectivo");
+        BigDecimal tarjeta = (BigDecimal) datosDeResumen.get("tarjeta");
+        BigDecimal transferencia = (BigDecimal) datosDeResumen.get("transferencia");
+
+        BigDecimal TotalSalientePedidos = pedidoRepo.sumaTotalPedidosPorEstado(inicio, fin, EstadoPedido.ENTREGADO,empresaId);
+        BigDecimal totalRecaudado = efectivo.add(tarjeta).add(transferencia).add(TotalSalientePedidos);
 
         // 3. Impuestos (Pasivo)
-        BigDecimal impVentas = nvl(ventaRepo.sumaImpuestosMes(inicio, fin,securityService.obtenerEmpresaId()));
-        BigDecimal impPedidos = nvl(pedidoRepo.sumaImpuestosPedidos(inicio, fin,securityService.obtenerEmpresaId()));
+        BigDecimal impVentas = nvl(ventaRepo.sumaImpuestosMes(inicio, fin,empresaId));
+        BigDecimal impPedidos = nvl(pedidoRepo.sumaImpuestosPedidos(inicio, fin,empresaId));
         BigDecimal impuestosTotales = impVentas.add(impPedidos);
 
         // 4. Costos y Gastos (Egresos)
-        BigDecimal totalEgresos = nvl(egresoRepo.sumarEgresosPorDia(inicio, fin,securityService.obtenerEmpresaId()));
-        BigDecimal totalCompras = nvl(comprasRepo.sumTotalCompras(inicio, fin ,securityService.obtenerEmpresaId()));
+        BigDecimal totalEgresos = nvl(egresoRepo.sumarEgresosPorDia(inicio, fin,empresaId));
+        BigDecimal totalComprasEncredito= nvl(comprasRepo.comprasPorCreditos(empresaId,inicio,fin));
+        BigDecimal totalCompras = nvl(comprasRepo.sumTotalCompras(inicio, fin ,empresaId).add(totalComprasEncredito));
 
         // AQUÍ LA CORRECCIÓN: Costo de lo que se vendió para calcular utilidad
-        BigDecimal costoVendido = nvl(productoRepo.sumaCostoVendidoMes(inicio, fin,securityService.obtenerEmpresaId()));
+        BigDecimal costoVendido = nvl(productoRepo.sumaCostoVendidoMes(inicio, fin,empresaId));
 
         // Costo de productos que salieron por pedidos confirmados
-        BigDecimal costoPedidos = nvl(productoRepo.sumaCostoPedidosMes(inicio, fin, EstadoPedido.ENTREGADO,securityService.obtenerEmpresaId()));
+        BigDecimal costoPedidos = nvl(productoRepo.sumaCostoPedidosMes(inicio, fin, EstadoPedido.ENTREGADO,empresaId));
 
         // Suma total de lo que te costó la mercancía que ya no está en stock
         BigDecimal costoTotalSaliente = costoVendido.add(costoPedidos);
         // 5. Valor del Inventario (Capital en Stock)
         // Usamos la consulta optimizada que te sugerí
-        BigDecimal valorInventario = nvl(productoRepo.calcularValorInventarioTotal(securityService.obtenerEmpresaId()));
+        BigDecimal valorInventario = nvl(productoRepo.calcularValorInventarioTotal(empresaId));
 
         // 6. CÁLCULO DE UTILIDADES CORRECTO
         // Ingresos reales (lo que entró menos el IVA cobrado)
@@ -76,13 +83,12 @@ public class CierreMensualImp implements CierreMensualServicio{
         // Utilidad Bruta: Margen después de pagar la mercancía
         BigDecimal utilidadBruta = ventasNetas.subtract(costoVendido);
 
-        // Utilidad Neta: Lo que queda después de pagar arriendo, servicios, etc (Egresos)
+        // Utilidad Neta: Lo que queda después de pagar arriendo, servicios, etc. (Egresos)
         BigDecimal utilidadNeta = utilidadBruta.subtract(totalEgresos);
 
-        BigDecimal TotalVentasPorMayor=nvl(ventaRepo.VentasTotalesAlMayor(securityService.obtenerEmpresaId()));
+        BigDecimal TotalVentasPorMayor=nvl(ventaRepo.VentasTotalesAlMayor(empresaId));
         // 7. Evitar duplicados
-        cierreRepo.eliminarCierreExistente(mes, anio,securityService.obtenerEmpresaId());
-        Empresa empresa = securityService.ObtenerEmpresa();
+        cierreRepo.eliminarCierreExistente(mes, anio,empresaId);
         // 8. Construir objeto de cierre
         CierreMensual cierre = new CierreMensual();
         cierre.setMes(mes);
@@ -101,8 +107,8 @@ public class CierreMensualImp implements CierreMensualServicio{
         cierre.setEmpresa(empresa);
 
         // Estadísticas adicionales
-        cierre.setCantidadPedidos(pedidoRepo.cantidadPedidosPorRango(inicio, fin, EstadoPedido.ENTREGADO,securityService.obtenerEmpresaId()).intValue());
-        cierre.setNuevosClientes(nvlInt(clienteRepo.contarNuevosClientesPorRango(inicio, fin,securityService.obtenerEmpresaId())));
+        cierre.setCantidadPedidos(pedidoRepo.cantidadPedidosPorRango(inicio, fin, EstadoPedido.ENTREGADO,empresaId).intValue());
+        cierre.setNuevosClientes(nvlInt(clienteRepo.contarNuevosClientesPorRango(inicio, fin,empresaId)));
         cierre.setTotalProductosEnStock(productoRepo.findAll().size());
         cierre.setValorInventarioTotal(valorInventario);
         cierre.setTotalVentasAlMayor(TotalVentasPorMayor);
@@ -121,7 +127,8 @@ public class CierreMensualImp implements CierreMensualServicio{
 
     @Override
     public Map<String, Object> obtenerResumenProyectado(int mes, int anio) {
-        
+        Long empresaId = securityService.obtenerEmpresaId();
+
         Map<String, Object> resumen = new HashMap<>();
         LocalDateTime fechaInicio = LocalDateTime.of(anio, mes, 1, 0, 0);
         LocalDateTime fechaFin = fechaInicio.with(TemporalAdjusters.lastDayOfMonth()).withHour(23).withMinute(59).withSecond(59);
@@ -150,20 +157,25 @@ public class CierreMensualImp implements CierreMensualServicio{
                         .equalsIgnoreCase("KGM"))
                 .map(Productos::getCantidad).reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        BigDecimal valorInventario = nvl(productoRepo.calcularValorInventarioTotal(securityService.obtenerEmpresaId()));
+        BigDecimal valorInventario = nvl(productoRepo.calcularValorInventarioTotal(empresaId));
+        BigDecimal efectivoMixto = nvl(ventaRepo.ValoresPorVentasMixtas(fechaInicio,fechaFin, MetodoPago.EFECTIVO,empresaId));
+        BigDecimal transfMixto = nvl(ventaRepo.ValoresPorVentasMixtas(fechaInicio,fechaFin, MetodoPago.TRANFERENCIA,empresaId));
+        BigDecimal tarjetMixto = nvl(ventaRepo.ValoresPorVentasMixtas(fechaInicio,fechaFin, MetodoPago.TARJETA,empresaId));
 
         // 2. Ventas por método de pago
-        BigDecimal efectivo = nvl(ventaRepo.sumaPorMetodoPago(fechaInicio, fechaFin, "EFECTIVO",securityService.obtenerEmpresaId()));
-        BigDecimal tarjeta = nvl(ventaRepo.sumaPorMetodoPago(fechaInicio, fechaFin, "TARJETA",securityService.obtenerEmpresaId()));
-        BigDecimal transferencia = nvl(ventaRepo.sumaPorMetodoPago(fechaInicio, fechaFin, "TRANSFERENCIA",securityService.obtenerEmpresaId()));
-        BigDecimal mixto = nvl(ventaRepo.sumaPorMetodoPago(fechaInicio, fechaFin, "MIXTO",securityService.obtenerEmpresaId()));
+        BigDecimal efectivo = nvl(ventaRepo.sumaPorMetodoPago(fechaInicio, fechaFin, "EFECTIVO",empresaId).
+                add(efectivoMixto));
+        BigDecimal tarjeta = nvl(ventaRepo.sumaPorMetodoPago(fechaInicio, fechaFin, "TARJETA",empresaId).
+                add(tarjetMixto));
+        BigDecimal transferencia = nvl(ventaRepo.sumaPorMetodoPago(fechaInicio, fechaFin, "TRANFERENCIA",empresaId).
+                add(transfMixto));
 
         // totalVentas representa solo ventas directas
-        BigDecimal totalVentas = efectivo.add(tarjeta).add(transferencia).add(mixto);
+        BigDecimal totalVentas = efectivo.add(tarjeta).add(transferencia);
 
         // 3. Consolidación de Pedidos (MOVIDO HACIA ARRIBA PARA EL CÁLCULO)
-        BigDecimal TotalPediosConfirmados = pedidoRepo.sumaTotalPedidosPorEstado(fechaInicio, fechaFin, EstadoPedido.ENTREGADO,securityService.obtenerEmpresaId());
-        Long TotalPedidos = pedidoRepo.cantidadPedidosPorRango(fechaInicio, fechaFin, EstadoPedido.ENTREGADO,securityService.obtenerEmpresaId());
+        BigDecimal TotalPediosConfirmados = pedidoRepo.sumaTotalPedidosPorEstado(fechaInicio, fechaFin, EstadoPedido.ENTREGADO,empresaId);
+        Long TotalPedidos = pedidoRepo.cantidadPedidosPorRango(fechaInicio, fechaFin, EstadoPedido.ENTREGADO,empresaId);
         if (TotalPedidos == null) TotalPedidos = 0L;
 
 
@@ -179,7 +191,7 @@ public class CierreMensualImp implements CierreMensualServicio{
         }
 
         // 5. Consolidación de Cantidades y Ticket Promedio
-        BigDecimal CantidadDeVentas = nvl(ventaRepo.CantidadDeVentas(fechaInicio, fechaFin,securityService.obtenerEmpresaId()));
+        BigDecimal CantidadDeVentas = nvl(ventaRepo.CantidadDeVentas(fechaInicio, fechaFin,empresaId));
         BigDecimal TotalCantidades = CantidadDeVentas.add(BigDecimal.valueOf(TotalPedidos));
 
         BigDecimal TicketPromedio = BigDecimal.ZERO.setScale(2);
@@ -187,10 +199,10 @@ public class CierreMensualImp implements CierreMensualServicio{
             // El ticket promedio debe ser sobre el dinero TOTAL
             TicketPromedio = TotalIngresos.divide(TotalCantidades, 2, RoundingMode.HALF_UP);
         }
-        BigDecimal TotalVentasAlMAyor = nvl(ventaRepo.VentasTotalesAlMayor(securityService.obtenerEmpresaId()));
+        BigDecimal TotalVentasAlMAyor = nvl(ventaRepo.VentasTotalesAlMayor(empresaId));
         BigDecimal TotalVentasAlDetal = nvl(TotalIngresos.subtract(TotalVentasAlMAyor));
 
-        BigDecimal egresos = nvl(egresoRepo.sumarEgresosPorDia(fechaInicio, fechaFin,securityService.obtenerEmpresaId()));
+        BigDecimal egresos = nvl(egresoRepo.sumarEgresosPorDia(fechaInicio, fechaFin,empresaId));
 
         // Mantenemos tus nombres exactos en el mapa
         resumen.put("stockUnidades", stockTotalUnd);
@@ -206,37 +218,41 @@ public class CierreMensualImp implements CierreMensualServicio{
         resumen.put("totalPedidos", TotalPedidos);
         resumen.put("VentasDetal",TotalVentasAlDetal);
         resumen.put("VentasMayor", TotalVentasAlMAyor);
+        resumen.put("efectivo",efectivo);
+        resumen.put("tarjeta",tarjeta);
+        resumen.put("transferencia",transferencia);
 
         return resumen;
     }
 
     @Override
     public BigDecimal calcularUtilidad(int mes, int anio) {
+        Long empresaId = securityService.obtenerEmpresaId();
         LocalDateTime inicio = LocalDateTime.of(anio, mes, 1, 0, 0);
         LocalDateTime fin = inicio.with(TemporalAdjusters.lastDayOfMonth()).withHour(23).withMinute(59).withSecond(59);
 
         // 1. OBTENER DINERO TOTAL ENTRADO (Con IVA)
-        BigDecimal ingresosBrutosVentas = nvl(ventaRepo.sumaVentasRango(inicio, fin,securityService.obtenerEmpresaId()));
-        BigDecimal ingresosBrutosPedidos = nvl(pedidoRepo.sumaTotalPedidosPorEstado(inicio, fin, EstadoPedido.ENTREGADO,securityService.obtenerEmpresaId()));
+        BigDecimal ingresosBrutosVentas = nvl(ventaRepo.sumaVentasRango(inicio, fin,empresaId));
+        BigDecimal ingresosBrutosPedidos = nvl(pedidoRepo.sumaTotalPedidosPorEstado(inicio, fin, EstadoPedido.ENTREGADO,empresaId));
         BigDecimal granTotalEntradas = ingresosBrutosVentas.add(ingresosBrutosPedidos);
 
         // 2. OBTENER IVA (Este dinero no es tuyo, se lo debes al estado)
-        BigDecimal totalIva = nvl(ventaRepo.sumaImpuestosMes(inicio, fin,securityService.obtenerEmpresaId()))
-                .add(nvl(pedidoRepo.sumaImpuestosPedidos(inicio, fin,securityService.obtenerEmpresaId())));
+        BigDecimal totalIva = nvl(ventaRepo.sumaImpuestosMes(inicio, fin,empresaId))
+                .add(nvl(pedidoRepo.sumaImpuestosPedidos(inicio, fin,empresaId)));
 
         // 3. VENTAS NETAS (Lo que realmente es del negocio antes de costos)
         BigDecimal ventasNetasReales = granTotalEntradas.subtract(totalIva);
 
         // 4. COSTO DE LO VENDIDO (Lo que pagaste por lo que salió)
-        BigDecimal costoMercancia = nvl(productoRepo.sumaCostoVendidoMes(inicio, fin,securityService.obtenerEmpresaId()))
-                .add(nvl(productoRepo.sumaCostoPedidosMes(inicio, fin, EstadoPedido.ENTREGADO,securityService.obtenerEmpresaId())));
+        BigDecimal costoMercancia = nvl(productoRepo.sumaCostoVendidoMes(inicio, fin,empresaId))
+                .add(nvl(productoRepo.sumaCostoPedidosMes(inicio, fin, EstadoPedido.ENTREGADO,empresaId)));
 
         // 5. UTILIDAD BRUTA (Ventas Netas - Costo de Mercancía)
         // Si esto es positivo, el negocio es rentable por producto.
         BigDecimal utilidadBruta = ventasNetasReales.subtract(costoMercancia);
 
         // 6. GASTOS FIJOS (Egresos)
-        BigDecimal egresos = nvl(egresoRepo.sumarEgresosPorDia(inicio, fin,securityService.obtenerEmpresaId()));
+        BigDecimal egresos = nvl(egresoRepo.sumarEgresosPorDia(inicio, fin,empresaId));
 
         // 7. UTILIDAD NETA (Lo que queda en tu bolsillo)
         return utilidadBruta.subtract(egresos).setScale(2, RoundingMode.HALF_UP);

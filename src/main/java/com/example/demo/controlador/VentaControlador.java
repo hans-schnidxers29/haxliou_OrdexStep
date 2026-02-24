@@ -107,7 +107,7 @@ public class VentaControlador {
         Usuario usuario = servicioUsuario.findByEmail(userDetails.getUsername());
 
         // 🔑 OBTENER CAJA ABIERTA
-        Caja cajaActiva = cajaServicio.CajaAbierta(usuario);
+        Caja cajaActiva = cajaServicio.CajaAbierta(securityService.obtenerEmpresaId());
 
         // 🔑 ENVIAR AMBAS COSAS
         model.addAttribute("cajaAbierta", cajaActiva);
@@ -447,7 +447,7 @@ public class VentaControlador {
             venta.setEmpresa(ventaExistente.getEmpresa());
             venta.setCliente(clienteService.clientdById(venta.getCliente().getId()));
             venta.setSubtotal(subtotalCalculado.setScale(2, RoundingMode.HALF_UP));
-             servicio.DescontarStock(venta);
+
 
             // 4. Totales Finales
             // Priorizar subtotal manual del formulario si existe

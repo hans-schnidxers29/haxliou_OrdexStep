@@ -16,7 +16,7 @@ public class Pagos {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "venta_id", nullable = false)
+    @JoinColumn(name = "venta_id")
     private Venta venta;
 
     @Enumerated(EnumType.STRING)
@@ -27,6 +27,14 @@ public class Pagos {
 
     @Column(name = "fecha_pago")
     private LocalDateTime fechaPago = LocalDateTime.now();
+
+    @ManyToOne
+    @JoinColumn(name = "abonos_id")
+    private AbonosCompra abonosCompra;
+
+    @ManyToOne
+    @JoinColumn(name = "egresos_id")
+    private Egresos egresos;
 
     public Pagos() {
     }
@@ -69,5 +77,21 @@ public class Pagos {
 
     public void setVenta(Venta venta) {
         this.venta = venta;
+    }
+
+    public AbonosCompra getAbonosCompra() {
+        return abonosCompra;
+    }
+
+    public void setAbonosCompra(AbonosCompra abonosCompra) {
+        this.abonosCompra = abonosCompra;
+    }
+
+    public Egresos getEgresos() {
+        return egresos;
+    }
+
+    public void setEgresos(Egresos egresos) {
+        this.egresos = egresos;
     }
 }

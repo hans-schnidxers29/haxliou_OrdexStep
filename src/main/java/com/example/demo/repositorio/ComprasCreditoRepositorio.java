@@ -5,10 +5,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Repository
 public interface ComprasCreditoRepositorio extends JpaRepository<ComprasCreditos,Long> {
-    ComprasCreditos findCompraById(Long id);
 
-    Object findAllBySaldoPendienteGreaterThan(BigDecimal saldoPendienteIsGreaterThan);
+    ComprasCreditos findCompraById(Long id);
+    List<ComprasCreditos> findAllBySaldoPendienteGreaterThan(BigDecimal saldoPendienteIsGreaterThan);
 }

@@ -40,6 +40,7 @@ public class CompraServicioImp implements CompraServicio{
     public void saveCompra(Compras compras) {
         Empresa empresa = securityservice.ObtenerEmpresa();
         compras.setEmpresa(empresa);
+        compras.setNumeroReferencia(GenerarReferenciasDeCompras());
         repositorio.save(compras);
     }
 
@@ -100,7 +101,6 @@ public class CompraServicioImp implements CompraServicio{
                     nuevoPrecioCompra
             );
         }
-            
         compra.setEstado(EstadoCompra.CONFIRMADA);
     }
 
@@ -144,23 +144,30 @@ public class CompraServicioImp implements CompraServicio{
 
     public Map<String, Object> StokMensual(LocalDateTime inicio, LocalDateTime fin) {
         Map<String, Object> datos = new HashMap<>();
+        Long empresaId = securityservice.obtenerEmpresaId();
 
-        // Gasto total (este ya te funciona)
-        datos.put("TotalEgresos", repositorio.sumTotalCompras(inicio, fin, securityservice.obtenerEmpresaId()));
+        // Gasto total
+        BigDecimal GastosComprasCredito = repositorio.comprasPorCreditos(empresaId,inicio,fin);
+        if (GastosComprasCredito == null) GastosComprasCredito = BigDecimal.ZERO;
+
+        BigDecimal TotalEgresosCompras = repositorio.sumTotalCompras(inicio, fin, empresaId);
+        if (TotalEgresosCompras == null) GastosComprasCredito = BigDecimal.ZERO;
+
+        datos.put("TotalEgresos", TotalEgresosCompras.add(GastosComprasCredito));
 
         // Cantidades (usando los nombres de los Enums)
         BigDecimal unidades = repositorio.sumarTotalEntrantePorTipoYRango(
                 "94", // Convertir a String
                 EstadoCompra.CONFIRMADA.name(), // Convertir a String
                 inicio,
-                fin, securityservice.obtenerEmpresaId()
+                fin, empresaId
         );
 
         BigDecimal peso = repositorio.sumarTotalEntrantePorTipoYRango(
                 "KGM", // O el nombre exacto de tu enum para peso
                 EstadoCompra.CONFIRMADA.name(),
                 inicio,
-                fin,securityservice.obtenerEmpresaId()
+                fin,empresaId
         );
 
         datos.put("EntradasEnUnidades", unidades);

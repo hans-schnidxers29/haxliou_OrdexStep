@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/adminlte}">
+<head>
+    <title>Cuentas por Pagar</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1><i class="fas fa-file-invoice-dollar mr-2"></i> Cuentas por Pagar</h1>
+                </div>
+                <div class="col-sm-6 text-right">
+                    <a th:href="@{/compras/crear}" class="btn btn-primary shadow-sm">
+                        <i class="fas fa-cart-plus mr-1"></i> Nueva Compra
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="content">
+        <div class="container-fluid">
+            <div th:if="${success}" class="alert alert-success alert-dismissible shadow">
+                <button type="button" class="close" data-dismiss="alert">×</button>
+                <i class="icon fas fa-check"></i> <span th:text="${success}"></span>
+            </div>
+            <div th:if="${error}" class="alert alert-danger alert-dismissible shadow">
+                <button type="button" class="close" data-dismiss="alert">×</button>
+                <i class="icon fas fa-ban"></i> <span th:text="${error}"></span>
+            </div>
+
+            <div class="card card-outline card-primary shadow">
+                <div class="card-header">
+                    <h3 class="card-title">Listado de Deudas Pendientes</h3>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-hover table-striped mb-0">
+                        <thead class="bg-light">
+                        <tr>
+                            <th>ID Compra</th>
+                            <th>Proveedor</th>
+                            <th>Monto Total</th>
+                            <th>Saldo Pendiente</th>
+                            <th>Vencimiento</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="cuenta : ${cuentas}">
+                            <td th:text="${cuenta.compra.id}">#</td>
+                            <td th:text="${cuenta.compra.proveedor.nombre}" class="font-weight-bold">Proveedor</td>
+                            <td th:text="${#numbers.formatCurrency(cuenta.montoTotal)}">$0.00</td>
+                            <td class="text-danger font-weight-bold" th:text="${#numbers.formatCurrency(cuenta.saldoPendiente)}">$0.00</td>
+                            <td th:text="${#temporals.format(cuenta.fechaVencimiento, 'dd/MM/yyyy')}">01/01/2024</td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-info btn-sm shadow-sm btn-abono"
+                                        data-toggle="modal"
+                                        data-target="#modalRegistrarAbono"
+                                        th:data-id="${cuenta.id}"
+                                        th:data-saldo="${cuenta.saldoPendiente}"
+                                        th:data-compra="${cuenta.compra.id}">
+                                    <i class="fas fa-hand-holding-usd mr-1"></i> Abonar
+                                </button>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(cuentas)}">
+                            <td colspan="6" class="text-center text-muted py-4">No hay deudas pendientes de pago.</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="modal fade" id="modalRegistrarAbono" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+        <div class="modal-dialog shadow-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title" id="modalLabel">
+                        <i class="fas fa-coins mr-2"></i> Registrar Abono a Compra #<span id="txtIdCompra"></span>
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <form th:action="@{/compras/registrar-abono}" method="POST" class="needs-validation" novalidate>
+                    <div class="modal-body">
+                        <input type="hidden" name="cuentaId" id="inputCuentaId">
+
+                        <div class="form-group">
+                            <label>Monto a Abonar <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text font-weight-bold">$</span>
+                                </div>
+                                <input type="number" name="monto" id="inputMonto" class="form-control"
+                                       step="0.01" min="0.01" placeholder="0.00" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Método de Pago <span class="text-danger">*</span></label>
+                            <select name="metodoPago" id="selectMetodoPago" class="form-control select2" style="width: 100%;" required>
+                                <option th:each="metodo : ${metodosPago}"
+                                        th:if="${metodo.toString() != 'CREDITO'}"
+                                        th:value="${metodo}"
+                                        th:text="${metodo}">
+                                </option>
+                            </select>
+                        </div>
+
+                        <div id="seccionMixto" style="display: none;" class="alert alert-secondary border shadow-sm">
+                            <h6 class="font-weight-bold small"><i class="fas fa-calculator mr-1"></i> Desglose Obligatorio</h6>
+                            <div class="row">
+                                <div class="col-6 form-group mb-0">
+                                    <label class="small">Efectivo</label>
+                                    <input type="number" name="montoEfectivo" id="inputMontoEfectivo" class="form-control form-control-sm" step="0.01" min="0" value="0">
+                                </div>
+                                <div class="col-6 form-group mb-0">
+                                    <label class="small">Transferencia</label>
+                                    <input type="number" name="montoTrans" id="inputMontoTrans" class="form-control form-control-sm" step="0.01" min="0" value="0">
+                                </div>
+                            </div>
+                            <div id="errorMixto" class="text-danger small d-none mt-2">
+                                <i class="fas fa-times-circle"></i> La suma debe ser igual o mayor al monto total.
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-0" id="contenedorCaja" style="display: none;">
+                            <label for="afectaCaja">Control de Tesorería</label>
+                            <div class="custom-control custom-switch">
+                                <input type="checkbox" class="custom-control-input" id="afectaCaja" name="afectaCaja" value="true" checked>
+                                <label class="custom-control-label font-weight-normal" for="afectaCaja">
+                                    ¿Descontar de la caja principal?
+                                </label>
+                            </div>
+                            <small class="text-muted">Si se desactiva, el pago se registrará sin afectar el saldo de caja actual.</small>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer bg-light justify-content-between">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                            <i class="fas fa-times mr-1"></i> Cerrar
+                        </button>
+                        <button type="submit" class="btn btn-info">
+                            <i class="fas fa-check-circle mr-1"></i> Confirmar Pago
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="scripts">
+    <script>
+        $(document).ready(function() {
+            // 1. Carga de datos dinámicos al abrir el modal
+            $('.btn-abono').on('click', function() {
+                const id = $(this).data('id');
+                const saldo = $(this).data('saldo');
+                const compraId = $(this).data('compra');
+
+                $('#inputCuentaId').val(id);
+                // Formateo visual del saldo pendiente
+                const saldoFormateado = new Intl.NumberFormat('es-CO', {
+                    style: 'currency',
+                    currency: 'COP'
+                }).format(saldo);
+
+                $('#txtSaldoPendiente').val(saldoFormateado);
+                $('#txtIdCompra').text(compraId);
+                $('#inputMonto').attr('max', saldo);
+            });
+
+            // 2. Función principal para controlar la visibilidad de los campos
+            function gestionarInterfazPago() {
+                const metodo = $('#selectMetodoPago').val();
+                const $seccionMixto = $('#seccionMixto');
+                const $contenedorCaja = $('#contenedorCaja');
+
+                // REGLA: El switch de caja aparece en EFECTIVO o MIXTO
+                if (metodo === 'EFECTIVO' || metodo === 'MIXTO') {
+                    $contenedorCaja.fadeIn();
+                } else {
+                    $contenedorCaja.fadeOut();
+                    $('#afectaCaja').prop('checked', false);
+                }
+
+                // REGLA: El desglose de montos solo aparece en MIXTO
+                if (metodo === 'MIXTO') {
+                    $seccionMixto.fadeIn();
+                } else {
+                    $seccionMixto.fadeOut();
+                    // Limpiamos valores si cambia a otro método
+                    $('#inputMontoEfectivo, #inputMontoTrans').val(0);
+                }
+            }
+
+            // Eventos de cambio en el selector de método
+            $('#selectMetodoPago').on('change', gestionarInterfazPago);
+
+            // Re-verificar al mostrar el modal
+            $('#modalRegistrarAbono').on('shown.bs.modal', function() {
+                gestionarInterfazPago();
+            });
+
+            // 3. Validación de envío (Bootstrap + Regla Mixta)
+            const form = document.querySelector('.needs-validation');
+
+            $(form).on('submit', function(event) {
+                const metodo = $('#selectMetodoPago').val();
+                let esValido = true;
+
+                // Validación Bootstrap estándar
+                if (this.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    esValido = false;
+                }
+
+                // Validación lógica para pago MIXTO
+                if (metodo === 'MIXTO') {
+                    const montoTotal = parseFloat($('#inputMonto').val()) || 0;
+                    const efectivo = parseFloat($('#inputMontoEfectivo').val()) || 0;
+                    const trans = parseFloat($('#inputMontoTrans').val()) || 0;
+                    const sumaDesglose = efectivo + trans;
+
+                    // Regla: Suma >= Monto Total (Permite ajuste mayor, no menor)
+                    if (sumaDesglose < montoTotal) {
+                        event.preventDefault();
+                        $('#errorMixto').removeClass('d-none');
+                        $('#inputMontoEfectivo, #inputMontoTrans').addClass('is-invalid');
+                        esValido = false;
+                    } else {
+                        $('#errorMixto').addClass('d-none');
+                        $('#inputMontoEfectivo, #inputMontoTrans').removeClass('is-invalid');
+                    }
+                }
+
+                $(this).addClass('was-validated');
+                return esValido;
+            });
+
+            // 4. Limpieza total al cerrar el modal
+            $('#modalRegistrarAbono').on('hidden.bs.modal', function () {
+                const $form = $(this).find('form');
+                $form.removeClass('was-validated');
+                $form[0].reset();
+                $('#errorMixto').addClass('d-none');
+                $('#inputMontoEfectivo, #inputMontoTrans').removeClass('is-invalid');
+                $('#seccionMixto, #contenedorCaja').hide();
+            });
+        });
+    </script>
+</th:block>
+</body>
+</html>

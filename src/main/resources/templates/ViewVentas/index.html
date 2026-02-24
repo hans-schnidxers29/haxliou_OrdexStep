@@ -60,10 +60,41 @@
             overflow-y: auto;
         }
 
-        . bg-gradient-success-light {
+        .bg-gradient-success-light {
              background-color: rgba(40, 167, 69, 0.15) !important;
              border-left: 5px solid #28a745 !important;
-         }
+        }
+        /* Resaltar los selects e inputs de fecha */
+        #filtroFecha, #fechaInicio, #fechaFin {
+            border: 2px solid #343a40; /* Borde más grueso y oscuro (Gris oscuro de AdminLTE) */
+            font-weight: 700;          /* Texto en negrita */
+            color: #212529;            /* Color de texto bien definido */
+            border-radius: 8px;        /* Bordes un poco más redondeados para estilo moderno */
+            transition: all 0.3s ease; /* Suavidad al hacer foco */
+        }
+
+        /* Cambio de color cuando el usuario hace clic (Focus) */
+        #filtroFecha:focus, #fechaInicio:focus, #fechaFin:focus {
+            border-color: #007bff;     /* Cambia a azul al seleccionar */
+            box-shadow: 0 0 8px rgba(0, 123, 255, 0.25);
+            outline: none;
+        }
+
+        /* Resaltar las etiquetas (Labels) */
+        label[for], label {
+            font-weight: 800;          /* Etiquetas mucho más marcadas */
+            text-transform: uppercase; /* Opcional: texto en mayúsculas para más impacto */
+            font-size: 0.85rem;
+            color: #495057;
+        }
+
+        /* Estilo para el contenedor del rango personalizado */
+        #rangoPersonalizado {
+            padding: 10px;
+            background-color: #f8f9fa; /* Fondo sutil para agrupar los inputs */
+            border-radius: 10px;
+            border: 1px dashed #ced4da;
+        }
     </style>
 </head>
 
@@ -144,6 +175,24 @@
                             </div>
                             <div class="card-body">
                                 <div class="table-responsive">
+                                    <div class="row mb-3">
+                                        <div class="col-md-4">
+                                            <label>Filtrar por Fecha:</label>
+                                            <select id="filtroFecha" class="form-control">
+                                                <option value="todos">Todas las Ventas</option>
+                                                <option value="hoy">Hoy</option>
+                                                <option value="ayer">Ayer</option>
+                                                <option value="personalizada">Rango Personalizado...</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6" id="rangoPersonalizado" style="display: none;">
+                                            <label>Desde - Hasta:</label>
+                                            <div class="input-group">
+                                                <input type="date" id="fechaInicio" class="form-control">
+                                                <input type="date" id="fechaFin" class="form-control">
+                                            </div>
+                                        </div>
+                                    </div>
                                     <table id="tablaVentas" class="table table-hover table-striped w-100">
                                         <thead class="bg-light">
                                             <tr>
@@ -311,33 +360,85 @@
                 const w = /*[[${warning}]]*/ null;
                 checkNotifications(s, e, i, w);
 
-                $('#tablaVentas').DataTable({
+                // --- 1. GUARDAR LA INSTANCIA EN LA VARIABLE 'table' ---
+                const table = $('#tablaVentas').DataTable({
                     "responsive": true,
                     "autoWidth": false,
                     "pageLength": 10,
                     "ordering": true,
                     "info": true,
                     "language": {
-                        "sSearch": "Buscar:",
-                        "sLengthMenu": "Mostrar _MENU_ registros",
-                        "oPaginate": { "sNext": "Siguiente", "sPrevious": "Anterior" }
+                        "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json"
                     },
                     "order": [ [ 0, "desc" ] ]
                 });
-            });
 
-            function confirmarEliminacionVenta(id) {
-                Swal.fire({
-                    title: '¿Anular Venta?',
-                    text: "Se revertirá el stock de los productos.",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#d33',
-                    confirmButtonText: 'Sí, anular'
-                }).then((result) => {
-                    if (result.isConfirmed) window.location.href = "/ventas/eliminar/" + id;
-                })
-            }
+                // --- 2. EXTENSIÓN DE BÚSQUEDA ---
+                $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+                    const filtro = $('#filtroFecha').val();
+                    if (filtro === 'todos') return true;
+
+                    // Obtenemos el texto de la columna 1 (Fecha)
+                    // Usamos trim() para limpiar espacios y saltos de línea ocultos
+                    let fechaTexto = data[1].trim().split(/\s+/)[0];
+
+                    if (!fechaTexto || !fechaTexto.includes('/')) return false;
+
+                    const parts = fechaTexto.split('/');
+                    const dia = parseInt(parts[0], 10);
+                    const mes = parseInt(parts[1], 10) - 1;
+                    const anio = parseInt(parts[2], 10);
+
+                    const fechaVenta = new Date(anio, mes, dia);
+                    fechaVenta.setHours(0, 0, 0, 0);
+
+                    const hoy = new Date();
+                    hoy.setHours(0, 0, 0, 0);
+
+                    if (filtro === 'hoy') {
+                        return fechaVenta.getTime() === hoy.getTime();
+                    }
+
+                    if (filtro === 'ayer') {
+                        const ayer = new Date();
+                        ayer.setDate(hoy.getDate() - 1);
+                        ayer.setHours(0, 0, 0, 0);
+                        return fechaVenta.getTime() === ayer.getTime();
+                    }
+
+                    if (filtro === 'personalizada') {
+                        const inicioStr = $('#fechaInicio').val();
+                        const finStr = $('#fechaFin').val();
+
+                        if (!inicioStr && !finStr) return true;
+
+                        let fechaInicio = inicioStr ? new Date(inicioStr + 'T00:00:00') : null;
+                        let fechaFin = finStr ? new Date(finStr + 'T23:59:59') : null;
+
+                        if (fechaInicio && fechaVenta < fechaInicio) return false;
+                        if (fechaFin && fechaVenta > fechaFin) return false;
+                    }
+
+                    return true;
+                });
+
+                // --- 3. EVENTOS DE CONTROL ---
+                $('#filtroFecha').on('change', function () {
+                    const valor = $(this).val();
+                    if (valor === 'personalizada') {
+                        $('#rangoPersonalizado').fadeIn();
+                    } else {
+                        $('#rangoPersonalizado').hide();
+                        $('#fechaInicio, #fechaFin').val('');
+                    }
+                    // Ahora 'table' sí existe y se puede llamar a draw()
+                    table.draw();
+                });
+
+                $('#fechaInicio, #fechaFin').on('change', function () {
+                    table.draw();
+                });
+            });
         </script>
     </th:block>
 </body>

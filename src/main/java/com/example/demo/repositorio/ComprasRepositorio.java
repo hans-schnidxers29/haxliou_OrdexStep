@@ -30,7 +30,8 @@ public interface ComprasRepositorio extends JpaRepository<Compras,Long> {
             "WHERE empresa_id = :empresaId", nativeQuery = true)
     Long obtenerNumeroSigReferencia(@Param("empresaId") Long empresaId);
 
-    @Query("SELECT COALESCE(SUM(c.total), 0) FROM Compras c WHERE c.fechaCompra BETWEEN :inicio AND :fin AND c.empresa.id = :empresaId ")
+    @Query("SELECT COALESCE(SUM(c.total), 0) FROM Compras c WHERE c.fechaCompra BETWEEN :inicio AND :fin " +
+            "AND c.empresa.id = :empresaId and c.metodoPago != 'CREDITO' and c.estado NOT IN ('ANULADA', 'BORRADOR') ")
     BigDecimal sumTotalCompras(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin,
                                @Param("empresaId") Long empresaId);
 
@@ -50,4 +51,15 @@ public interface ComprasRepositorio extends JpaRepository<Compras,Long> {
             @Param("fin") LocalDateTime fin,
             @Param("empresaId") Long empresaId
     );
+
+    @Query("select coalesce(sum(" +
+            "case " +
+            "   when cp.estadoDeuda = 'PENDIENTE' THEN coalesce((cp.montoTotal - cp.saldoPendiente),0)" +
+            "   when cp.estadoDeuda = 'CONFIRMADO' THEN  cp.montoTotal " +
+            "   else 0 " +
+            "end),0) " +
+            "from  ComprasCreditos cp " +
+            "where cp.compra.metodoPago = 'CREDITO' AND cp.estadoDeuda in('CONFIRMADO', 'PENDIENTE') " +
+            "AND  cp.compra.fechaCompra between :inicio and :fin and cp.compra.empresa.id = :empresaId")
+    BigDecimal comprasPorCreditos(@Param("empresaId") Long empresaId, @Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin);
 }

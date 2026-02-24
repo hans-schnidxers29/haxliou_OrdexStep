@@ -1,6 +1,7 @@
 package com.example.demo.entidad;
 
 import com.example.demo.entidad.Enum.EstadoPedido;
+import com.example.demo.entidad.Enum.MetodoPago;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;

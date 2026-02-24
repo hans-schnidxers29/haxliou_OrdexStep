@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 import java.util.Map;
 
 public interface CajaServicio {
-    Caja CajaAbierta(Usuario user);
+    Caja CajaAbierta(Long EmpresaId);
     Caja CerrarCaja(Long id,BigDecimal MontoEnCaja);
     void EjecutarCaja(Usuario user, BigDecimal MontoInicial);
     Map<String ,Object> obtenerResumenActual(Long cajaId);

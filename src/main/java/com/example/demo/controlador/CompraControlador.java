@@ -6,6 +6,7 @@ import com.example.demo.repositorio.ComprasCreditoRepositorio;
 import com.example.demo.servicio.*;
 import com.example.demo.entidad.Enum.EstadoCompra;
 import com.example.demo.entidad.Enum.MetodoPago;
+import groovyjarjarpicocli.CommandLine;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -199,6 +200,7 @@ public class CompraControlador {
         model.addAttribute("compras",compras);
         model.addAttribute("proveedores",proveedorServicio.listarproveedores());
         model.addAttribute("productos",productoServicio.ProductoSimple());
+        model.addAttribute("MetodoPago", MetodoPago.values());
         return "viewCompras/editarCompra";
 
     }
@@ -253,9 +255,6 @@ public class CompraControlador {
                 if (primerProveedor != null) {
                     compraExistente.setProveedor(primerProveedor);
                 } else {
-                    // Handle case where no valid product with a supplier was found
-                    // This might need more robust error handling or a default supplier
-                    // For now, I'll set it to null if no product with a supplier is found.
                     compraExistente.setProveedor(null);
                 }
                 compraExistente.setTotal(acumulador);
@@ -270,6 +269,7 @@ public class CompraControlador {
         }
         return "redirect:/compras/listar";
     }
+
     @GetMapping("/compra/delete/{id}")
     public String deleteCompra(@PathVariable Long id,RedirectAttributes redirectAttributes){
         compraServicio.deleteCompraById(id);
@@ -295,10 +295,7 @@ public class CompraControlador {
     @GetMapping("/anular/{id}")
     public String AnularCompra(@PathVariable Long id,RedirectAttributes redirectAttributes){
         try{
-
             Compras compra = compraServicio.compraById(id);
-            String referencia = compraServicio.GenerarReferenciasDeCompras();
-            compra.setNumeroReferencia(referencia);
             compraServicio.AnularCompra(compra.getId());
             redirectAttributes.addFlashAttribute("success", "Compra anulada correctamente");
             return "redirect:/compras/listar";
@@ -308,26 +305,26 @@ public class CompraControlador {
         }
     }
 
-//    @GetMapping("/cuentas-por-pagar")
-//    public String listarCuentas(Model model) {
-//        model.addAttribute("cuentas", comprasCreditoRepo.findAllBySaldoPendienteGreaterThan(BigDecimal.ZERO);
-//        model.addAttribute("metodosPago", MetodoPago.values());
-//        return "viewFinanzas/cuentasPorPagar";
-//    }
+    @GetMapping("/cuentas-por-pagar")
+    public String listarCuentas(Model model){
+        model.addAttribute("cuentas", comprasCreditoRepo.findAllBySaldoPendienteGreaterThan(BigDecimal.ZERO));
+        model.addAttribute("metodosPago", MetodoPago.values());
+        return "viewCompras/cuentasPorPagar";
+    }
 
-//    @PostMapping("/registrar-abono")
-//    public String registrarAbono(@RequestParam Long cuentaId,
-//                                 @RequestParam BigDecimal monto,
-//                                 @RequestParam MetodoPago metodoPago,
-//                                 @RequestParam(default = "false") boolean afectaCaja,
-//    RedirectAttributes ra) {
-//        try {
-//            FinanzasServicio.ProcesarAbono(cuentaId, monto, metodoPago, afectaCaja);
-//            ra.addFlashAttribute("success", "Abono registrado correctamente");
-//            return "redirect:/cuentas-por-pagar";
-//        } catch (Exception e) {
-//            ra.addFlashAttribute("error", e.getMessage());
-//        }
-//        return "redirect:/cuentas-por-pagar";
-//    }
+    @PostMapping("/registrar-abono")
+    public String registrarAbono(@RequestParam Long cuentaId, @RequestParam BigDecimal monto, @RequestParam MetodoPago metodoPago,
+                                 @RequestParam(defaultValue = "false") boolean afectaCaja, RedirectAttributes ra,
+                                 @RequestParam(defaultValue = "0") BigDecimal montoEfectivo, @RequestParam(defaultValue = "0") BigDecimal montoTrans) {
+
+        try {
+            finanzasServicio.ProcesarAbono(cuentaId, monto, metodoPago, afectaCaja, montoEfectivo,montoTrans);
+            ra.addFlashAttribute("success", "Abono registrado correctamente");
+            return "redirect:/compras/cuentas-por-pagar";
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", e.getMessage());
+            return "redirect:/compras/cuentas-por-pagar";
+        }
+
+    }
 }

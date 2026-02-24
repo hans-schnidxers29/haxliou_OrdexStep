@@ -28,7 +28,7 @@ import java.util.Map;
 
 @Controller
 @RequestMapping("/cierre")
-public class CierreMensualControlador {
+public class  CierreMensualControlador {
 
     @Autowired
     private CierreMensualServicio servicio;
