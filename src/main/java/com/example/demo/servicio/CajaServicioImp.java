@@ -169,4 +169,9 @@ public class CajaServicioImp implements CajaServicio{
     public Caja cajaByid(Long id) {
         return cajaRepositorio.findById(id).orElseThrow(() -> new RuntimeException("Caja no encontrada"));
     }
+
+    @Override
+    public List<Caja> ListaCaja() {
+        return cajaRepositorio.findAllByOrderByFechaAperturaDesc();
+    }
 }

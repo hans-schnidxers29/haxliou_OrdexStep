@@ -58,13 +58,14 @@ public class CajaControlador {
 
 
     @PostMapping("/cerrar/{id}")
-    public String cerrarCaja(@PathVariable Long id, RedirectAttributes redirectAttributes,Model model) {
+    public String cerrarCaja(@PathVariable Long id, RedirectAttributes redirectAttributes,
+                             Model model,@RequestParam("montoReal") BigDecimal montoReal,
+                             @RequestParam(value = "observaciones", required = false) String observaciones) {
 
         model.addAttribute("cajaId", id);
         try {
             Caja caja = servicio.cajaByid(id);
-            BigDecimal montoReal = caja.getMontoReal();
-
+            caja.setObservaciones(observaciones);
             servicio.CerrarCaja(id, montoReal);
             redirectAttributes.addFlashAttribute("success", "Caja cerrada correctamente");
             return "caja/cierre_exitoso";
@@ -134,5 +135,11 @@ public class CajaControlador {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=cierre_final_caja_" + id + ".pdf")
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(pdf);
+    }
+
+    @GetMapping("/historial")
+    public String HistorialDeCajas(Model model){
+        model.addAttribute("lista",servicio.ListaCaja());
+        return "ViewVentas/HistorialCaja";
     }
 }

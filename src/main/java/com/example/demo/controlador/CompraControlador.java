@@ -170,12 +170,14 @@ public class CompraControlador {
                 comprasCreditos.setMontoTotal(compras.getTotal());
                 comprasCreditos.setFechaVencimiento(LocalDate.now().plusDays(30));
                 comprasCreditoRepo.save(comprasCreditos);
-
-                for(DetalleCompra detalleCompra : detallesValidos){
-                    BigDecimal nuevoImpuesto = detalleCompra.getProductos().getImpuesto();
-                    BigDecimal nuevoPrecioCompra = detalleCompra.getProductos().getPrecioCompra();
-                    productoServicio.AgregarStock(detalleCompra.getProductos().getId(),
-                            detalleCompra.getCantidad(), nuevoImpuesto , nuevoPrecioCompra);
+                // D. Actualizar Stock (Sumamos porque venía de Borrador donde no había stock)
+                for (DetalleCompra dc : compras.getDetalles()) {
+                    productoServicio.AgregarStock(
+                            dc.getProductos().getId(),
+                            dc.getCantidad(),
+                            dc.getProductos().getImpuesto(),
+                            dc.getProductos().getPrecioCompra()
+                    );
                 }
                 redirectAttributes.addFlashAttribute("success", "Compra a CRÉDITO registrada y stock actualizado.");
             }else{
@@ -212,62 +214,113 @@ public class CompraControlador {
                                BindingResult result,
                                RedirectAttributes redirectAttributes,
                                @AuthenticationPrincipal UserDetails userDetails) {
-
         try {
-            // 1. Cargar la compra original de la DB
+            // 1. Carga inicial de la base de datos (Hibernate rastrea esta instancia)
             Compras compraExistente = compraServicio.compraById(id);
 
             if (compraExistente.getEstado() != EstadoCompra.BORRADOR) {
-                redirectAttributes.addFlashAttribute("error", "Solo se pueden editar compras en BORRADOR.");
+                redirectAttributes.addFlashAttribute("error", "Solo se pueden editar compras en estado BORRADOR.");
                 return "redirect:/compras/listar";
             }
 
-            // 2. Datos básicos
+            // 2. Mapeo de datos básicos (Mantenemos estado BORRADOR para pasar el check del Service)
+            Usuario user = servicioUsuario.findByEmail(userDetails.getUsername());
+            compraExistente.setUsuario(user);
             compraExistente.setMetodoPago(compras.getMetodoPago());
             compraExistente.setObservaciones(compras.getObservaciones());
 
-            // 3. Gestionar Detalles
-            compraExistente.getDetalles().clear(); // Requiere orphanRemoval = true en la Entidad
+            // 3. Gestionar Detalles (Evitar el error de Orphan Deletion)
+            // Limpiamos la lista original SIN reemplazar la instancia de la colección
+            compraExistente.getDetalles().clear();
+
+            BigDecimal acumuladorSubtotales = BigDecimal.ZERO;
 
             if (compras.getDetalles() != null) {
-                BigDecimal acumulador = BigDecimal.ZERO;
-                Proveedores primerProveedor = null; // To store the supplier of the first product
                 for (DetalleCompra detalle : compras.getDetalles()) {
-                    if (detalle.getProductos() != null && detalle.getProductos().getId() != null) {
-
-                        Productos prod = productoServicio.productoById(detalle.getProductos().getId());
-                        // Set the supplier of the purchase from the first product found
-                        if (primerProveedor == null && prod.getProveedor() != null) {
-                            primerProveedor = prod.getProveedor();
-                        }
-
-                        detalle.setProductos(prod);
-                        detalle.setCompra(compraExistente); // Vínculo necesario para JPA
-
-                        BigDecimal subtotal = detalle.getPrecioUnitario().multiply(detalle.getCantidad());
-                        detalle.setSubtotal(subtotal);
-                        acumulador = acumulador.add(subtotal);
-
-                        compraExistente.getDetalles().add(detalle);
+                    // Validación de datos mínimos de la fila
+                    if (detalle.getProductos() == null || detalle.getProductos().getId() == null ||
+                            detalle.getCantidad() == null || detalle.getCantidad().compareTo(BigDecimal.ZERO) <= 0 ||
+                            detalle.getPrecioUnitario() == null) {
+                        continue;
                     }
+
+                    Productos prod = productoServicio.productoById(detalle.getProductos().getId());
+                    if (prod == null) continue;
+
+                    // Sincronizar info técnica del producto (Impuesto y Precio de Compra)
+                    if (detalle.getProductos().getImpuesto() != null) {
+                        prod.setImpuesto(detalle.getProductos().getImpuesto());
+                    }
+                    if (detalle.getProductos().getPrecioCompra() != null) {
+                        prod.setPrecioCompra(detalle.getProductos().getPrecioCompra());
+                    }
+
+                    // Configurar el detalle
+                    detalle.setProductos(prod);
+                    detalle.setCompra(compraExistente); // Importante para la relación bidireccional
+
+                    BigDecimal subtotal = detalle.getPrecioUnitario().multiply(detalle.getCantidad());
+                    detalle.setSubtotal(subtotal);
+                    acumuladorSubtotales = acumuladorSubtotales.add(subtotal);
+
+                    // AGREGAR a la lista que Hibernate ya conoce
+                    compraExistente.getDetalles().add(detalle);
                 }
-                // Set the purchase's supplier based on the first product's supplier
-                if (primerProveedor != null) {
-                    compraExistente.setProveedor(primerProveedor);
-                } else {
-                    compraExistente.setProveedor(null);
-                }
-                compraExistente.setTotal(acumulador);
             }
 
-            // 4. Guardar
-            compraServicio.updateCompra(id, compraExistente);
+            if (compraExistente.getDetalles().isEmpty()) {
+                redirectAttributes.addFlashAttribute("error", "Debe agregar al menos un producto válido.");
+                return "redirect:/compras/editar/" + id;
+            }
 
-            redirectAttributes.addFlashAttribute("success", "Compra #" + id + " actualizada.");
+            compraExistente.setTotal(acumuladorSubtotales);
+
+            // 4. Lógica de Persistencia y Transición
+            if (MetodoPago.CREDITO.equals(compraExistente.getMetodoPago())) {
+
+                // A. Actualizamos datos en DB (El Service verá que aún es BORRADOR y dejará pasar)
+                compraServicio.updateCompra(id, compraExistente);
+
+                // B. Promoción de estado después de validar
+                compraExistente.setEstado(EstadoCompra.CREDITO);
+
+                // C. Generar cuenta por pagar
+                ComprasCreditos comprasCreditos = new ComprasCreditos();
+                comprasCreditos.setCompra(compraExistente);
+                comprasCreditos.setSaldoPendiente(compraExistente.getTotal());
+                comprasCreditos.setEstadoDeuda(EstadoPedido.PENDIENTE);
+                comprasCreditos.setMontoTotal(compraExistente.getTotal());
+                comprasCreditos.setFechaVencimiento(LocalDate.now().plusDays(30));
+                comprasCreditoRepo.save(comprasCreditos);
+
+                // D. Actualizar Stock (Sumamos porque venía de Borrador donde no había stock)
+                for (DetalleCompra dc : compraExistente.getDetalles()) {
+                    productoServicio.AgregarStock(
+                            dc.getProductos().getId(),
+                            dc.getCantidad(),
+                            dc.getProductos().getImpuesto(),
+                            dc.getProductos().getPrecioCompra()
+                    );
+                }
+
+                // E. Guardar el cambio de estado definitivo
+                compraServicio.saveCompra(compraExistente);
+                redirectAttributes.addFlashAttribute("success", "Compra #" + id + " actualizada y finalizada a CRÉDITO.");
+            } else {
+                // Caso: Se mantiene en BORRADOR
+                compraExistente.setEstado(EstadoCompra.BORRADOR);
+                compraServicio.updateCompra(id, compraExistente);
+                redirectAttributes.addFlashAttribute("success", "Compra #" + id + " actualizada correctamente (BORRADOR).");
+            }
+
+            return "redirect:/compras/listar";
+
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Error: " + e.getMessage());
+            // En caso de error, es mejor loguearlo para debug
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("error", "Error al procesar la edición: " + e.getMessage());
+            return "redirect:/compras/listar";
         }
-        return "redirect:/compras/listar";
     }
 
     @GetMapping("/compra/delete/{id}")

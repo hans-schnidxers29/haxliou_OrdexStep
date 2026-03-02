@@ -51,7 +51,7 @@
                         </thead>
                         <tbody>
                         <tr th:each="cuenta : ${cuentas}">
-                            <td th:text="${cuenta.compra.id}">#</td>
+                            <td th:text="${cuenta.compra.numeroReferencia}">#</td>
                             <td th:text="${cuenta.compra.proveedor.nombre}" class="font-weight-bold">Proveedor</td>
                             <td th:text="${#numbers.formatCurrency(cuenta.montoTotal)}">$0.00</td>
                             <td class="text-danger font-weight-bold" th:text="${#numbers.formatCurrency(cuenta.saldoPendiente)}">$0.00</td>

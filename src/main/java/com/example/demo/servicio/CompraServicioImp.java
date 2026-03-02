@@ -63,11 +63,8 @@ public class CompraServicioImp implements CompraServicio{
     @Override
     @Transactional
     public void updateCompra(Long id, Compras comprasNuevas) {
-        Compras compraExistente = compraById(id);
-
-        if (compraExistente.getEstado() != EstadoCompra.BORRADOR) {
-            throw new RuntimeException("No se puede editar una compra que ya ha sido confirmada.");
-        }
+        Compras compraExistente = repositorio.findById(id)
+                .orElseThrow(() -> new RuntimeException("Compra no encontrada"));
         repositorio.save(comprasNuevas);
     }
 

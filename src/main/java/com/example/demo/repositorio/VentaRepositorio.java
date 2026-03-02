@@ -95,20 +95,24 @@ public interface VentaRepositorio extends JpaRepository<Venta, Long> {
     @Query("SELECT COALESCE((COUNT(v)),0) FROM Venta v WHERE v.fechaVenta BETWEEN :inicio AND :fin AND v.empresa.id = :empresaId")
     BigDecimal CantidadDeVentas(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin, @Param("empresaId") Long empresaId);
 
-    @Query(value = "select sum(total_ventas_mayor) as total_mayor\n" +
-            "from(\n" +
-            "    select sum(v.total) as total_ventas_mayor,  date_trunc('month', fecha_venta) as mes\n" +
-            "    FROM venta v \n" +
-            "    WHERE v.venta_al_por_mayor  = 'TRUE' AND v.empresa_id = :empresaId GROUP BY mes\n" +
-            "\n" +
-            "    UNION \n" +
-            "    SELECT SUM(p.total) as total_ventas_mayor, date_trunc('month', p.fecha_pedido) as mes\n" +
-            "    FROM pedidos p \n" +
-            "    WHERE p.estado = 'ENTREGADO' AND p.venta_por_mayor = 'TRUE' AND p.empresa_id = :empresaId GROUP BY mes\n" +
-            "  \n" +
-            ") AS consolidado \n" +
-            "GROUP BY mes ORDER BY mes ASC", nativeQuery = true)
-    BigDecimal VentasTotalesAlMayor(@Param("empresaId") Long empresaId);
+    @Query(value = "SELECT COALESCE(SUM(total_ventas_mayor), 0) " +
+            "FROM (" +
+            "    SELECT SUM(v.total) as total_ventas_mayor " +
+            "    FROM venta v " +
+            "    WHERE v.venta_al_por_mayor = true " +
+            "    AND v.empresa_id = :empresaId " +
+            "    AND v.fecha_venta >= :inicio AND v.fecha_venta <= :fin " +
+            "    UNION ALL " +
+            "    SELECT SUM(p.total) as total_ventas_mayor " +
+            "    FROM pedidos p " +
+            "    WHERE p.estado = 'ENTREGADO' " +
+            "    AND p.venta_por_mayor = true " +
+            "    AND p.empresa_id = :empresaId " +
+            "    AND p.fecha_pedido >= :inicio AND p.fecha_pedido <= :fin " +
+            ") AS consolidado", nativeQuery = true)
+    BigDecimal VentasTotalesAlMayor(@Param("inicio") LocalDateTime inicio,
+                                    @Param("fin") LocalDateTime fin,
+                                    @Param("empresaId") Long empresaId);
 
     @Query("select sum (p.monto) from Pagos as p join Venta as v on v.id = p.venta.id where v.metodoPago = 'MIXTO' " +
             "and p.metodoPago = :metodo and p.fechaPago between :inicio and :fin and v.empresa.id = :empresaId")

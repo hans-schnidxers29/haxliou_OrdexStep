@@ -86,7 +86,7 @@ public class CierreMensualImp implements CierreMensualServicio{
         // Utilidad Neta: Lo que queda después de pagar arriendo, servicios, etc. (Egresos)
         BigDecimal utilidadNeta = utilidadBruta.subtract(totalEgresos);
 
-        BigDecimal TotalVentasPorMayor=nvl(ventaRepo.VentasTotalesAlMayor(empresaId));
+        BigDecimal TotalVentasPorMayor=nvl(ventaRepo.VentasTotalesAlMayor(inicio,fin,empresaId));
         // 7. Evitar duplicados
         cierreRepo.eliminarCierreExistente(mes, anio,empresaId);
         // 8. Construir objeto de cierre
@@ -199,7 +199,7 @@ public class CierreMensualImp implements CierreMensualServicio{
             // El ticket promedio debe ser sobre el dinero TOTAL
             TicketPromedio = TotalIngresos.divide(TotalCantidades, 2, RoundingMode.HALF_UP);
         }
-        BigDecimal TotalVentasAlMAyor = nvl(ventaRepo.VentasTotalesAlMayor(empresaId));
+        BigDecimal TotalVentasAlMAyor = nvl(ventaRepo.VentasTotalesAlMayor(fechaInicio,fechaFin,empresaId));
         BigDecimal TotalVentasAlDetal = nvl(TotalIngresos.subtract(TotalVentasAlMAyor));
 
         BigDecimal egresos = nvl(egresoRepo.sumarEgresosPorDia(fechaInicio, fechaFin,empresaId));

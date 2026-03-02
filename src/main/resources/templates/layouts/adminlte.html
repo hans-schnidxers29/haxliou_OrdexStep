@@ -251,6 +251,19 @@
                     </li>
 
                     <li class="nav-item">
+                        <a th:href="@{/caja/historial}" class="nav-link">
+                            <i class="nav-icon fas fa-history"></i>
+                            <p>
+                                Historial Arqueos
+                                <span th:if="${T(java.time.LocalDate).now().isBefore(T(java.time.LocalDate).of(2026, 3, 3))}"
+                                      class="badge badge-danger right animacion-nuevo">
+                                    NUEVO
+                                </span>
+                            </p>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
                         <a th:href="@{/cierre/resumen}" class="nav-link">
                             <i class="nav-icon fas fa-calendar-check"></i>
                             <p>Tu Mes - Resumen</p>
