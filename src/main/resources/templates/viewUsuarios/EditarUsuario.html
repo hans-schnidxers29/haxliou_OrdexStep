@@ -120,28 +120,28 @@
 
     <th:block layout:fragment="scripts">
         <script th:inline="javascript">
+            // 1. Definición GLOBAL de la función (fuera de cualquier ready)
+            function showToast(icon, message) {
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
+                    didOpen: (toast) => {
+                        toast.addEventListener('mouseenter', Swal.stopTimer)
+                        toast.addEventListener('mouseleave', Swal.resumeTimer)
+                    }
+                });
+
+                Toast.fire({
+                    icon: icon,
+                    title: message
+                });
+            }
+
             $(document).ready(function() {
-                // Definición de la función showToast usando SweetAlert2
-                function showToast(icon, message) {
-                    const Toast = Swal.mixin({
-                        toast: true,
-                        position: 'top-end',
-                        showConfirmButton: false,
-                        timer: 3000,
-                        timerProgressBar: true,
-                        didOpen: (toast) => {
-                            toast.addEventListener('mouseenter', Swal.stopTimer)
-                            toast.addEventListener('mouseleave', Swal.resumeTimer)
-                        }
-                    });
-
-                    Toast.fire({
-                        icon: icon, // 'success', 'error', 'warning', 'info'
-                        title: message
-                    });
-                }
-
-                // Validación de Bootstrap
+                // 2. Validación general de Bootstrap
                 $('.needs-validation').on('submit', function(e) {
                     if (this.checkValidity() === false) {
                         e.preventDefault();
@@ -149,28 +149,27 @@
                     }
                     $(this).addClass('was-validated');
                 });
-            });
-            $(document).ready(function() {
-                // Validación de contraseñas al enviar el formulario
+
+                // 3. Validación específica de contraseñas
                 $('#formPassword').on('submit', function(e) {
                     const pass = $('#pass').val();
                     const confirm = $('#confirm').val();
 
-                    if (pass !== "" && pass !== confirm) {
-                        e.preventDefault(); // Detiene el envío del formulario
+                    // Si las contraseñas no coinciden
+                    if (pass !== confirm) {
+                        e.preventDefault();
                         e.stopPropagation();
 
-                        // Ahora showToast ya está definida y no dará error
                         showToast('error', '¡Las contraseñas no coinciden!');
 
-                        // Opcional: limpiar el campo de confirmación y resaltar en rojo
                         $('#confirm').addClass('is-invalid');
+                        $(this).removeClass('was-validated'); // Evita que se vea verde si está mal
                     }
                 });
 
-                // Quitar el color rojo cuando el usuario vuelva a escribir
-                $('#confirm').on('input', function() {
-                    $(this).removeClass('is-invalid');
+                // Limpiar error al escribir
+                $('#confirm, #pass').on('input', function() {
+                    $('#confirm').removeClass('is-invalid');
                 });
             });
         </script>

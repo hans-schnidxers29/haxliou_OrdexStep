@@ -22,28 +22,45 @@ public interface ProductoRepositorio extends JpaRepository<Productos,Long> {
             "FROM productos WHERE empresa_id = :empresaId", nativeQuery = true)
     Long obtenerMaximoCodigoNumerico(@Param("empresaId") Long empresaId);
 
-    @Query(value = "SELECT nombre, SUM(total_cantidad) as productos_vendidos \n" +
-            "FROM (\n" +
-            "   -- Suma de Ventas\n" +
-            "    SELECT p.nombre, SUM(d.cantidad) as total_cantidad\n" +
-            "    FROM productos p\n" +
-            "    INNER JOIN detalle_venta d ON p.id = d.producto_id\n" +
-            "    WHERE p.empresa_id = :empresaId\n" +
-            "    GROUP BY p.nombre\n" +
-            "\n" +
-            "    UNION ALL\n" +
-            "\n" +
-            "  \n" +
-            "  -- Suma de Pedidos\n" +
-            "    SELECT p.nombre, SUM(dp.cantidad) as total_cantidad\n" +
-            "    FROM productos p\n" +
-            "    INNER JOIN detalle_pedido dp ON p.id = dp.producto_id\n" +
-            "    WHERE p.empresa_id = :empresaId\n" +
-            "    GROUP BY p.nombre\n" +
-            ") as consolidado\n" +
-            "GROUP BY nombre\n" +
-            "ORDER BY nombre DESC LIMIT 5", nativeQuery = true)
-    List<Object[]> ListarProductosMasVendidos(@Param("empresaId") Long empresaId);
+    // REPOSITORIO: Productos MAS vendidos en el mes
+    @Query(value = "SELECT nombre, SUM(total_cantidad) as productos_vendidos FROM (" +
+            "    SELECT p.nombre, SUM(d.cantidad) as total_cantidad " +
+            "    FROM productos p " +
+            "    INNER JOIN detalle_venta d ON p.id = d.producto_id " +
+            "    INNER JOIN venta v ON v.id = d.venta_id " +
+            "    WHERE p.empresa_id = :empresaId AND v.fecha_venta BETWEEN :inicio AND :fin " +
+            "    GROUP BY p.nombre " +
+            "    UNION ALL " +
+            "    SELECT p.nombre, SUM(dp.cantidad) as total_cantidad " +
+            "    FROM productos p " +
+            "    INNER JOIN detalle_pedido dp ON p.id = dp.producto_id " +
+            "    INNER JOIN pedidos pe ON pe.id = dp.pedido_id " +
+            "    WHERE p.empresa_id = :empresaId AND pe.fecha_pedido BETWEEN :inicio AND :fin " +
+            "    GROUP BY p.nombre " +
+            ") as consolidado " +
+            "GROUP BY nombre " +
+            "ORDER BY productos_vendidos DESC LIMIT 5", nativeQuery = true)
+    List<Object[]> ListarProductosMasVendidos(@Param("empresaId") Long empresaId, @Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin);
+
+    // REPOSITORIO: Producto MENOS vendido en el mes
+    @Query(value = "SELECT nombre, SUM(total_cantidad) as productos_vendidos FROM (" +
+            "    SELECT p.nombre, SUM(d.cantidad) as total_cantidad " +
+            "    FROM productos p " +
+            "    INNER JOIN detalle_venta d ON p.id = d.producto_id " +
+            "    INNER JOIN venta v ON v.id = d.venta_id " +
+            "    WHERE p.empresa_id = :empresaId AND v.fecha_venta BETWEEN :inicio AND :fin " +
+            "    GROUP BY p.nombre " +
+            "    UNION ALL " +
+            "    SELECT p.nombre, SUM(dp.cantidad) as total_cantidad " +
+            "    FROM productos p " +
+            "    INNER JOIN detalle_pedido dp ON p.id = dp.producto_id " +
+            "    INNER JOIN pedidos pe ON pe.id = dp.pedido_id " +
+            "    WHERE p.empresa_id = :empresaId AND pe.fecha_pedido BETWEEN :inicio AND :fin " +
+            "    GROUP BY p.nombre " +
+            ") as consolidado " +
+            "GROUP BY nombre " +
+            "ORDER BY productos_vendidos ASC LIMIT 1", nativeQuery = true)
+    List<Object[]> ProductoMenosVendido(@Param("empresaId") Long empresaId, @Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin);
 
     @Query(value = "SELECT nombre, SUM(total_cantidad) as productos_vendidos " +
             "FROM (" +

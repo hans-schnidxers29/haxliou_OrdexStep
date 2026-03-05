@@ -14,4 +14,5 @@ public interface EgresoServicio {
     void deleteGasto(Long id);
     Egresos ObtenerEgreso(Long id );
     void UpdateEgreso(Egresos egresos);
+    List<Egresos>listaEgresosMensuales(LocalDateTime inicio, LocalDateTime fin);
 }

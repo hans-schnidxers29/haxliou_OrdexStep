@@ -75,4 +75,9 @@ public class EgresosServicioImp implements EgresoServicio{
     public void UpdateEgreso(Egresos egresos) {
         repositorio.save(egresos);
     }
+
+    @Override
+    public List<Egresos> listaEgresosMensuales(LocalDateTime inicio, LocalDateTime fin) {
+        return repositorio.findByFechaRegistroBetween(inicio,fin);
+    }
 }

@@ -1,5 +1,7 @@
 package com.example.demo.controlador;
 
+import com.example.demo.Seguridad.ServiceEmail;
+import com.example.demo.entidad.Enum.EstadoDeCaja;
 import com.example.demo.servicio.ServicioUsuario;
 import com.example.demo.entidad.Usuario;
 import com.example.demo.entidad.Caja;
@@ -35,6 +37,9 @@ public class CajaControlador {
     @Autowired
     private PdfServicio pdfService;
 
+    @Autowired
+    private ServiceEmail emailService;
+
     /* =========================
        ABRIR CAJA
        ========================= */
@@ -64,19 +69,37 @@ public class CajaControlador {
 
         model.addAttribute("cajaId", id);
         try {
-            Caja caja = servicio.cajaByid(id);
-            caja.setObservaciones(observaciones);
-            servicio.CerrarCaja(id, montoReal);
+            Caja cajaCerrada = servicio.cajaByid(id);
+            cajaCerrada.setObservaciones(observaciones);
+
+            Map<String, Object> resumen = servicio.obtenerResumenActual(id);
+
+            Map<String, Object> data = new HashMap<>(resumen);
+            data.put("caja", cajaCerrada);
+            data.put("usuario", cajaCerrada.getUsuario());
+            data.put("titulo", "Reporte de Cierre Definitivo");
+            data.put("montoRealContado", montoReal);
+
+            // 3. Generar el PDF que irá adjunto en el correo
+            byte[] pdfAdjunto = pdfService.generarPdf("pdf/ticketFinal", data);
+
+            // 4. Enviar el correo (solo se ejecutará UNA vez aquí)
+            String emailDestino = cajaCerrada.getUsuario().getEmail();
+            emailService.enviarCorreoConPlantilla(
+                    emailDestino,
+                    "Cierre de Caja Finalizado - ID: " + id,
+                    data,
+                    pdfAdjunto,
+                    "cierre_caja_" + id + ".pdf"
+            );
+            servicio.CerrarCaja(cajaCerrada.getId(),montoReal);
             redirectAttributes.addFlashAttribute("success", "Caja cerrada correctamente");
             return "caja/cierre_exitoso";
-
-        } catch (DataAccessException e) {
-            redirectAttributes.addFlashAttribute("error", "Error al cerrar la caja: " + e.getMessage());
-            return "redirect:/ventas/crear";
 
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Error al cerrar la caja: " + e.getMessage());
             return "redirect:/ventas/crear";
+
         }
     }
 
@@ -114,23 +137,19 @@ public class CajaControlador {
 
         // 1. Obtener y cerrar la caja (Persistencia)
         Caja cajaOriginal = servicio.cajaByid(id);
-        BigDecimal montoReal = cajaOriginal.getMontoReal();
-        Caja cajaCerrada = servicio.CerrarCaja(cajaOriginal.getId(), montoReal);
-
         Map<String, Object> resumen = servicio.obtenerResumenActual(id);
 
         // 3. Crear el mapa principal para el PDF y combinar
-        Map<String, Object> data = new HashMap<>();
+        Map<String, Object> data = new HashMap<>(resumen);
         data.putAll(resumen); // Inserta todos los valores del resumen automáticamente
 
         // 4. Agregar objetos adicionales necesarios para el ticket
-        data.put("caja", cajaCerrada);
-        data.put("usuario", cajaCerrada.getUsuario());
+        data.put("caja", cajaOriginal);
+        data.put("usuario", cajaOriginal.getUsuario());
         data.put("titulo", "Reporte de Cierre Definitivo");
-        data.put("montoRealContado", montoReal);// Valor físico reportado
+        data.put("montoRealContado", cajaOriginal.getMontoReal());// Valor físico reportado
 
         byte[] pdf = pdfService.generarPdf("pdf/ticketFinal", data);
-
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=cierre_final_caja_" + id + ".pdf")
                 .contentType(MediaType.APPLICATION_PDF)
