@@ -52,14 +52,9 @@ public interface ComprasRepositorio extends JpaRepository<Compras,Long> {
             @Param("empresaId") Long empresaId
     );
 
-    @Query("select coalesce(sum(" +
-            "case " +
-            "   when cp.estadoDeuda = 'PENDIENTE' THEN coalesce((cp.montoTotal - cp.saldoPendiente),0)" +
-            "   when cp.estadoDeuda = 'CONFIRMADO' THEN  cp.montoTotal " +
-            "   else 0 " +
-            "end),0) " +
-            "from  ComprasCreditos cp " +
-            "where cp.compra.metodoPago = 'CREDITO' AND cp.estadoDeuda in('CONFIRMADO', 'PENDIENTE') " +
-            "AND  cp.compra.fechaCompra between :inicio and :fin and cp.compra.empresa.id = :empresaId")
+    @Query("select coalesce(sum(a.montoAbonado), 0) " +
+            "from AbonosCompra a " +
+            "where a.fechaAbono between :inicio and :fin " +
+            "and a.cuentaPorPagar.compra.empresa.id = :empresaId")
     BigDecimal comprasPorCreditos(@Param("empresaId") Long empresaId, @Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin);
 }

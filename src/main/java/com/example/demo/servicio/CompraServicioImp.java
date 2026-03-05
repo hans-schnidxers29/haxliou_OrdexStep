@@ -148,7 +148,7 @@ public class CompraServicioImp implements CompraServicio{
         if (GastosComprasCredito == null) GastosComprasCredito = BigDecimal.ZERO;
 
         BigDecimal TotalEgresosCompras = repositorio.sumTotalCompras(inicio, fin, empresaId);
-        if (TotalEgresosCompras == null) GastosComprasCredito = BigDecimal.ZERO;
+        if (TotalEgresosCompras == null) TotalEgresosCompras = BigDecimal.ZERO;
 
         datos.put("TotalEgresos", TotalEgresosCompras.add(GastosComprasCredito));
 

@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -73,14 +74,14 @@ public class ProductoServiceImpl implements ProductoServicio{
     }
 
     @Override
-    public List<String> NombreProductosVentas() {
-        List<Object[]>resultado = repositorio.ListarProductosMasVendidos(securityService.obtenerEmpresaId());
+    public List<String> NombreProductosVentas(LocalDateTime inicio, LocalDateTime fin) {
+        List<Object[]>resultado = repositorio.ListarProductosMasVendidos(securityService.obtenerEmpresaId(),inicio, fin);
         return resultado.stream().map(objeto ->(String) objeto[0]).toList();
     }
 
     @Override
-    public List<BigDecimal> CantidadProductosVentas() {
-        List<Object[]>resultado = repositorio.ListarProductosMasVendidos(securityService.obtenerEmpresaId());
+    public List<BigDecimal> CantidadProductosVentas(LocalDateTime inicio, LocalDateTime fin) {
+        List<Object[]>resultado = repositorio.ListarProductosMasVendidos(securityService.obtenerEmpresaId(),inicio, fin);
         return resultado.stream().map(objeto ->(BigDecimal) objeto[1]).toList();
     }
 

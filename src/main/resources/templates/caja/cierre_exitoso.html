@@ -36,7 +36,7 @@
     document.addEventListener("DOMContentLoaded", function() {
       const win = window.open(urlFinal, '_blank');
 
-      if (!win) {
+      if (!win || win.closed || typeof win.closed == 'undefined') {
         // Si el navegador bloqueó el popup
         document.getElementById('manualBtn').style.display = 'block';
         document.getElementById('linkTicket').href = urlFinal;
@@ -44,7 +44,7 @@
         // Si funcionó, redirigimos la ventana actual
         setTimeout(() => {
           window.location.href = urlRetorno;
-        }, 2000);
+        }, 3000);
       }
     });
   </script>

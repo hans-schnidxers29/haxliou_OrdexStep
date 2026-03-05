@@ -41,4 +41,6 @@ public interface EgresoRepositorio extends JpaRepository <Egresos, Long>{
     BigDecimal egresosSalioCaja(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin,
                                 @Param("metodos")List<MetodoPago> metodos, @Param("empresaId") Long empresaId);
 
+    List<Egresos> findByFechaRegistroBetween(LocalDateTime inicio, LocalDateTime fin);
+
 }
